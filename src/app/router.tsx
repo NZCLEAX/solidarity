@@ -13,6 +13,7 @@ import { PointsPage } from '@/features/points/pages/PointsPage'
 import { InterventionsPage } from '@/features/interventions/pages/InterventionsPage'
 import { ModerationPage } from '@/features/moderation/pages/ModerationPage'
 import { AdminPage } from '@/features/admin/pages/AdminPage'
+import { ProfilePage } from '@/features/profile/pages/ProfilePage'
 
 export const router = createBrowserRouter([
   // ── Routes publiques (auth) ──────────────────────────────────────────
@@ -33,6 +34,7 @@ export const router = createBrowserRouter([
       { path: '/interventions', element: <InterventionsPage /> },
       { path: '/moderation',    element: <ModerationPage /> },
       { path: '/admin',         element: <AdminPage /> },
+      { path: '/profile',       element: <ProfilePage /> },
     ],
   },
 ])

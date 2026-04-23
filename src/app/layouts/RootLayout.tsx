@@ -1,26 +1,24 @@
 import { NavLink, Outlet } from 'react-router-dom'
 
 const navLinks = [
-  { to: '/',              label: 'Dashboard' },
-  { to: '/map',           label: 'Carte' },
-  { to: '/points',        label: 'Points' },
+  { to: '/', label: 'Dashboard' },
+  { to: '/map', label: 'Carte' },
+  { to: '/points', label: 'Points' },
   { to: '/interventions', label: 'Interventions' },
-  { to: '/moderation',    label: 'Modération' },
-  { to: '/admin',         label: 'Administration' },
+  { to: '/moderation', label: 'Moderation' },
+  { to: '/admin', label: 'Administration' },
+  { to: '/profile', label: 'Profil' },
 ]
 
 export function RootLayout() {
   return (
     <div className="flex min-h-screen">
-      {/* Sidebar */}
-      <aside className="w-56 shrink-0 bg-gray-900 text-white flex flex-col">
-        {/* Logo */}
-        <div className="px-5 py-4 border-b border-gray-700">
-          <span className="text-lg font-bold tracking-tight">🤝 Solidarity</span>
+      <aside className="flex w-56 shrink-0 flex-col bg-gray-900 text-white">
+        <div className="border-b border-gray-700 px-5 py-4">
+          <span className="text-lg font-bold tracking-tight">Solidarity</span>
         </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 px-3 py-4 space-y-1">
+        <nav className="flex-1 space-y-1 px-3 py-4">
           {navLinks.map(({ to, label }) => (
             <NavLink
               key={to}
@@ -39,25 +37,27 @@ export function RootLayout() {
           ))}
         </nav>
 
-        {/* Footer sidebar */}
-        <div className="px-5 py-3 border-t border-gray-700 text-xs text-gray-500">
+        <div className="border-t border-gray-700 px-5 py-3 text-xs text-gray-500">
           MVP v0.1.0
         </div>
       </aside>
 
-      {/* Main content */}
-      <div className="flex-1 flex flex-col bg-gray-50">
-        {/* Top bar */}
-        <header className="h-14 bg-white border-b border-gray-200 flex items-center justify-end px-6">
+      <div className="flex flex-1 flex-col bg-gray-50">
+        <header className="flex h-14 items-center justify-end gap-4 border-b border-gray-200 bg-white px-6">
+          <NavLink
+            to="/profile"
+            className="text-sm text-gray-600 transition-colors hover:text-gray-900"
+          >
+            Mon profil
+          </NavLink>
           <button
             type="button"
-            className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
+            className="text-sm text-gray-600 transition-colors hover:text-gray-900"
           >
-            Déconnexion
+            Deconnexion
           </button>
         </header>
 
-        {/* Page content */}
         <main className="flex-1 p-6">
           <Outlet />
         </main>
