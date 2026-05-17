@@ -1,4 +1,3 @@
-/* Leaflet CSS - requis pour que la carte s'affiche correctement */
 @import 'leaflet/dist/leaflet.css';
 
 @tailwind base;
