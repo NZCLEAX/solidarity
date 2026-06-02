@@ -2,11 +2,11 @@ import { supabase } from '@/lib/supabase'
 
 export async function signUp(email: string, password: string, name: string) {
   const { data, error } = await supabase.auth.signUp({
-    email,
+    email: email.trim(),
     password,
     options: {
       data: {
-        nom: name,
+        nom: name.trim(),
       },
     },
   })
@@ -18,7 +18,7 @@ export async function signUp(email: string, password: string, name: string) {
 
 export async function signIn(email: string, password: string) {
   const { data, error } = await supabase.auth.signInWithPassword({
-    email,
+    email: email.trim(),
     password,
   })
 
