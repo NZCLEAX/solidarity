@@ -8,6 +8,9 @@ declare
   current_user_id uuid := auth.uid();
   auth_user auth.users%rowtype;
   current_profile public.profiles;
+  profile_name text;
+  role_type text;
+  role_value text;
 begin
   if current_user_id is null then
     raise exception 'Not authenticated' using errcode = '28000';
@@ -22,28 +25,71 @@ begin
     raise exception 'Authenticated user not found' using errcode = '28000';
   end if;
 
-  insert into public.profiles (id, email, nom)
-  values (
+  profile_name := nullif(
+    trim(
+      coalesce(
+        auth_user.raw_user_meta_data->>'nom',
+        auth_user.raw_user_meta_data->>'name',
+        auth_user.raw_user_meta_data->>'full_name',
+        ''
+      )
+    ),
+    ''
+  );
+
+  select atttypid::regtype::text
+  into role_type
+  from pg_attribute
+  where attrelid = 'public.profiles'::regclass
+    and attname = 'role'
+    and not attisdropped;
+
+  if role_type is null then
+    raise exception 'profiles.role column not found';
+  end if;
+
+  if exists (
+    select 1
+    from pg_type
+    where oid = role_type::regtype
+      and typtype = 'e'
+  ) then
+    select enumlabel
+    into role_value
+    from pg_enum
+    where enumtypid = role_type::regtype
+    order by case enumlabel
+      when 'citoyen' then 1
+      when 'benevole' then 2
+      when 'association' then 3
+      else 99
+    end
+    limit 1;
+  else
+    role_value := 'citoyen';
+  end if;
+
+  if role_value is null then
+    raise exception 'No valid role value found for profiles.role';
+  end if;
+
+  execute format(
+    'insert into public.profiles (id, email, nom, role, statut_compte)
+     values ($1, $2, $3, $4::%s, $5)
+     on conflict (id) do update
+     set
+       email = excluded.email,
+       nom = coalesce(public.profiles.nom, excluded.nom),
+       updated_at = now()
+     returning *',
+    role_type
+  )
+  using
     auth_user.id,
     coalesce(auth_user.email, ''),
-    nullif(
-      trim(
-        coalesce(
-          auth_user.raw_user_meta_data->>'nom',
-          auth_user.raw_user_meta_data->>'name',
-          auth_user.raw_user_meta_data->>'full_name',
-          ''
-        )
-      ),
-      ''
-    )
-  )
-  on conflict (id) do update
-  set
-    email = excluded.email,
-    nom = coalesce(public.profiles.nom, excluded.nom),
-    updated_at = now()
-  returning *
+    profile_name,
+    role_value,
+    'actif'
   into current_profile;
 
   return current_profile;
@@ -53,21 +99,4 @@ $$;
 revoke all on function public.ensure_current_profile() from public;
 grant execute on function public.ensure_current_profile() to authenticated;
 
-drop policy if exists "Users can read their own profile" on public.profiles;
-create policy "Users can read their own profile"
-on public.profiles
-for select
-to authenticated
-using (id = auth.uid());
-
-drop policy if exists "Users can insert their own profile" on public.profiles;
-create policy "Users can insert their own profile"
-on public.profiles
-for insert
-to authenticated
-with check (
-  id = auth.uid()
-  and role = 'citoyen'
-  and statut_compte = 'actif'
-  and association_id is null
-);
+notify pgrst, 'reload schema';

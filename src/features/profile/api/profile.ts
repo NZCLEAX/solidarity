@@ -54,6 +54,10 @@ function isMissingAuthSession(error: unknown) {
 }
 
 export async function createProfileForUser(user: User) {
+  return ensureProfileForUser(user)
+}
+
+async function ensureProfileWithRpc() {
   const { data: rpcData, error: rpcError } = await supabase.rpc(
     'ensure_current_profile'
   )
@@ -62,6 +66,14 @@ export async function createProfileForUser(user: User) {
     return rpcData as UserProfile
   }
 
+  if (rpcError && rpcError.code !== 'PGRST202') {
+    throw rpcError
+  }
+
+  return null
+}
+
+async function createProfileWithDirectInsert(user: User) {
   const { data, error } = await supabase
     .from('profiles')
     .insert(buildProfileInsert(user))
@@ -96,13 +108,19 @@ export async function getProfileByUserId(userId: string) {
 }
 
 export async function ensureProfileForUser(user: User) {
+  const profileFromRpc = await ensureProfileWithRpc()
+
+  if (profileFromRpc) {
+    return profileFromRpc
+  }
+
   const profile = await getProfileByUserId(user.id)
 
   if (profile) {
     return profile
   }
 
-  return createProfileForUser(user)
+  return createProfileWithDirectInsert(user)
 }
 
 export async function getCurrentProfile() {
