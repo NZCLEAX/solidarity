@@ -10,8 +10,9 @@ import { DashboardPage } from '@/features/dashboard/pages/DashboardPage'
 import { InterventionsPage } from '@/features/interventions/pages/InterventionsPage'
 import { MapPage } from '@/features/map/pages/MapPage'
 import { ModerationPage } from '@/features/moderation/pages/ModerationPage'
-import { PointsPage } from '@/features/points/pages/PointsPage'
+import  PointsPage  from '@/features/points/pages/PointsPage'
 import { ProfilePage } from '@/features/profile/pages/ProfilePage'
+import CreatePointPage from '@/features/points/pages/CreatePointPage'
 
 export const router = createBrowserRouter([
   {
@@ -37,6 +38,7 @@ export const router = createBrowserRouter([
       { path: '/moderation', element: <ModerationPage /> },
       { path: '/administration', element: <AdminPage /> },
       { path: '/profile', element: <ProfilePage /> },
+      { path: '/points/new', element: <CreatePointPage /> },
     ],
   },
 ])
