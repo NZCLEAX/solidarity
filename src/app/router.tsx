@@ -14,6 +14,7 @@ import  PointsPage  from '@/features/points/pages/PointsPage'
 import { ProfilePage } from '@/features/profile/pages/ProfilePage'
 import CreatePointPage from '@/features/points/pages/CreatePointPage'
 import EditPointPage from '@/features/points/pages/EditPointPage'
+import PointDetailsPage from '@/features/points/pages/PointDetailsPage'
 
 export const router = createBrowserRouter([
   {
@@ -41,6 +42,7 @@ export const router = createBrowserRouter([
       { path: '/profile', element: <ProfilePage /> },
       { path: '/points/new', element: <CreatePointPage /> },
       { path: '/points/:pointId/edit', element: <EditPointPage /> },
+      { path: '/points/:pointId', element: <PointDetailsPage /> },
     ],
   },
 ])

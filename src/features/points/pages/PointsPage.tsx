@@ -68,6 +68,12 @@ export default function PointsPage() {
                     {point.latitude}, {point.longitude}
                   </p>
                 </div>
+                <Link
+                  to={`/points/${point.id}`}
+                  className="rounded-lg border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                >
+                Voir détail
+              </Link>
 
               <div className="flex items-center gap-2"></div>
                 <Link
