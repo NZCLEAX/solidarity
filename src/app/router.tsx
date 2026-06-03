@@ -13,6 +13,7 @@ import { ModerationPage } from '@/features/moderation/pages/ModerationPage'
 import  PointsPage  from '@/features/points/pages/PointsPage'
 import { ProfilePage } from '@/features/profile/pages/ProfilePage'
 import CreatePointPage from '@/features/points/pages/CreatePointPage'
+import EditPointPage from '@/features/points/pages/EditPointPage'
 
 export const router = createBrowserRouter([
   {
@@ -39,6 +40,7 @@ export const router = createBrowserRouter([
       { path: '/administration', element: <AdminPage /> },
       { path: '/profile', element: <ProfilePage /> },
       { path: '/points/new', element: <CreatePointPage /> },
+      { path: '/points/:pointId/edit', element: <EditPointPage /> },
     ],
   },
 ])

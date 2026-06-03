@@ -69,10 +69,19 @@ export default function PointsPage() {
                   </p>
                 </div>
 
+              <div className="flex items-center gap-2"></div>
+                <Link
+                to={`/points/${point.id}/edit`}
+                className="rounded-lg border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+            
+            >
+              modifier
+
+            </Link>
                 <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700">
-                  {point.statut || 'statut inconnu'}
-                </span>
-              </div>
+    {point.statut || 'statut inconnu'}
+  </span>
+</div>
 
               <div className="mt-4 grid gap-3 md:grid-cols-3">
                 <div className="rounded-lg bg-slate-50 p-3">
