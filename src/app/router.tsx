@@ -7,7 +7,7 @@ import LoginPage from '@/features/auth/pages/LoginPage'
 import RegisterPage from '@/features/auth/pages/RegisterPage'
 import { AdminPage } from '@/features/admin/pages/AdminPage'
 import { DashboardPage } from '@/features/dashboard/pages/DashboardPage'
-import { InterventionsPage } from '@/features/interventions/pages/InterventionsPage'
+import  InterventionsPage  from '@/features/interventions/pages/InterventionsPage'
 import  MapPage  from '@/features/map/pages/MapPage'
 import { ModerationPage } from '@/features/moderation/pages/ModerationPage'
 import  PointsPage  from '@/features/points/pages/PointsPage'
@@ -15,6 +15,7 @@ import { ProfilePage } from '@/features/profile/pages/ProfilePage'
 import CreatePointPage from '@/features/points/pages/CreatePointPage'
 import EditPointPage from '@/features/points/pages/EditPointPage'
 import PointDetailsPage from '@/features/points/pages/PointDetailsPage'
+import CreateInterventionPage from '@/features/interventions/pages/CreateInterventionPage'
 
 export const router = createBrowserRouter([
   {
@@ -44,6 +45,7 @@ export const router = createBrowserRouter([
       { path: '/points/:pointId/edit', element: <EditPointPage /> },
       { path: '/points/:pointId', element: <PointDetailsPage /> },
       { path: '/carte', element: <MapPage /> },
+      { path: '/interventions/new', element: <CreateInterventionPage /> },
     ],
   },
 ])
