@@ -1,17 +1,38 @@
 import { supabase } from '@/lib/supabase'
+import type { UserRole } from '../utils/roles'
 
-export async function signUp(email: string, password: string, name: string) {
+export async function signUp(
+  email: string,
+  password: string,
+  name: string,
+  role: Exclude<UserRole, 'administrateur'>
+) {
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
       data: {
         nom: name,
+        role,
       },
     },
   })
 
   if (error) throw error
+
+  if (!data.user) {
+    throw new Error('Utilisateur introuvable après inscription.')
+  }
+
+  const { error: profileError } = await supabase.from('profiles').insert({
+    id: data.user.id,
+    email,
+    nom: name,
+    role,
+    statut_compte: 'actif',
+  })
+
+  if (profileError) throw profileError
 
   return data
 }

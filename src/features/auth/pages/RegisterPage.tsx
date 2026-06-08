@@ -1,16 +1,20 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { signUp } from '../api/auth'
+import { publicRegisterRoles, type UserRole } from '../utils/roles'
 import {
   isValidPassword,
   passwordValidationMessage,
 } from '../utils/passwordValidation'
+
+type PublicRegisterRole = Exclude<UserRole, 'administrateur'>
 
 export default function RegisterPage() {
   const navigate = useNavigate()
 
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
+  const [role, setRole] = useState<PublicRegisterRole>('civil')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -20,6 +24,18 @@ export default function RegisterPage() {
     setError(null)
     setLoading(true)
 
+    if (!name.trim()) {
+      setError('Le nom est obligatoire.')
+      setLoading(false)
+      return
+    }
+
+    if (!email.trim()) {
+      setError('L’email est obligatoire.')
+      setLoading(false)
+      return
+    }
+
     if (!isValidPassword(password)) {
       setError(passwordValidationMessage)
       setLoading(false)
@@ -27,7 +43,7 @@ export default function RegisterPage() {
     }
 
     try {
-      await signUp(email, password, name)
+      await signUp(email, password, name, role)
       navigate('/dashboard')
     } catch (err: any) {
       setError(err.message || "Erreur d'inscription")
@@ -58,6 +74,24 @@ export default function RegisterPage() {
             onChange={(e) => setEmail(e.target.value)}
             className="border rounded-lg px-3 py-2"
           />
+
+          <div>
+            <label className="mb-1 block text-sm font-medium text-slate-700">
+              Type de compte
+            </label>
+
+            <select
+              value={role}
+              onChange={(e) => setRole(e.target.value as PublicRegisterRole)}
+              className="w-full rounded-lg border px-3 py-2"
+            >
+              {publicRegisterRoles.map((roleOption) => (
+                <option key={roleOption.value} value={roleOption.value}>
+                  {roleOption.label}
+                </option>
+              ))}
+            </select>
+          </div>
 
           <div className="flex flex-col gap-1">
             <input
