@@ -148,9 +148,7 @@ export async function updatePoint(pointId: string, input: UpdatePointInput) {
   }
 
   if (duplicatePoints && duplicatePoints.length > 0) {
-    throw new Error(
-      'Un autre point actif utilise déjà cette adresse.'
-    )
+    throw new Error('Un autre point actif utilise déjà cette adresse.')
   }
 
   const { data, error } = await supabase
@@ -166,6 +164,45 @@ export async function updatePoint(pointId: string, input: UpdatePointInput) {
       commentaire: input.commentaire?.trim() || null,
       statut: input.statut,
       actif: input.statut !== 'archive' && input.statut !== 'inactif',
+      date_derniere_maj: new Date().toISOString(),
+    })
+    .eq('id', pointId)
+    .select()
+    .single()
+
+  if (error) {
+    throw error
+  }
+
+  return data
+}
+
+export async function confirmPoint(pointId: string) {
+  const { data, error } = await supabase
+    .from('points')
+    .update({
+      statut: 'confirme',
+      niveau_fiabilite: 'verifie_terrain',
+      actif: true,
+      date_derniere_maj: new Date().toISOString(),
+    })
+    .eq('id', pointId)
+    .select()
+    .single()
+
+  if (error) {
+    throw error
+  }
+
+  return data
+}
+
+export async function rejectPoint(pointId: string) {
+  const { data, error } = await supabase
+    .from('points')
+    .update({
+      statut: 'rejete',
+      actif: false,
       date_derniere_maj: new Date().toISOString(),
     })
     .eq('id', pointId)
