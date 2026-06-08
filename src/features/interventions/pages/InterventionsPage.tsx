@@ -7,6 +7,25 @@ function formatDate(value: string | null) {
   return new Date(value).toLocaleDateString('fr-FR')
 }
 
+function formatTime(value: string | null) {
+  if (!value) return '--:--'
+  return value.slice(0, 5)
+}
+
+function formatStatut(value: string | null) {
+  if (!value) return 'Déclarée'
+
+  const labels: Record<string, string> = {
+    declaree: 'Déclarée',
+    planifiee: 'Planifiée',
+    en_cours: 'En cours',
+    terminee: 'Terminée',
+    annulee: 'Annulée',
+  }
+
+  return labels[value] || value
+}
+
 export default function InterventionsPage() {
   const {
     data: interventions = [],
@@ -71,13 +90,13 @@ export default function InterventionsPage() {
                   </h2>
 
                   <p className="mt-1 text-sm text-slate-500">
-                    Point :{' '}
+                    Point concerné :{' '}
                     {intervention.points?.adresse || 'Point non renseigné'}
                   </p>
                 </div>
 
                 <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700">
-                  {intervention.statut || 'déclarée'}
+                  {formatStatut(intervention.statut)}
                 </span>
               </div>
 
@@ -90,10 +109,12 @@ export default function InterventionsPage() {
                 </div>
 
                 <div className="rounded-lg bg-slate-50 p-3">
-                  <p className="text-xs uppercase text-slate-500">Horaires</p>
+                  <p className="text-xs uppercase text-slate-500">
+                    Horaires
+                  </p>
                   <p className="mt-1 font-semibold">
-                    {intervention.heure_debut || '--:--'} -{' '}
-                    {intervention.heure_fin || '--:--'}
+                    {formatTime(intervention.heure_debut)} -{' '}
+                    {formatTime(intervention.heure_fin)}
                   </p>
                 </div>
 
@@ -105,7 +126,9 @@ export default function InterventionsPage() {
                 </div>
 
                 <div className="rounded-lg bg-slate-50 p-3">
-                  <p className="text-xs uppercase text-slate-500">Bénévoles</p>
+                  <p className="text-xs uppercase text-slate-500">
+                    Bénévoles
+                  </p>
                   <p className="mt-1 font-semibold">
                     {intervention.nombre_benevoles ?? 'Non renseigné'}
                   </p>
