@@ -1,6 +1,10 @@
 import { Link } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
-import { getPoints } from '@/features/points/api/points'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  getPoints,
+  markDuplicatePoint,
+  mergeDuplicatePoints,
+} from '@/features/points/api/points'
 import { detectDuplicatePoints } from '@/features/moderation/utils/detectDuplicatePoints'
 
 function formatLabel(value: string | null) {
@@ -26,6 +30,8 @@ function formatLabel(value: string | null) {
 }
 
 export default function DuplicatePointsPage() {
+  const queryClient = useQueryClient()
+
   const {
     data: points = [],
     isLoading,
@@ -36,7 +42,22 @@ export default function DuplicatePointsPage() {
     queryFn: getPoints,
   })
 
+  const markDuplicateMutation = useMutation({
+    mutationFn: markDuplicatePoint,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['points'] })
+    },
+  })
+
+  const mergeMutation = useMutation({
+    mutationFn: mergeDuplicatePoints,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['points'] })
+    },
+  })
+
   const duplicateGroups = detectDuplicatePoints(points)
+  const isUpdating = markDuplicateMutation.isPending || mergeMutation.isPending
 
   return (
     <div>
@@ -46,8 +67,7 @@ export default function DuplicatePointsPage() {
             Points potentiellement doublons
           </h1>
           <p className="mt-2 text-slate-600">
-            Détection des points actifs ayant une adresse similaire ou des
-            coordonnées proches.
+            Marque un point comme doublon ou fusionne deux signalements proches.
           </p>
         </div>
 
@@ -67,8 +87,15 @@ export default function DuplicatePointsPage() {
 
       {isError && (
         <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-red-700">
-          {(error as Error).message ||
-            'Erreur lors du chargement des points.'}
+          {(error as Error).message || 'Erreur lors du chargement des points.'}
+        </div>
+      )}
+
+      {(markDuplicateMutation.isError || mergeMutation.isError) && (
+        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          {(markDuplicateMutation.error as Error)?.message ||
+            (mergeMutation.error as Error)?.message ||
+            'Erreur lors du traitement du doublon.'}
         </div>
       )}
 
@@ -123,80 +150,111 @@ export default function DuplicatePointsPage() {
               </div>
 
               <div className="grid gap-4 xl:grid-cols-2">
-                {group.points.map((point) => (
-                  <div
-                    key={point.id}
-                    className="rounded-xl border border-slate-200 bg-slate-50 p-4"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <h3 className="font-semibold text-slate-950">
-                          {point.adresse || 'Adresse non renseignée'}
-                        </h3>
+                {group.points.map((point) => {
+                  const otherPoint = group.points.find(
+                    (item) => item.id !== point.id
+                  )
 
-                        <p className="mt-1 text-sm text-slate-500">
-                          {point.latitude}, {point.longitude}
-                        </p>
+                  return (
+                    <div
+                      key={point.id}
+                      className="rounded-xl border border-slate-200 bg-slate-50 p-4"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <h3 className="font-semibold text-slate-950">
+                            {point.adresse || 'Adresse non renseignée'}
+                          </h3>
+
+                          <p className="mt-1 text-sm text-slate-500">
+                            {point.latitude}, {point.longitude}
+                          </p>
+                        </div>
+
+                        <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700">
+                          {formatLabel(point.statut)}
+                        </span>
                       </div>
 
-                      <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700">
-                        {formatLabel(point.statut)}
-                      </span>
+                      <div className="mt-4 grid gap-3 md:grid-cols-3">
+                        <div className="rounded-lg bg-white p-3">
+                          <p className="text-xs uppercase text-slate-500">
+                            Personnes
+                          </p>
+                          <p className="mt-1 font-semibold">
+                            {point.nombre_personnes_estime ?? 'Non renseigné'}
+                          </p>
+                        </div>
+
+                        <div className="rounded-lg bg-white p-3">
+                          <p className="text-xs uppercase text-slate-500">
+                            Urgence
+                          </p>
+                          <p className="mt-1 font-semibold">
+                            {formatLabel(point.niveau_urgence)}
+                          </p>
+                        </div>
+
+                        <div className="rounded-lg bg-white p-3">
+                          <p className="text-xs uppercase text-slate-500">
+                            Fiabilité
+                          </p>
+                          <p className="mt-1 font-semibold">
+                            {formatLabel(point.niveau_fiabilite)}
+                          </p>
+                        </div>
+                      </div>
+
+                      {point.besoins && (
+                        <p className="mt-3 text-sm text-slate-700">
+                          <span className="font-medium">Besoins :</span>{' '}
+                          {point.besoins}
+                        </p>
+                      )}
+
+                      <div className="mt-4 flex flex-wrap gap-3">
+                        <Link
+                          to={`/points/${point.id}`}
+                          className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                        >
+                          Voir détail
+                        </Link>
+
+                        <Link
+                          to={`/points/${point.id}/edit`}
+                          className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                        >
+                          Modifier
+                        </Link>
+
+                        <button
+                          type="button"
+                          disabled={isUpdating}
+                          onClick={() => markDuplicateMutation.mutate(point.id)}
+                          className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700 disabled:opacity-60"
+                        >
+                          Marquer doublon
+                        </button>
+
+                        {otherPoint && (
+                          <button
+                            type="button"
+                            disabled={isUpdating}
+                            onClick={() =>
+                              mergeMutation.mutate({
+                                mainPointId: point.id,
+                                duplicatePointId: otherPoint.id,
+                              })
+                            }
+                            className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-60"
+                          >
+                            Garder ce point et fusionner l’autre
+                          </button>
+                        )}
+                      </div>
                     </div>
-
-                    <div className="mt-4 grid gap-3 md:grid-cols-3">
-                      <div className="rounded-lg bg-white p-3">
-                        <p className="text-xs uppercase text-slate-500">
-                          Personnes
-                        </p>
-                        <p className="mt-1 font-semibold">
-                          {point.nombre_personnes_estime ?? 'Non renseigné'}
-                        </p>
-                      </div>
-
-                      <div className="rounded-lg bg-white p-3">
-                        <p className="text-xs uppercase text-slate-500">
-                          Urgence
-                        </p>
-                        <p className="mt-1 font-semibold">
-                          {formatLabel(point.niveau_urgence)}
-                        </p>
-                      </div>
-
-                      <div className="rounded-lg bg-white p-3">
-                        <p className="text-xs uppercase text-slate-500">
-                          Fiabilité
-                        </p>
-                        <p className="mt-1 font-semibold">
-                          {formatLabel(point.niveau_fiabilite)}
-                        </p>
-                      </div>
-                    </div>
-
-                    {point.besoins && (
-                      <p className="mt-3 text-sm text-slate-700">
-                        <span className="font-medium">Besoins :</span>{' '}
-                        {point.besoins}
-                      </p>
-                    )}
-
-                    <div className="mt-4 flex flex-wrap gap-3">
-                      <Link
-                        to={`/points/${point.id}`}
-                        className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-                      >
-                        Voir détail
-                      </Link>
-
-                      <Link
-                        to={`/points/${point.id}/edit`}
-                        className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-                      >
-                        Modifier
-                      </Link>
-                    </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </article>
           ))}

@@ -12,7 +12,14 @@ export type CreatePointInput = {
 }
 
 export type UpdatePointInput = CreatePointInput & {
-  statut: 'signale' | 'a_confirmer' | 'confirme' | 'actif' | 'inactif' | 'archive'
+  statut:
+    | 'signale'
+    | 'a_confirmer'
+    | 'confirme'
+    | 'actif'
+    | 'inactif'
+    | 'archive'
+    | 'rejete'
 }
 
 export type Point = {
@@ -33,6 +40,12 @@ export type Point = {
   created_by: string
   created_at: string | null
   updated_at: string | null
+  date_derniere_maj?: string | null
+}
+
+export type MergeDuplicatePointsInput = {
+  mainPointId: string
+  duplicatePointId: string
 }
 
 export async function createPoint(input: CreatePointInput) {
@@ -214,4 +227,142 @@ export async function rejectPoint(pointId: string) {
   }
 
   return data
+}
+
+function splitBesoins(value: string | null) {
+  if (!value) return []
+
+  return value
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean)
+}
+
+function mergeBesoins(
+  mainBesoins: string | null,
+  duplicateBesoins: string | null
+) {
+  const merged = Array.from(
+    new Set([...splitBesoins(mainBesoins), ...splitBesoins(duplicateBesoins)])
+  )
+
+  return merged.length > 0 ? merged.join(', ') : null
+}
+
+function getHighestUrgence(urgenceA: string | null, urgenceB: string | null) {
+  const priority: Record<string, number> = {
+    basse: 1,
+    moyenne: 2,
+    haute: 3,
+    critique: 4,
+  }
+
+  if (!urgenceA) return urgenceB
+  if (!urgenceB) return urgenceA
+
+  return priority[urgenceB] > priority[urgenceA] ? urgenceB : urgenceA
+}
+
+function mergeCommentaires(
+  mainCommentaire: string | null,
+  duplicateCommentaire: string | null
+) {
+  const commentaires = [
+    mainCommentaire?.trim(),
+    duplicateCommentaire?.trim(),
+  ].filter(Boolean)
+
+  if (commentaires.length === 0) return null
+
+  return commentaires.join('\n\n--- Commentaire du point fusionné ---\n')
+}
+
+export async function markDuplicatePoint(pointId: string) {
+  const { data, error } = await supabase
+    .from('points')
+    .update({
+      statut: 'archive',
+      actif: false,
+      date_derniere_maj: new Date().toISOString(),
+    })
+    .eq('id', pointId)
+    .select()
+    .single()
+
+  if (error) {
+    throw error
+  }
+
+  return data
+}
+
+export async function mergeDuplicatePoints({
+  mainPointId,
+  duplicatePointId,
+}: MergeDuplicatePointsInput) {
+  if (mainPointId === duplicatePointId) {
+    throw new Error('Impossible de fusionner un point avec lui-même.')
+  }
+
+  const [mainPoint, duplicatePoint] = await Promise.all([
+    getPointById(mainPointId),
+    getPointById(duplicatePointId),
+  ])
+
+  const now = new Date().toISOString()
+
+  const { data: updatedMainPoint, error: updateMainError } = await supabase
+    .from('points')
+    .update({
+      adresse: mainPoint.adresse || duplicatePoint.adresse,
+      latitude: mainPoint.latitude ?? duplicatePoint.latitude,
+      longitude: mainPoint.longitude ?? duplicatePoint.longitude,
+      nombre_personnes_estime:
+        mainPoint.nombre_personnes_estime ??
+        duplicatePoint.nombre_personnes_estime,
+      typologie: mainPoint.typologie || duplicatePoint.typologie,
+      besoins: mergeBesoins(mainPoint.besoins, duplicatePoint.besoins),
+      niveau_urgence: getHighestUrgence(
+        mainPoint.niveau_urgence,
+        duplicatePoint.niveau_urgence
+      ),
+      commentaire: mergeCommentaires(
+        mainPoint.commentaire,
+        duplicatePoint.commentaire
+      ),
+      date_derniere_maj: now,
+    })
+    .eq('id', mainPointId)
+    .select()
+    .single()
+
+  if (updateMainError) {
+    throw updateMainError
+  }
+
+  const { data: archivedDuplicatePoint, error: archiveDuplicateError } =
+    await supabase
+      .from('points')
+      .update({
+        statut: 'archive',
+        actif: false,
+        commentaire: `${
+          duplicatePoint.commentaire?.trim()
+            ? `${duplicatePoint.commentaire.trim()}\n\n`
+            : ''
+        }Point fusionné avec le point ${mainPointId}.`,
+        date_derniere_maj: now,
+      })
+      .eq('id', duplicatePointId)
+      .select()
+      .single()
+
+  if (archiveDuplicateError) {
+    throw archiveDuplicateError
+  }
+
+  return {
+    mainPoint: updatedMainPoint,
+    duplicatePoint: archivedDuplicatePoint,
+  }
 }
