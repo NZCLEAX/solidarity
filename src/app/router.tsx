@@ -17,6 +17,7 @@ import EditPointPage from '@/features/points/pages/EditPointPage'
 import PointDetailsPage from '@/features/points/pages/PointDetailsPage'
 import CreateInterventionPage from '@/features/interventions/pages/CreateInterventionPage'
 import AdminAssociationsPage from '@/features/admin/pages/AdminAssociationsPage'
+import DuplicatePointsPage from '@/features/moderation/pages/DuplicatePointsPage'
 
 export const router = createBrowserRouter([
   {
@@ -48,6 +49,7 @@ export const router = createBrowserRouter([
       { path: '/carte', element: <MapPage /> },
       { path: '/interventions/new', element: <CreateInterventionPage /> },
       { path: '/administration/associations', element: <AdminAssociationsPage /> },
+      { path: '/moderation/doublons', element: <DuplicatePointsPage /> },
     ],
   },
 ])

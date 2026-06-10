@@ -11,8 +11,11 @@ function formatLabel(value: string | null) {
 
   const labels: Record<string, string> = {
     signale: 'Signalé',
+    a_confirmer: 'À confirmer',
     confirme: 'Confirmé',
     rejete: 'Rejeté',
+    actif: 'Actif',
+    inactif: 'Inactif',
     archive: 'Archivé',
     non_verifie: 'Non vérifié',
     verifie_terrain: 'Vérifié terrain',
@@ -63,13 +66,23 @@ export default function ModerationPage() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-slate-950">
-          Modération des points
-        </h1>
-        <p className="mt-2 text-slate-600">
-          Confirme ou rejette les points signalés avant leur validation terrain.
-        </p>
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-950">
+            Modération des points
+          </h1>
+          <p className="mt-2 text-slate-600">
+            Confirme ou rejette les points signalés avant leur validation
+            terrain.
+          </p>
+        </div>
+
+        <Link
+          to="/moderation/doublons"
+          className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+        >
+          Voir les doublons
+        </Link>
       </div>
 
       {isLoading && (
@@ -139,31 +152,26 @@ export default function ModerationPage() {
                 </div>
 
                 <div className="rounded-lg bg-slate-50 p-3">
-                  <p className="text-xs uppercase text-slate-500">
-                    Urgence
-                  </p>
+                  <p className="text-xs uppercase text-slate-500">Urgence</p>
                   <p className="mt-1 font-semibold">
                     {formatLabel(point.niveau_urgence)}
                   </p>
                 </div>
 
                 <div className="rounded-lg bg-slate-50 p-3">
-                  <p className="text-xs uppercase text-slate-500">
-                    Besoins
-                  </p>
+                  <p className="text-xs uppercase text-slate-500">Besoins</p>
                   <p className="mt-1 font-semibold">
                     {point.besoins || 'Non renseigné'}
                   </p>
                 </div>
               </div>
 
-              {point.commentaire &&
-                point.commentaire.trim().length > 0 && (
-                  <p className="mt-4 text-sm text-slate-700">
-                    <span className="font-medium">Commentaire :</span>{' '}
-                    {point.commentaire}
-                  </p>
-                )}
+              {point.commentaire && point.commentaire.trim().length > 0 && (
+                <p className="mt-4 text-sm text-slate-700">
+                  <span className="font-medium">Commentaire :</span>{' '}
+                  {point.commentaire}
+                </p>
+              )}
 
               <div className="mt-5 flex flex-wrap gap-3">
                 <button
