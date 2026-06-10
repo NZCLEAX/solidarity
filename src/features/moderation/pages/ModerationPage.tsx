@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   confirmPoint,
+  deactivateStalePoints,
   getPoints,
   rejectPoint,
 } from '@/features/points/api/points'
@@ -55,6 +56,13 @@ export default function ModerationPage() {
     },
   })
 
+  const deactivateStaleMutation = useMutation({
+    mutationFn: deactivateStalePoints,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['points'] })
+    },
+  })
+
   const pointsAModerer = points.filter(
     (point) =>
       point.actif !== false &&
@@ -62,7 +70,10 @@ export default function ModerationPage() {
         point.niveau_fiabilite === 'non_verifie')
   )
 
-  const isUpdating = confirmMutation.isPending || rejectMutation.isPending
+  const isUpdating =
+    confirmMutation.isPending ||
+    rejectMutation.isPending ||
+    deactivateStaleMutation.isPending
 
   return (
     <div>
@@ -77,12 +88,23 @@ export default function ModerationPage() {
           </p>
         </div>
 
-        <Link
-          to="/moderation/doublons"
-          className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-        >
-          Voir les doublons
-        </Link>
+        <div className="flex flex-wrap gap-3">
+          <button
+            type="button"
+            disabled={isUpdating}
+            onClick={() => deactivateStaleMutation.mutate()}
+            className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+          >
+            Inactiver les points de +30 jours
+          </button>
+
+          <Link
+            to="/moderation/doublons"
+            className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          >
+            Voir les doublons
+          </Link>
+        </div>
       </div>
 
       {isLoading && (
@@ -103,6 +125,20 @@ export default function ModerationPage() {
           {(confirmMutation.error as Error)?.message ||
             (rejectMutation.error as Error)?.message ||
             'Erreur lors de la mise à jour du point.'}
+        </div>
+      )}
+
+      {deactivateStaleMutation.isError && (
+        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          {(deactivateStaleMutation.error as Error)?.message ||
+            'Erreur lors de l’inactivation des points anciens.'}
+        </div>
+      )}
+
+      {deactivateStaleMutation.isSuccess && (
+        <div className="mb-4 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-700">
+          {deactivateStaleMutation.data.length} point(s) ancien(s) passé(s) en
+          inactif.
         </div>
       )}
 

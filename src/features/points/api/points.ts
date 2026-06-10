@@ -40,7 +40,7 @@ export type Point = {
   created_by: string
   created_at: string | null
   updated_at: string | null
-  date_derniere_maj?: string | null
+  date_derniere_maj: string | null
 }
 
 export type MergeDuplicatePointsInput = {
@@ -227,6 +227,31 @@ export async function rejectPoint(pointId: string) {
   }
 
   return data
+}
+
+export async function deactivateStalePoints() {
+  const limitDate = new Date()
+  limitDate.setDate(limitDate.getDate() - 30)
+
+  const limitDateIso = limitDate.toISOString()
+  const now = new Date().toISOString()
+
+  const { data, error } = await supabase
+    .from('points')
+    .update({
+      statut: 'inactif',
+      actif: false,
+      date_derniere_maj: now,
+    })
+    .eq('actif', true)
+    .lt('date_derniere_maj', limitDateIso)
+    .select()
+
+  if (error) {
+    throw error
+  }
+
+  return data ?? []
 }
 
 function splitBesoins(value: string | null) {
