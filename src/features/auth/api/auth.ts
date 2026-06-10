@@ -1,11 +1,11 @@
 import { supabase } from '@/lib/supabase'
-import type { UserRole } from '../utils/roles'
+import type { PublicRegisterRole } from '../utils/roles'
 
 export async function signUp(
   email: string,
   password: string,
   name: string,
-  role: Exclude<UserRole, 'administrateur'>
+  role: PublicRegisterRole
 ) {
   const { data, error } = await supabase.auth.signUp({
     email,

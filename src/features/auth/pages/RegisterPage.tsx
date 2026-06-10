@@ -1,20 +1,21 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { signUp } from '../api/auth'
-import { publicRegisterRoles, type UserRole } from '../utils/roles'
+import {
+  publicRegisterRoles,
+  type PublicRegisterRole,
+} from '../utils/roles'
 import {
   isValidPassword,
   passwordValidationMessage,
 } from '../utils/passwordValidation'
-
-type PublicRegisterRole = Exclude<UserRole, 'administrateur'>
 
 export default function RegisterPage() {
   const navigate = useNavigate()
 
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
-  const [role, setRole] = useState<PublicRegisterRole>('civil')
+  const [role, setRole] = useState<PublicRegisterRole>('citoyen')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)

@@ -1,12 +1,19 @@
-export type UserRole = 'civil' | 'benevole' | 'association' | 'administrateur'
+export type UserRole =
+  | 'citoyen'
+  | 'benevole'
+  | 'association'
+  | 'moderateur'
+  | 'admin'
+
+export type PublicRegisterRole = Exclude<UserRole, 'admin' | 'moderateur'>
 
 export const publicRegisterRoles: Array<{
   label: string
-  value: Exclude<UserRole, 'administrateur'>
+  value: PublicRegisterRole
 }> = [
   {
-    label: 'Civil',
-    value: 'civil',
+    label: 'Citoyen',
+    value: 'citoyen',
   },
   {
     label: 'Bénévole',
@@ -18,12 +25,39 @@ export const publicRegisterRoles: Array<{
   },
 ]
 
+export const adminManageableRoles: Array<{
+  label: string
+  value: UserRole
+}> = [
+  {
+    label: 'Citoyen',
+    value: 'citoyen',
+  },
+  {
+    label: 'Bénévole',
+    value: 'benevole',
+  },
+  {
+    label: 'Association',
+    value: 'association',
+  },
+  {
+    label: 'Modérateur',
+    value: 'moderateur',
+  },
+  {
+    label: 'Administrateur',
+    value: 'admin',
+  },
+]
+
 export function formatRole(role: string | null | undefined) {
   const labels: Record<string, string> = {
-    civil: 'Civil',
+    citoyen: 'Citoyen',
     benevole: 'Bénévole',
     association: 'Association',
-    administrateur: 'Administrateur',
+    moderateur: 'Modérateur',
+    admin: 'Administrateur',
   }
 
   if (!role) return 'Non renseigné'
