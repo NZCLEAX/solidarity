@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+
 import {
   getCurrentProfile,
   getUsers,
@@ -154,6 +156,13 @@ export default function AdminPage() {
             Administration des comptes, rôles et statuts utilisateurs.
           </p>
         </div>
+
+        <Link
+          to="/administration/associations"
+          className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+        >
+          Gestion des associations
+        </Link>
       </div>
 
       <section className="mb-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -162,6 +171,7 @@ export default function AdminPage() {
             <label className="block text-sm font-medium text-slate-700">
               Rechercher un utilisateur
             </label>
+
             <input
               type="text"
               value={searchTerm}

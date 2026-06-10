@@ -16,6 +16,7 @@ import CreatePointPage from '@/features/points/pages/CreatePointPage'
 import EditPointPage from '@/features/points/pages/EditPointPage'
 import PointDetailsPage from '@/features/points/pages/PointDetailsPage'
 import CreateInterventionPage from '@/features/interventions/pages/CreateInterventionPage'
+import AdminAssociationsPage from '@/features/admin/pages/AdminAssociationsPage'
 
 export const router = createBrowserRouter([
   {
@@ -46,6 +47,7 @@ export const router = createBrowserRouter([
       { path: '/points/:pointId', element: <PointDetailsPage /> },
       { path: '/carte', element: <MapPage /> },
       { path: '/interventions/new', element: <CreateInterventionPage /> },
+      { path: '/administration/associations', element: <AdminAssociationsPage /> },
     ],
   },
 ])
