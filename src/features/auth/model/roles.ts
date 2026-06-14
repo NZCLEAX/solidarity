@@ -1,0 +1,13 @@
+export const ROLES = [
+  'citoyen',
+  'benevole',
+  'association',
+  'moderateur',
+  'admin',
+] as const
+
+export type UserRole = (typeof ROLES)[number]
+
+export function isUserRole(value: string): value is UserRole {
+  return ROLES.includes(value as UserRole)
+}
