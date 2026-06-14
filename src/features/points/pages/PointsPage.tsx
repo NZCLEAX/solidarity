@@ -1,6 +1,8 @@
 import { useMemo, useState, type FormEvent } from 'react'
 
 import { usePermissions } from '@/features/auth/hooks/usePermissions'
+import { reportFormSchema } from '@/features/security/model/schemas'
+import { logSecurityEvent } from '@/features/security/services/security-audit'
 
 const WINDOW_MS = 60_000
 const MAX_REPORTS_PER_WINDOW = 3
@@ -28,17 +30,40 @@ export function PointsPage() {
 
   const [message, setMessage] = useState('')
   const [feedback, setFeedback] = useState<string | null>(null)
+  const [validationError, setValidationError] = useState<string | null>(null)
 
   const remaining = useMemo(() => {
     const current = readTimestamps(Date.now())
     return Math.max(0, MAX_REPORTS_PER_WINDOW - current.length)
   }, [feedback])
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+
+    const parsed = reportFormSchema.safeParse({ message })
+    if (!parsed.success) {
+      const errorMessage = parsed.error.issues[0]?.message ?? 'Signalement invalide'
+      setValidationError(errorMessage)
+      setFeedback(null)
+      void logSecurityEvent({
+        action: 'report.create.validation_failed',
+        resource: 'points',
+        outcome: 'failure',
+        details: { error: errorMessage },
+      })
+      return
+    }
+
+    setValidationError(null)
 
     if (!canCreateReport) {
       setFeedback('Votre role ne peut pas creer de signalement.')
+      void logSecurityEvent({
+        action: 'report.create.attempt',
+        resource: 'points',
+        outcome: 'denied',
+        details: { reason: 'role_not_allowed' },
+      })
       return
     }
 
@@ -47,19 +72,32 @@ export function PointsPage() {
 
     if (current.length >= MAX_REPORTS_PER_WINDOW) {
       setFeedback('Quota atteint: maximum 3 signalements par minute.')
+      void logSecurityEvent({
+        action: 'report.create.rate_limited',
+        resource: 'points',
+        outcome: 'denied',
+        details: { window_ms: WINDOW_MS, max_reports: MAX_REPORTS_PER_WINDOW },
+      })
       return
     }
 
     const next = [...current, now]
     writeTimestamps(next)
     setMessage('')
-    setFeedback('Signalement enregistre (simulation front).')
+    setFeedback('Signalement valide et prepare (simulation front).')
+
+    void logSecurityEvent({
+      action: 'report.create.success',
+      resource: 'points',
+      outcome: 'success',
+      details: { message_length: parsed.data.message.length },
+    })
   }
 
   return (
     <div>
       <h1 className="text-2xl font-bold text-gray-900">Points de collecte</h1>
-      <p className="mt-2 text-sm text-gray-500">Creation de signalements avec quota anti-spam.</p>
+      <p className="mt-2 text-sm text-gray-500">Validation stricte et quota anti-spam.</p>
 
       <div className="mt-6 rounded-lg border border-gray-200 bg-white p-4">
         <p className="text-sm font-medium text-gray-800">Quota actuel</p>
@@ -86,6 +124,7 @@ export function PointsPage() {
           Envoyer
         </button>
 
+        {validationError ? <p className="mt-3 text-sm text-red-600">{validationError}</p> : null}
         {feedback ? <p className="mt-3 text-sm text-gray-700">{feedback}</p> : null}
       </form>
     </div>

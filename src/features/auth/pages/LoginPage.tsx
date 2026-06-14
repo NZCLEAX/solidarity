@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 
 import { useAuth } from '@/features/auth/auth-context'
+import { logSecurityEvent } from '@/features/security/services/security-audit'
 
 export function LoginPage() {
   const [email, setEmail] = useState('')
@@ -23,6 +24,12 @@ export function LoginPage() {
     }
 
     setErrorMessage(null)
+    void logSecurityEvent({
+      action: 'auth.login.success',
+      resource: 'session',
+      outcome: 'success',
+      details: { email_domain: email.split('@')[1] ?? null },
+    })
     navigate(from, { replace: true })
   }
 

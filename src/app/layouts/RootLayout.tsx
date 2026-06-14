@@ -2,6 +2,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 
 import { useAuth } from '@/features/auth/auth-context'
 import type { UserRole } from '@/features/auth/model/roles'
+import { logSecurityEvent } from '@/features/security/services/security-audit'
 
 type NavLinkItem = {
   to: string
@@ -29,6 +30,12 @@ export function RootLayout() {
   const visibleLinks = navLinks.filter((link) => !link.roles || (user && link.roles.includes(user.role)))
 
   async function handleLogout() {
+    void logSecurityEvent({
+      action: 'auth.logout',
+      resource: 'session',
+      outcome: 'success',
+      details: { role: user?.role ?? null },
+    })
     await logout()
     navigate('/login', { replace: true })
   }
