@@ -1,6 +1,8 @@
+import { useEffect } from 'react'
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '@/features/auth/auth-context'
 import type { UserRole } from '@/features/auth/model/roles'
+import { logSecurityEvent } from '@/features/security/services/security-audit'
 
 export function RequireAuth() {
   const { user, isLoading, isMfaRequired } = useAuth()
@@ -23,6 +25,18 @@ export function RequireAuth() {
 
 export function RequireRole({ allowedRoles }: { allowedRoles: UserRole[] }) {
   const { user, isLoading } = useAuth()
+  const location = useLocation()
+
+  useEffect(() => {
+    if (user && !allowedRoles.includes(user.role)) {
+      void logSecurityEvent({
+        action: 'auth.access.denied',
+        resource: location.pathname,
+        outcome: 'denied',
+        details: { required_roles: allowedRoles, current_role: user.role },
+      })
+    }
+  }, [allowedRoles, location.pathname, user])
 
   if (isLoading) {
     return <div className="text-sm text-gray-500">Verification des droits...</div>
