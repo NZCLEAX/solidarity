@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '@/features/auth/auth-context'
 import type { UserRole } from '@/features/auth/model/roles'
@@ -7,6 +7,19 @@ import { logSecurityEvent } from '@/features/security/services/security-audit'
 export function RequireAuth() {
   const { user, isLoading, isMfaRequired } = useAuth()
   const location = useLocation()
+  const loggedMfaWarning = useRef<string | null>(null)
+
+  useEffect(() => {
+    if (user?.role === 'admin' && isMfaRequired && loggedMfaWarning.current !== location.pathname) {
+      loggedMfaWarning.current = location.pathname
+      void logSecurityEvent({
+        action: 'auth.mfa.required',
+        resource: location.pathname,
+        outcome: 'denied',
+        details: { role: user.role },
+      })
+    }
+  }, [isMfaRequired, location.pathname, user])
 
   if (isLoading) {
     return <div className="text-sm text-gray-500">Chargement de la session...</div>

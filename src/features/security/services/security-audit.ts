@@ -7,6 +7,7 @@ export type SecurityAuditAction =
   | 'auth.login.success'
   | 'auth.logout'
   | 'auth.access.denied'
+  | 'auth.mfa.required'
   | 'report.create.attempt'
   | 'report.create.success'
   | 'report.create.rate_limited'
@@ -15,6 +16,7 @@ export type SecurityAuditAction =
   | 'intervention.comment.success'
   | 'intervention.comment.validation_failed'
   | 'admin.audit.view'
+  | 'security.retention.cleanup'
   | 'profile.role.changed'
 
 export type SecurityAuditLogRow = {
