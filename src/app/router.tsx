@@ -31,6 +31,7 @@ import ProfilePage from '@/features/profile/pages/ProfilePage'
 import AssociationsPage from '@/features/associations/pages/AssociationsPage'
 import AssociationRequestsPage from '@/features/associations/pages/AssociationRequestsPage'
 import AssociationRegisterPage from '@/features/associations/pages/AssociationRegisterPage'
+import AssociationTeamPage from '@/features/associations/pages/AssociationTeamPage'
 
 import AppLayout from '@/shared/components/AppLayout'
 
@@ -130,6 +131,15 @@ export const router = createBrowserRouter([
         element: (
           <RequireAccess permission="manage_association_requests">
             <AssociationRequestsPage />
+          </RequireAccess>
+        ),
+      },
+
+      {
+        path: 'association/equipe',
+        element: (
+          <RequireAccess permission="manage_association_requests">
+            <AssociationTeamPage />
           </RequireAccess>
         ),
       },

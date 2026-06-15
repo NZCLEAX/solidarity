@@ -44,7 +44,9 @@ export function hasPermission(
 
   const role = profile.role
 
-  if (permission === 'profile') return true
+  if (permission === 'profile') {
+    return true
+  }
 
   if (permission === 'create_point') {
     if (role === 'association') return isAssociationValidated(profile)
@@ -52,8 +54,10 @@ export function hasPermission(
     return ['citoyen', 'benevole', 'moderateur', 'admin'].includes(role)
   }
 
+  // Bénévole non validé ou bénévole sans association :
+  // il doit voir le bouton pour rejoindre une association.
   if (permission === 'view_associations') {
-    return role === 'benevole' || role === 'admin'
+    return role === 'benevole' && !isVolunteerValidated(profile)
   }
 
   if (permission === 'view_map') {
@@ -83,10 +87,9 @@ export function hasPermission(
     return ['moderateur', 'admin'].includes(role)
   }
 
+  // Demandes + Équipe uniquement pour une association validée
   if (permission === 'manage_association_requests') {
-    if (role === 'association') return isAssociationValidated(profile)
-
-    return role === 'admin'
+    return isAssociationValidated(profile)
   }
 
   if (permission === 'moderation') {

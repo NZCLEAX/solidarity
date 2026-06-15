@@ -41,6 +41,24 @@ const navItems: Array<{
     icon: '',
     permission: 'administration',
   },
+  {
+  label: 'Demandes',
+  to: '/association/demandes',
+  icon: '',
+  permission: 'manage_association_requests',
+},
+  {
+  label: 'Équipe',
+  to: '/association/equipe',
+  icon: '',
+  permission: 'manage_association_requests',
+},
+{
+  label: 'Rejoindre une asso',
+  to: '/associations',
+  icon: '',
+  permission: 'view_associations',
+},
 ]
 
 export default function AppLayout() {

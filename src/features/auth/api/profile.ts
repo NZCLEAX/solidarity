@@ -12,10 +12,25 @@ export type CurrentProfile = {
   updated_at: string | null
 }
 
+function isValidRole(value: unknown): value is UserRole {
+  return (
+    value === 'citoyen' ||
+    value === 'benevole' ||
+    value === 'association' ||
+    value === 'moderateur' ||
+    value === 'admin'
+  )
+}
+
 export async function getCurrentProfile(): Promise<CurrentProfile> {
   const {
     data: { session },
+    error: sessionError,
   } = await supabase.auth.getSession()
+
+  if (sessionError) {
+    throw sessionError
+  }
 
   if (!session?.user) {
     throw new Error('Utilisateur non connecté.')
@@ -23,7 +38,8 @@ export async function getCurrentProfile(): Promise<CurrentProfile> {
 
   const { data, error } = await supabase
     .from('profiles')
-    .select(`
+    .select(
+      `
       id,
       email,
       nom,
@@ -32,13 +48,36 @@ export async function getCurrentProfile(): Promise<CurrentProfile> {
       statut_compte,
       created_at,
       updated_at
-    `)
+    `
+    )
     .eq('id', session.user.id)
-    .single()
+    .order('updated_at', { ascending: false, nullsFirst: false })
+    .limit(1)
 
   if (error) {
     throw error
   }
 
-  return data as CurrentProfile
+  const profile = data?.[0]
+
+  if (!profile) {
+    const metadataRole = session.user.user_metadata?.role
+    const role: UserRole = isValidRole(metadataRole) ? metadataRole : 'citoyen'
+
+    return {
+      id: session.user.id,
+      email: session.user.email ?? null,
+      nom:
+        session.user.user_metadata?.nom ??
+        session.user.user_metadata?.name ??
+        null,
+      role,
+      association_id: null,
+      statut_compte: role === 'association' ? 'en_attente' : 'actif',
+      created_at: null,
+      updated_at: null,
+    }
+  }
+
+  return profile as CurrentProfile
 }

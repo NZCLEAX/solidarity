@@ -41,6 +41,17 @@ export type AssociationJoinRequest = {
   updated_at: string
 }
 
+export type AssociationVolunteer = {
+  id: string
+  nom: string | null
+  email: string | null
+  role: string | null
+  association_id: string | null
+  statut_compte: string | null
+  created_at: string | null
+  updated_at: string | null
+}
+
 export type CreateAssociationRequestInput = {
   nom: string
   email: string
@@ -51,6 +62,8 @@ export type CreateAssociationRequestInput = {
   typeAidePrincipale: string
   description: string
 }
+
+export type VolunteerAction = 'actif' | 'suspendu' | 'en_attente' | 'retirer'
 
 export async function getValidatedAssociations(): Promise<Association[]> {
   const { data, error } = await supabase.rpc('get_validated_associations')
@@ -148,6 +161,35 @@ export async function respondJoinRequest(
     p_request_id: requestId,
     p_decision: decision,
   })
+
+  if (error) {
+    throw error
+  }
+}
+
+export async function getAssociationVolunteers(): Promise<
+  AssociationVolunteer[]
+> {
+  const { data, error } = await supabase.rpc('get_association_volunteers')
+
+  if (error) {
+    throw error
+  }
+
+  return data ?? []
+}
+
+export async function updateAssociationVolunteerStatus(
+  volunteerId: string,
+  action: VolunteerAction
+) {
+  const { error } = await supabase.rpc(
+    'update_association_volunteer_status',
+    {
+      p_benevole_id: volunteerId,
+      p_action: action,
+    }
+  )
 
   if (error) {
     throw error
