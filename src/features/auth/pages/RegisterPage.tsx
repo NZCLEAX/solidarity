@@ -125,6 +125,12 @@ export default function RegisterPage() {
             Se connecter
           </Link>
         </p>
+        <div className="mt-4 text-center text-sm text-slate-600">
+  Tu représentes une association ?{' '}
+  <Link to="/associations/register" className="font-bold text-[#d94a0b]">
+    Demander un accès association
+  </Link>
+</div>
       </div>
     </div>
   )

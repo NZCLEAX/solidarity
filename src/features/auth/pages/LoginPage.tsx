@@ -1,70 +1,88 @@
-import { useState } from 'react'
+import { FormEvent, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { signIn } from '../api/auth'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { signIn } from '@/features/auth/api/auth'
+import { getCurrentProfile } from '@/features/auth/api/profile'
+import { getDefaultPathForProfile } from '@/features/auth/utils/permissions'
 
 export default function LoginPage() {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
-    setLoading(true)
+  const mutation = useMutation({
+    mutationFn: async () => {
+      await signIn(email.trim(), password)
 
-    try {
-      await signIn(email, password)
-      navigate('/dashboard')
-    } catch (err: any) {
-      setError(err.message || 'Erreur de connexion')
-    } finally {
-      setLoading(false)
-    }
+      const profile = await getCurrentProfile()
+
+      return profile
+    },
+    onSuccess: (profile) => {
+      queryClient.setQueryData(['current-profile'], profile)
+
+      const defaultPath = getDefaultPathForProfile(profile)
+
+      navigate(defaultPath, { replace: true })
+    },
+  })
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+
+    mutation.mutate()
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-100 px-4">
-      <div className="w-full max-w-md rounded-xl bg-white p-6 shadow">
-        <h1 className="text-2xl font-bold mb-2">Connexion</h1>
-        <p className="text-slate-500 mb-6">Connecte-toi à ton espace.</p>
+    <div className="flex min-h-screen items-center justify-center bg-slate-100 px-4">
+      <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h1 className="text-2xl font-black text-slate-950">Connexion</h1>
 
-        <form onSubmit={handleLogin} className="flex flex-col gap-4">
+        <p className="mt-2 text-sm text-slate-500">Connecte-toi à ton espace.</p>
+
+        {mutation.isError && (
+          <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700">
+            {(mutation.error as Error)?.message ||
+              'Impossible de te connecter.'}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <input
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            required
             type="email"
             placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="border rounded-lg px-3 py-2"
+            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-[#d94a0b] focus:ring-4 focus:ring-orange-100"
           />
 
           <input
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            required
             type="password"
             placeholder="Mot de passe"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="border rounded-lg px-3 py-2"
+            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-[#d94a0b] focus:ring-4 focus:ring-orange-100"
           />
-
-          {error && <p className="text-sm text-red-600">{error}</p>}
 
           <button
             type="submit"
-            disabled={loading}
-            className="bg-indigo-600 text-white rounded-lg px-4 py-2"
+            disabled={mutation.isPending}
+            className="min-h-12 w-full rounded-xl bg-[#d94a0b] px-4 py-3 text-sm font-black text-white transition hover:bg-[#b93607] disabled:cursor-not-allowed disabled:bg-slate-300"
           >
-            {loading ? 'Connexion...' : 'Se connecter'}
+            {mutation.isPending ? 'Connexion...' : 'Se connecter'}
           </button>
         </form>
 
-        <p className="mt-4 text-sm text-slate-600">
+        <div className="mt-5 text-center text-sm text-slate-600">
           Pas de compte ?{' '}
-          <Link to="/register" className="text-indigo-600 font-medium">
+          <Link to="/register" className="font-bold text-[#d94a0b]">
             S’inscrire
           </Link>
-        </p>
+        </div>
       </div>
     </div>
   )
