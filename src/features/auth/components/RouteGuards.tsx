@@ -70,7 +70,7 @@ export function GuestOnly() {
   }
 
   if (user) {
-    return <Navigate to="/" replace />
+    return <Navigate to="/dashboard" replace />
   }
 
   return <Outlet />
