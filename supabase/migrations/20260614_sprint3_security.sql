@@ -12,10 +12,10 @@ create extension if not exists pgcrypto;
 create table if not exists public.security_settings (
   id boolean primary key default true check (id),
   admin_2fa_required boolean not null default true,
-  password_min_length integer not null default 12,
+  password_min_length integer not null default 15,
   password_require_uppercase boolean not null default true,
   password_require_number boolean not null default true,
-  password_require_symbol boolean not null default true,
+  password_require_lowercase boolean not null default true,
   security_audit_log_retention_days integer not null default 90,
   report_rate_limit_per_minute integer not null default 3,
   sensitive_api_rate_limit_per_minute integer not null default 30,

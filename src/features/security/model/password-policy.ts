@@ -18,8 +18,8 @@ function hasNumber(value: string) {
   return /\d/.test(value)
 }
 
-function hasSymbol(value: string) {
-  return /[^A-Za-z0-9]/.test(value)
+function hasLowercase(value: string) {
+  return /[a-z]/.test(value)
 }
 
 export function evaluatePasswordPolicy(
@@ -29,7 +29,7 @@ export function evaluatePasswordPolicy(
     | 'password_min_length'
     | 'password_require_uppercase'
     | 'password_require_number'
-    | 'password_require_symbol'
+    | 'password_require_lowercase'
   > = DEFAULT_SECURITY_SETTINGS,
 ): PasswordPolicyResult {
   const checks: PasswordPolicyCheck[] = [
@@ -46,8 +46,8 @@ export function evaluatePasswordPolicy(
       passed: !policy.password_require_number || hasNumber(password),
     },
     {
-      label: 'Au moins un caractere special',
-      passed: !policy.password_require_symbol || hasSymbol(password),
+      label: 'Au moins une minuscule',
+      passed: !policy.password_require_lowercase || hasLowercase(password),
     },
   ]
 

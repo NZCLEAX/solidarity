@@ -1,23 +1,40 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { signIn } from '../api/auth'
+import { useState, type FormEvent } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+
+import { useAuth } from '@/features/auth/auth-context'
+import { logSecurityEvent } from '@/features/security/services/security-audit'
 
 export default function LoginPage() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const { login } = useAuth()
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const from = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname ?? '/dashboard'
+
+  const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
     setError(null)
     setLoading(true)
 
     try {
-      await signIn(email, password)
-      navigate('/dashboard')
+      const result = await login(email, password)
+      if (result.error) {
+        throw new Error(result.error)
+      }
+
+      void logSecurityEvent({
+        action: 'auth.login.success',
+        resource: 'session',
+        outcome: 'success',
+        details: { email_domain: email.split('@')[1] ?? null },
+      })
+
+      navigate(from, { replace: true })
     } catch (err: any) {
       setError(err.message || 'Erreur de connexion')
     } finally {
@@ -28,32 +45,32 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-100 px-4">
       <div className="w-full max-w-md rounded-xl bg-white p-6 shadow">
-        <h1 className="text-2xl font-bold mb-2">Connexion</h1>
-        <p className="text-slate-500 mb-6">Connecte-toi à ton espace.</p>
+        <h1 className="mb-2 text-2xl font-bold">Connexion</h1>
+        <p className="mb-6 text-slate-500">Connecte-toi a ton espace.</p>
 
         <form onSubmit={handleLogin} className="flex flex-col gap-4">
           <input
             type="email"
             placeholder="Email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="border rounded-lg px-3 py-2"
+            onChange={(event) => setEmail(event.target.value)}
+            className="rounded-lg border px-3 py-2"
           />
 
           <input
             type="password"
             placeholder="Mot de passe"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="border rounded-lg px-3 py-2"
+            onChange={(event) => setPassword(event.target.value)}
+            className="rounded-lg border px-3 py-2"
           />
 
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error ? <p className="text-sm text-red-600">{error}</p> : null}
 
           <button
             type="submit"
             disabled={loading}
-            className="bg-indigo-600 text-white rounded-lg px-4 py-2"
+            className="rounded-lg bg-indigo-600 px-4 py-2 text-white"
           >
             {loading ? 'Connexion...' : 'Se connecter'}
           </button>
@@ -61,8 +78,8 @@ export default function LoginPage() {
 
         <p className="mt-4 text-sm text-slate-600">
           Pas de compte ?{' '}
-          <Link to="/register" className="text-indigo-600 font-medium">
-            S’inscrire
+          <Link to="/register" className="font-medium text-indigo-600">
+            S'inscrire
           </Link>
         </p>
       </div>

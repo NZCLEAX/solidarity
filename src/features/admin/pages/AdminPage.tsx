@@ -163,6 +163,12 @@ export default function AdminPage() {
         >
           Gestion des associations
         </Link>
+        <Link
+          to="/administration/security"
+          className="rounded-lg border border-indigo-300 bg-indigo-50 px-4 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-100"
+        >
+          Centre de securite
+        </Link>
       </div>
 
       <section className="mb-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">

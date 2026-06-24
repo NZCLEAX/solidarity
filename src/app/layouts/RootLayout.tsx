@@ -1,27 +1,47 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 
-import { signOut } from '@/features/auth/api/auth'
+import { useAuth } from '@/features/auth/auth-context'
+import type { UserRole } from '@/features/auth/model/roles'
+import { logSecurityEvent } from '@/features/security/services/security-audit'
 
-const navLinks = [
+type NavLinkItem = {
+  to: string
+  label: string
+  roles?: UserRole[]
+}
+
+const navLinks: NavLinkItem[] = [
   { to: '/dashboard', label: 'Dashboard' },
   { to: '/carte', label: 'Carte' },
   { to: '/points', label: 'Points' },
-  { to: '/interventions', label: 'Interventions' },
-  { to: '/moderation', label: 'Moderation' },
-  { to: '/administration', label: 'Administration' },
+  {
+    to: '/interventions',
+    label: 'Interventions',
+    roles: ['benevole', 'association', 'moderateur', 'admin'],
+  },
+  { to: '/moderation', label: 'Moderation', roles: ['moderateur', 'admin'] },
+  { to: '/administration', label: 'Administration', roles: ['admin'] },
   { to: '/profile', label: 'Profil' },
 ]
 
 export function RootLayout() {
+  const { user, logout } = useAuth()
   const navigate = useNavigate()
 
+  const visibleLinks = navLinks.filter(
+    (link) => !link.roles || (user && link.roles.includes(user.role))
+  )
+
   const handleLogout = async () => {
-    try {
-      await signOut()
-      navigate('/login', { replace: true })
-    } catch (error) {
-      console.error('Erreur lors de la deconnexion :', error)
-    }
+    void logSecurityEvent({
+      action: 'auth.logout',
+      resource: 'session',
+      outcome: 'success',
+      details: { role: user?.role ?? null },
+    })
+
+    await logout()
+    navigate('/login', { replace: true })
   }
 
   const baseLinkClass = 'block rounded-lg px-4 py-3 transition-colors'
@@ -36,7 +56,7 @@ export function RootLayout() {
         </div>
 
         <nav className="flex-1 space-y-3 px-4 py-6">
-          {navLinks.map(({ to, label }) => (
+          {visibleLinks.map(({ to, label }) => (
             <NavLink
               key={to}
               to={to}
@@ -56,6 +76,9 @@ export function RootLayout() {
 
       <main className="flex-1">
         <header className="flex h-20 items-center justify-end gap-4 border-b border-slate-200 bg-white px-8">
+          <span className="text-xs uppercase tracking-wide text-slate-500">
+            Role: {user?.role}
+          </span>
           <NavLink
             to="/profile"
             className="text-sm text-slate-700 transition-colors hover:text-indigo-600"

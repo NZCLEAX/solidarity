@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import {
-  getPointById,
-  updatePoint,
-  type Point,
-} from '@/features/points/api/points'
+
+import { getPointById, updatePoint, type Point } from '@/features/points/api/points'
+import { pointUpdateSchema } from '@/features/security/model/schemas'
+import { logSecurityEvent } from '@/features/security/services/security-audit'
 
 const besoinOptions = [
   'Repas',
@@ -21,18 +20,13 @@ export default function EditPointPage() {
   const navigate = useNavigate()
 
   const [point, setPoint] = useState<Point | null>(null)
-
   const [adresse, setAdresse] = useState('')
   const [latitude, setLatitude] = useState('')
   const [longitude, setLongitude] = useState('')
   const [nombrePersonnesEstime, setNombrePersonnesEstime] = useState('')
   const [typologie, setTypologie] = useState('')
-  const [niveauUrgence, setNiveauUrgence] = useState<
-    'basse' | 'moyenne' | 'haute' | 'critique'
-  >('moyenne')
-  const [statut, setStatut] = useState<
-    'signale' | 'a_confirmer' | 'confirme' | 'actif' | 'inactif' | 'archive'
-  >('signale')
+  const [niveauUrgence, setNiveauUrgence] = useState<'basse' | 'moyenne' | 'haute' | 'critique'>('moyenne')
+  const [statut, setStatut] = useState<'signale' | 'a_confirmer' | 'confirme' | 'actif' | 'inactif' | 'archive'>('signale')
   const [besoins, setBesoins] = useState<string[]>([])
   const [commentaire, setCommentaire] = useState('')
 
@@ -50,18 +44,14 @@ export default function EditPointPage() {
 
       try {
         const data = await getPointById(pointId)
-
         setPoint(data)
         setAdresse(data.adresse || '')
         setLatitude(data.latitude?.toString() || '')
         setLongitude(data.longitude?.toString() || '')
-        setNombrePersonnesEstime(
-          data.nombre_personnes_estime?.toString() || ''
-        )
+        setNombrePersonnesEstime(data.nombre_personnes_estime?.toString() || '')
         setTypologie(data.typologie || '')
         setNiveauUrgence(
-          (data.niveau_urgence as 'basse' | 'moyenne' | 'haute' | 'critique') ||
-            'moyenne'
+          (data.niveau_urgence as 'basse' | 'moyenne' | 'haute' | 'critique') || 'moyenne'
         )
         setStatut(
           (data.statut as
@@ -73,9 +63,7 @@ export default function EditPointPage() {
             | 'archive') || 'signale'
         )
         setBesoins(
-          data.besoins
-            ? data.besoins.split(',').map((besoin) => besoin.trim())
-            : []
+          data.besoins ? data.besoins.split(',').map((besoin) => besoin.trim()) : []
         )
         setCommentaire(data.commentaire || '')
       } catch (err: any) {
@@ -107,70 +95,61 @@ export default function EditPointPage() {
       return
     }
 
-    if (!adresse.trim()) {
-      setError('L’adresse est obligatoire.')
-      setSaving(false)
-      return
-    }
+    const parsed = pointUpdateSchema.safeParse({
+      adresse,
+      latitude: Number(latitude),
+      longitude: Number(longitude),
+      nombrePersonnesEstime: Number(nombrePersonnesEstime),
+      typologie,
+      niveauUrgence,
+      statut,
+      besoins,
+      commentaire,
+    })
 
-    if (!latitude.trim() || !longitude.trim()) {
-      setError('La latitude et la longitude sont obligatoires.')
-      setSaving(false)
-      return
-    }
-
-    const parsedLatitude = Number(latitude)
-    const parsedLongitude = Number(longitude)
-    const parsedNombrePersonnes = Number(nombrePersonnesEstime)
-
-    if (Number.isNaN(parsedLatitude) || Number.isNaN(parsedLongitude)) {
-      setError('La latitude et la longitude doivent être valides.')
-      setSaving(false)
-      return
-    }
-
-    if (
-      Number.isNaN(parsedNombrePersonnes) ||
-      parsedNombrePersonnes <= 0
-    ) {
-      setError('Le nombre de personnes estimé doit être supérieur à 0.')
-      setSaving(false)
-      return
-    }
-
-    if (besoins.length === 0) {
-      setError('Sélectionne au moins un besoin observé.')
+    if (!parsed.success) {
+      const errorMessage = parsed.error.issues[0]?.message ?? 'Point invalide'
+      setError(errorMessage)
+      void logSecurityEvent({
+        action: 'report.update.validation_failed',
+        resource: 'points',
+        outcome: 'failure',
+        details: { error: errorMessage, mode: 'edit' },
+      })
       setSaving(false)
       return
     }
 
     try {
       await updatePoint(pointId, {
-        adresse,
-        latitude: parsedLatitude,
-        longitude: parsedLongitude,
-        nombrePersonnesEstime: parsedNombrePersonnes,
-        typologie,
-        niveauUrgence,
-        statut,
-        besoins,
-        commentaire,
+        adresse: parsed.data.adresse,
+        latitude: parsed.data.latitude,
+        longitude: parsed.data.longitude,
+        nombrePersonnesEstime: parsed.data.nombrePersonnesEstime,
+        typologie: parsed.data.typologie || '',
+        niveauUrgence: parsed.data.niveauUrgence,
+        statut: parsed.data.statut,
+        besoins: parsed.data.besoins,
+        commentaire: parsed.data.commentaire || '',
+      })
+
+      void logSecurityEvent({
+        action: 'report.update.success',
+        resource: 'points',
+        outcome: 'success',
+        details: { mode: 'edit', point_id: pointId },
       })
 
       navigate('/points')
     } catch (err: any) {
-      setError(err.message || 'Erreur lors de la mise à jour du point.')
+      setError(err.message || 'Erreur lors de la mise a jour du point.')
     } finally {
       setSaving(false)
     }
   }
 
   if (loading) {
-    return (
-      <div className="rounded-xl bg-white p-6 text-slate-600">
-        Chargement du point...
-      </div>
-    )
+    return <div className="rounded-xl bg-white p-6 text-slate-600">Chargement du point...</div>
   }
 
   if (!point) {
@@ -191,21 +170,15 @@ export default function EditPointPage() {
         ← Retour aux points
       </button>
 
-      <h1 className="text-3xl font-bold text-slate-950">
-        Modifier un point de précarité
-      </h1>
-      <p className="mt-2 text-slate-600">
-        Mets à jour les informations du point sélectionné.
-      </p>
+      <h1 className="text-3xl font-bold text-slate-950">Modifier un point de precarite</h1>
+      <p className="mt-2 text-slate-600">Mets a jour les informations du point sélectionné.</p>
 
       <form
         onSubmit={handleSubmit}
-        className="mt-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm space-y-6"
+        className="mt-6 space-y-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
       >
         <div>
-          <label className="block text-sm font-medium text-slate-700">
-            Adresse ou lieu *
-          </label>
+          <label className="block text-sm font-medium text-slate-700">Adresse ou lieu *</label>
           <input
             type="text"
             value={adresse}
@@ -216,9 +189,7 @@ export default function EditPointPage() {
 
         <div className="grid gap-4 md:grid-cols-2">
           <div>
-            <label className="block text-sm font-medium text-slate-700">
-              Latitude *
-            </label>
+            <label className="block text-sm font-medium text-slate-700">Latitude *</label>
             <input
               type="number"
               step="any"
@@ -229,9 +200,7 @@ export default function EditPointPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700">
-              Longitude *
-            </label>
+            <label className="block text-sm font-medium text-slate-700">Longitude *</label>
             <input
               type="number"
               step="any"
@@ -245,7 +214,7 @@ export default function EditPointPage() {
         <div className="grid gap-4 md:grid-cols-2">
           <div>
             <label className="block text-sm font-medium text-slate-700">
-              Nombre de personnes estimé *
+              Nombre de personnes estime *
             </label>
             <input
               type="number"
@@ -257,9 +226,7 @@ export default function EditPointPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700">
-              Niveau d’urgence *
-            </label>
+            <label className="block text-sm font-medium text-slate-700">Niveau d'urgence *</label>
             <select
               value={niveauUrgence}
               onChange={(e) =>
@@ -278,9 +245,7 @@ export default function EditPointPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700">
-            Statut *
-          </label>
+          <label className="block text-sm font-medium text-slate-700">Statut *</label>
           <select
             value={statut}
             onChange={(e) =>
@@ -306,9 +271,7 @@ export default function EditPointPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700">
-            Besoins observés *
-          </label>
+          <label className="block text-sm font-medium text-slate-700">Besoins observés *</label>
 
           <div className="mt-3 grid gap-3 sm:grid-cols-2 md:grid-cols-3">
             {besoinOptions.map((besoin) => (
@@ -333,9 +296,7 @@ export default function EditPointPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700">
-            Typologie
-          </label>
+          <label className="block text-sm font-medium text-slate-700">Typologie</label>
           <input
             type="text"
             value={typologie}
@@ -345,9 +306,7 @@ export default function EditPointPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700">
-            Commentaire
-          </label>
+          <label className="block text-sm font-medium text-slate-700">Commentaire</label>
           <textarea
             value={commentaire}
             onChange={(e) => setCommentaire(e.target.value)}
@@ -356,11 +315,11 @@ export default function EditPointPage() {
           />
         </div>
 
-        {error && (
+        {error ? (
           <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
             {error}
           </div>
-        )}
+        ) : null}
 
         <div className="flex gap-3">
           <button
@@ -368,7 +327,7 @@ export default function EditPointPage() {
             disabled={saving}
             className="rounded-lg bg-indigo-600 px-5 py-2 font-medium text-white hover:bg-indigo-700 disabled:opacity-60"
           >
-            {saving ? 'Mise à jour...' : 'Mettre à jour'}
+            {saving ? 'Mise a jour...' : 'Mettre a jour'}
           </button>
 
           <button

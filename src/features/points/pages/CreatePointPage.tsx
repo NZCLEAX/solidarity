@@ -1,6 +1,10 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { createPoint } from '../api/points'
+
+import { usePermissions } from '@/features/auth/hooks/usePermissions'
+import { createPoint } from '@/features/points/api/points'
+import { pointSubmissionSchema } from '@/features/security/model/schemas'
+import { logSecurityEvent } from '@/features/security/services/security-audit'
 
 const besoinOptions = [
   'Repas',
@@ -14,15 +18,15 @@ const besoinOptions = [
 
 export default function CreatePointPage() {
   const navigate = useNavigate()
+  const { can } = usePermissions()
+  const canCreateReport = can('report.create')
 
   const [adresse, setAdresse] = useState('')
   const [latitude, setLatitude] = useState('')
   const [longitude, setLongitude] = useState('')
   const [nombrePersonnesEstime, setNombrePersonnesEstime] = useState('')
   const [typologie, setTypologie] = useState('')
-  const [niveauUrgence, setNiveauUrgence] = useState<
-    'basse' | 'moyenne' | 'haute' | 'critique'
-  >('moyenne')
+  const [niveauUrgence, setNiveauUrgence] = useState<'basse' | 'moyenne' | 'haute' | 'critique'>('moyenne')
   const [besoins, setBesoins] = useState<string[]>([])
   const [commentaire, setCommentaire] = useState('')
 
@@ -42,52 +46,64 @@ export default function CreatePointPage() {
     setError(null)
     setLoading(true)
 
-    const parsedLatitude = Number(latitude)
-    const parsedLongitude = Number(longitude)
-    const parsedNombrePersonnes = Number(nombrePersonnesEstime)
-
-    if (!adresse.trim()) {
-      setError('L’adresse est obligatoire.')
+    if (!canCreateReport) {
+      setError('Votre role ne peut pas creer de signalement.')
+      void logSecurityEvent({
+        action: 'report.create.attempt',
+        resource: 'points',
+        outcome: 'denied',
+        details: { reason: 'role_not_allowed' },
+      })
       setLoading(false)
       return
     }
 
-    if (Number.isNaN(parsedLatitude) || Number.isNaN(parsedLongitude)) {
-      setError('La latitude et la longitude doivent être valides.')
-      setLoading(false)
-      return
-    }
+    const parsed = pointSubmissionSchema.safeParse({
+      adresse,
+      latitude: Number(latitude),
+      longitude: Number(longitude),
+      nombrePersonnesEstime: Number(nombrePersonnesEstime),
+      typologie,
+      niveauUrgence,
+      besoins,
+      commentaire,
+    })
 
-    if (
-      Number.isNaN(parsedNombrePersonnes) ||
-      parsedNombrePersonnes <= 0
-    ) {
-      setError('Le nombre de personnes estimé doit être supérieur à 0.')
-      setLoading(false)
-      return
-    }
-
-    if (besoins.length === 0) {
-      setError('Sélectionne au moins un besoin observé.')
+    if (!parsed.success) {
+      const errorMessage = parsed.error.issues[0]?.message ?? 'Signalement invalide'
+      setError(errorMessage)
+      void logSecurityEvent({
+        action: 'report.create.validation_failed',
+        resource: 'points',
+        outcome: 'failure',
+        details: { error: errorMessage },
+      })
       setLoading(false)
       return
     }
 
     try {
       await createPoint({
-        adresse,
-        latitude: parsedLatitude,
-        longitude: parsedLongitude,
-        nombrePersonnesEstime: parsedNombrePersonnes,
-        typologie,
-        niveauUrgence,
-        besoins,
-        commentaire,
+        adresse: parsed.data.adresse,
+        latitude: parsed.data.latitude,
+        longitude: parsed.data.longitude,
+        nombrePersonnesEstime: parsed.data.nombrePersonnesEstime,
+        typologie: parsed.data.typologie || '',
+        niveauUrgence: parsed.data.niveauUrgence,
+        besoins: parsed.data.besoins,
+        commentaire: parsed.data.commentaire || '',
+      })
+
+      void logSecurityEvent({
+        action: 'report.create.success',
+        resource: 'points',
+        outcome: 'success',
+        details: { message_length: parsed.data.commentaire?.length ?? 0 },
       })
 
       navigate('/points')
     } catch (err: any) {
-      setError(err.message || 'Erreur lors de la création du point.')
+      setError(err.message || 'Erreur lors de la creation du point.')
     } finally {
       setLoading(false)
     }
@@ -104,23 +120,18 @@ export default function CreatePointPage() {
           ← Retour aux points
         </button>
 
-        <h1 className="text-3xl font-bold text-slate-950">
-          Signaler un point de précarité
-        </h1>
+        <h1 className="text-3xl font-bold text-slate-950">Signaler un point de precarite</h1>
         <p className="mt-2 text-slate-600">
-          Crée un nouveau point afin qu’il puisse être suivi par les acteurs du
-          terrain.
+          Crée un nouveau point afin qu’il puisse être suivi par les acteurs du terrain.
         </p>
       </div>
 
       <form
         onSubmit={handleSubmit}
-        className="rounded-xl bg-white p-6 shadow-sm border border-slate-200 space-y-6"
+        className="space-y-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
       >
         <div>
-          <label className="block text-sm font-medium text-slate-700">
-            Adresse ou lieu *
-          </label>
+          <label className="block text-sm font-medium text-slate-700">Adresse ou lieu *</label>
           <input
             type="text"
             value={adresse}
@@ -132,9 +143,7 @@ export default function CreatePointPage() {
 
         <div className="grid gap-4 md:grid-cols-2">
           <div>
-            <label className="block text-sm font-medium text-slate-700">
-              Latitude *
-            </label>
+            <label className="block text-sm font-medium text-slate-700">Latitude *</label>
             <input
               type="number"
               step="any"
@@ -146,9 +155,7 @@ export default function CreatePointPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700">
-              Longitude *
-            </label>
+            <label className="block text-sm font-medium text-slate-700">Longitude *</label>
             <input
               type="number"
               step="any"
@@ -163,7 +170,7 @@ export default function CreatePointPage() {
         <div className="grid gap-4 md:grid-cols-2">
           <div>
             <label className="block text-sm font-medium text-slate-700">
-              Nombre de personnes estimé *
+              Nombre de personnes estime *
             </label>
             <input
               type="number"
@@ -176,9 +183,7 @@ export default function CreatePointPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700">
-              Niveau d’urgence *
-            </label>
+            <label className="block text-sm font-medium text-slate-700">Niveau d'urgence *</label>
             <select
               value={niveauUrgence}
               onChange={(e) =>
@@ -197,9 +202,7 @@ export default function CreatePointPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700">
-            Besoins observés *
-          </label>
+          <label className="block text-sm font-medium text-slate-700">Besoins observés *</label>
 
           <div className="mt-3 grid gap-3 sm:grid-cols-2 md:grid-cols-3">
             {besoinOptions.map((besoin) => (
@@ -224,9 +227,7 @@ export default function CreatePointPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700">
-            Typologie
-          </label>
+          <label className="block text-sm font-medium text-slate-700">Typologie</label>
           <input
             type="text"
             value={typologie}
@@ -237,9 +238,7 @@ export default function CreatePointPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700">
-            Commentaire
-          </label>
+          <label className="block text-sm font-medium text-slate-700">Commentaire</label>
           <textarea
             value={commentaire}
             onChange={(e) => setCommentaire(e.target.value)}
@@ -249,19 +248,19 @@ export default function CreatePointPage() {
           />
         </div>
 
-        {error && (
+        {error ? (
           <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
             {error}
           </div>
-        )}
+        ) : null}
 
         <div className="flex items-center gap-3">
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !canCreateReport}
             className="rounded-lg bg-indigo-600 px-5 py-2 font-medium text-white hover:bg-indigo-700 disabled:opacity-60"
           >
-            {loading ? 'Création...' : 'Créer le point'}
+            {loading ? 'Creation...' : 'Créer le point'}
           </button>
 
           <button

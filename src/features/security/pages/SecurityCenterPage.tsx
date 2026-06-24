@@ -78,7 +78,7 @@ export function SecurityCenterPage() {
             Chiffre: {settings?.password_require_number ? 'obligatoire' : 'optionnel'}
           </p>
           <p className="text-sm text-gray-600">
-            Symbole: {settings?.password_require_symbol ? 'obligatoire' : 'optionnel'}
+            Minuscule: {settings?.password_require_lowercase ? 'obligatoire' : 'optionnelle'}
           </p>
 
           <label htmlFor="sample-password" className="mt-4 block text-sm font-medium text-gray-700">

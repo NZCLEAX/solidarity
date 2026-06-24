@@ -1,8 +1,12 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
+
+import { usePermissions } from '@/features/auth/hooks/usePermissions'
 import { getPoints } from '@/features/points/api/points'
 import { createIntervention } from '@/features/interventions/api/interventions'
+import { interventionSubmissionSchema } from '@/features/security/model/schemas'
+import { logSecurityEvent } from '@/features/security/services/security-audit'
 
 const typeAideOptions = [
   'Distribution de repas',
@@ -16,6 +20,8 @@ const typeAideOptions = [
 
 export default function CreateInterventionPage() {
   const navigate = useNavigate()
+  const { can } = usePermissions()
+  const canManageInterventions = can('interventions.manage')
 
   const { data: points = [], isLoading: pointsLoading } = useQuery({
     queryKey: ['points'],
@@ -39,60 +45,80 @@ export default function CreateInterventionPage() {
     setError(null)
     setLoading(true)
 
-    if (!pointId) {
-      setError('Sélectionne un point concerné par l’intervention.')
+    if (!canManageInterventions) {
+      setError('Votre role ne peut pas declarer une intervention.')
+      void logSecurityEvent({
+        action: 'intervention.create.attempt',
+        resource: 'interventions',
+        outcome: 'denied',
+        details: { reason: 'role_not_allowed' },
+      })
       setLoading(false)
       return
     }
 
-    if (!dateIntervention) {
-      setError('La date d’intervention est obligatoire.')
+    const parsed = interventionSubmissionSchema.safeParse({
+      pointId,
+      dateIntervention,
+      heureDebut,
+      heureFin,
+      typeAide,
+      nombreRepas: Number(nombreRepas),
+      nombreBenevoles: Number(nombreBenevoles),
+      commentaire,
+    })
+
+    if (!parsed.success) {
+      const errorMessage = parsed.error.issues[0]?.message ?? 'Declaration invalide'
+      setError(errorMessage)
+      void logSecurityEvent({
+        action: 'intervention.create.validation_failed',
+        resource: 'interventions',
+        outcome: 'failure',
+        details: { error: errorMessage },
+      })
       setLoading(false)
       return
     }
 
-    if (!heureDebut || !heureFin) {
-      setError('Les heures de début et de fin sont obligatoires.')
-      setLoading(false)
-      return
-    }
-
-    if (heureFin <= heureDebut) {
-      setError('L’heure de fin doit être après l’heure de début.')
-      setLoading(false)
-      return
-    }
-
-    const parsedNombreRepas = Number(nombreRepas)
-    const parsedNombreBenevoles = Number(nombreBenevoles)
-
-    if (Number.isNaN(parsedNombreRepas) || parsedNombreRepas < 0) {
-      setError('Le nombre de repas doit être valide.')
-      setLoading(false)
-      return
-    }
-
-    if (Number.isNaN(parsedNombreBenevoles) || parsedNombreBenevoles <= 0) {
-      setError('Le nombre de bénévoles doit être supérieur à 0.')
+    if (parsed.data.heureFin <= parsed.data.heureDebut) {
+      const errorMessage = "L'heure de fin doit etre apres l'heure de debut."
+      setError(errorMessage)
+      void logSecurityEvent({
+        action: 'intervention.create.validation_failed',
+        resource: 'interventions',
+        outcome: 'failure',
+        details: { error: errorMessage },
+      })
       setLoading(false)
       return
     }
 
     try {
       await createIntervention({
-        pointId,
-        dateIntervention,
-        heureDebut,
-        heureFin,
-        typeAide,
-        nombreRepas: parsedNombreRepas,
-        nombreBenevoles: parsedNombreBenevoles,
-        commentaire,
+        pointId: parsed.data.pointId,
+        dateIntervention: parsed.data.dateIntervention,
+        heureDebut: parsed.data.heureDebut,
+        heureFin: parsed.data.heureFin,
+        typeAide: parsed.data.typeAide,
+        nombreRepas: parsed.data.nombreRepas,
+        nombreBenevoles: parsed.data.nombreBenevoles,
+        commentaire: parsed.data.commentaire || '',
+      })
+
+      void logSecurityEvent({
+        action: 'intervention.create.success',
+        resource: 'interventions',
+        outcome: 'success',
+        details: {
+          point_id: parsed.data.pointId,
+          date_intervention: parsed.data.dateIntervention,
+        },
       })
 
       navigate('/interventions')
     } catch (err: any) {
-      setError(err.message || 'Erreur lors de la déclaration de l’intervention.')
+      setError(err.message || "Erreur lors de la declaration de l'intervention.")
     } finally {
       setLoading(false)
     }
@@ -108,9 +134,7 @@ export default function CreateInterventionPage() {
         ← Retour aux interventions
       </button>
 
-      <h1 className="text-3xl font-bold text-slate-950">
-        Déclarer une intervention
-      </h1>
+      <h1 className="text-3xl font-bold text-slate-950">Déclarer une intervention</h1>
       <p className="mt-2 text-slate-600">
         Renseigne les informations de l’intervention réalisée sur un point.
       </p>
@@ -120,9 +144,7 @@ export default function CreateInterventionPage() {
         className="mt-6 space-y-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
       >
         <div>
-          <label className="block text-sm font-medium text-slate-700">
-            Point concerné *
-          </label>
+          <label className="block text-sm font-medium text-slate-700">Point concerné *</label>
 
           <select
             value={pointId}
@@ -144,9 +166,7 @@ export default function CreateInterventionPage() {
 
         <div className="grid gap-4 md:grid-cols-3">
           <div>
-            <label className="block text-sm font-medium text-slate-700">
-              Date *
-            </label>
+            <label className="block text-sm font-medium text-slate-700">Date *</label>
             <input
               type="date"
               value={dateIntervention}
@@ -156,9 +176,7 @@ export default function CreateInterventionPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700">
-              Heure de début *
-            </label>
+            <label className="block text-sm font-medium text-slate-700">Heure de début *</label>
             <input
               type="time"
               value={heureDebut}
@@ -168,9 +186,7 @@ export default function CreateInterventionPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700">
-              Heure de fin *
-            </label>
+            <label className="block text-sm font-medium text-slate-700">Heure de fin *</label>
             <input
               type="time"
               value={heureFin}
@@ -181,9 +197,7 @@ export default function CreateInterventionPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700">
-            Type d’aide *
-          </label>
+          <label className="block text-sm font-medium text-slate-700">Type d'aide *</label>
 
           <select
             value={typeAide}
@@ -200,9 +214,7 @@ export default function CreateInterventionPage() {
 
         <div className="grid gap-4 md:grid-cols-2">
           <div>
-            <label className="block text-sm font-medium text-slate-700">
-              Nombre de repas *
-            </label>
+            <label className="block text-sm font-medium text-slate-700">Nombre de repas *</label>
             <input
               type="number"
               min="0"
@@ -214,9 +226,7 @@ export default function CreateInterventionPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700">
-              Nombre de bénévoles *
-            </label>
+            <label className="block text-sm font-medium text-slate-700">Nombre de bénévoles *</label>
             <input
               type="number"
               min="1"
@@ -229,9 +239,7 @@ export default function CreateInterventionPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700">
-            Commentaire
-          </label>
+          <label className="block text-sm font-medium text-slate-700">Commentaire</label>
           <textarea
             value={commentaire}
             onChange={(event) => setCommentaire(event.target.value)}
@@ -241,19 +249,19 @@ export default function CreateInterventionPage() {
           />
         </div>
 
-        {error && (
+        {error ? (
           <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
             {error}
           </div>
-        )}
+        ) : null}
 
         <div className="flex gap-3">
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !canManageInterventions}
             className="rounded-lg bg-indigo-600 px-5 py-2 font-medium text-white hover:bg-indigo-700 disabled:opacity-60"
           >
-            {loading ? 'Déclaration...' : 'Déclarer l’intervention'}
+            {loading ? 'Declaration...' : 'Déclarer l’intervention'}
           </button>
 
           <button
