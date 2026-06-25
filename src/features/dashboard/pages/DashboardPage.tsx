@@ -3,7 +3,7 @@ import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getPoints } from '@/features/points/api/points'
 import { getInterventions } from '@/features/interventions/api/interventions'
-import { formatDate, formatLabel, formatTime } from '../../../utils/formatters'
+import { formatDate, formatLabel, formatTime } from '@/utils/formatters'
 
 export default function DashboardPage() {
   const {
