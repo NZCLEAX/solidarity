@@ -68,26 +68,24 @@ export default function PointsPage() {
                     {point.latitude}, {point.longitude}
                   </p>
                 </div>
-                <Link
-                  to={`/points/${point.id}`}
-                  className="rounded-lg border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
-                >
-                Voir détail
-              </Link>
-
-              <div className="flex items-center gap-2"></div>
-                <Link
-                to={`/points/${point.id}/edit`}
-                className="rounded-lg border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
-            
-            >
-              modifier
-
-            </Link>
-                <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700">
-    {point.statut || 'statut inconnu'}
-  </span>
-</div>
+                <div className="flex flex-shrink-0 items-center gap-2">
+                  <Link
+                    to={`/points/${point.id}`}
+                    className="rounded-lg border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                  >
+                    Voir détail
+                  </Link>
+                  <Link
+                    to={`/points/${point.id}/edit`}
+                    className="rounded-lg border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                  >
+                    Modifier
+                  </Link>
+                  <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700">
+                    {point.statut || 'statut inconnu'}
+                  </span>
+                </div>
+              </div>
 
               <div className="mt-4 grid gap-3 md:grid-cols-3">
                 <div className="rounded-lg bg-slate-50 p-3">

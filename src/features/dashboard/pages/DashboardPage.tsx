@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getPoints } from '@/features/points/api/points'
 import { getInterventions } from '@/features/interventions/api/interventions'
@@ -64,69 +65,74 @@ export default function DashboardPage() {
   const isLoading = pointsLoading || interventionsLoading
   const hasError = pointsError || interventionsError
 
-  const pointsActifs = points.filter((point) => point.actif !== false)
+  const stats = useMemo(() => {
+    const pointsActifs = points.filter((point) => point.actif !== false)
 
-  const pointsUrgents = pointsActifs.filter(
-    (point) =>
-      point.niveau_urgence === 'haute' || point.niveau_urgence === 'critique'
-  )
-
-  const pointsCritiques = pointsActifs.filter(
-    (point) => point.niveau_urgence === 'critique'
-  )
-
-  const pointsNonVerifies = pointsActifs.filter(
-    (point) => point.niveau_fiabilite === 'non_verifie'
-  )
-
-  const pointsGeolocalises = pointsActifs.filter((point) => {
-    const latitude = Number(point.latitude)
-    const longitude = Number(point.longitude)
-
-    return (
-      Number.isFinite(latitude) &&
-      Number.isFinite(longitude) &&
-      !(latitude === 0 && longitude === 0)
-    )
-  })
-
-  const totalPersonnesEstimees = pointsActifs.reduce(
-    (total, point) => total + (point.nombre_personnes_estime || 0),
-    0
-  )
-
-  const totalRepas = interventions.reduce(
-    (total, intervention) => total + (intervention.nombre_repas || 0),
-    0
-  )
-
-  const totalBenevoles = interventions.reduce(
-    (total, intervention) => total + (intervention.nombre_benevoles || 0),
-    0
-  )
-
-  const derniersPoints = [...pointsActifs]
-    .sort((a, b) => {
-      const dateA = a.created_at ? new Date(a.created_at).getTime() : 0
-      const dateB = b.created_at ? new Date(b.created_at).getTime() : 0
-      return dateB - dateA
-    })
-    .slice(0, 4)
-
-  const dernieresInterventions = [...interventions]
-    .sort((a, b) => {
-      const dateA = a.created_at ? new Date(a.created_at).getTime() : 0
-      const dateB = b.created_at ? new Date(b.created_at).getTime() : 0
-      return dateB - dateA
-    })
-    .slice(0, 4)
-
-  const pointsPrioritaires = [...pointsActifs]
-    .filter(
+    const pointsUrgents = pointsActifs.filter(
       (point) =>
         point.niveau_urgence === 'haute' || point.niveau_urgence === 'critique'
     )
-    .slice(0, 4)
+
+    const pointsCritiques = pointsActifs.filter(
+      (point) => point.niveau_urgence === 'critique'
+    )
+
+    const pointsNonVerifies = pointsActifs.filter(
+      (point) => point.niveau_fiabilite === 'non_verifie'
+    )
+
+    const pointsGeolocalises = pointsActifs.filter((point) => {
+      const latitude = Number(point.latitude)
+      const longitude = Number(point.longitude)
+
+      return (
+        Number.isFinite(latitude) &&
+        Number.isFinite(longitude) &&
+        !(latitude === 0 && longitude === 0)
+      )
+    })
+
+    const totalPersonnesEstimees = pointsActifs.reduce(
+      (total, point) => total + (point.nombre_personnes_estime || 0),
+      0
+    )
+
+    const totalRepas = interventions.reduce(
+      (total, intervention) => total + (intervention.nombre_repas || 0),
+      0
+    )
+
+    const totalBenevoles = interventions.reduce(
+      (total, intervention) => total + (intervention.nombre_benevoles || 0),
+      0
+    )
+
+    const derniersPoints = [...pointsActifs]
+      .sort((a, b) => {
+        const dateA = a.created_at ? new Date(a.created_at).getTime() : 0
+        const dateB = b.created_at ? new Date(b.created_at).getTime() : 0
+        return dateB - dateA
+      })
+      .slice(0, 4)
+
+    const dernieresInterventions = [...interventions]
+      .sort((a, b) => {
+        const dateA = a.created_at ? new Date(a.created_at).getTime() : 0
+        const dateB = b.created_at ? new Date(b.created_at).getTime() : 0
+        return dateB - dateA
+      })
+      .slice(0, 4)
+
+    const pointsPrioritaires = [...pointsActifs]
+      .filter(
+        (point) =>
+          point.niveau_urgence === 'haute' || point.niveau_urgence === 'critique'
+      )
+      .slice(0, 4)
+
+    return { pointsActifs, pointsUrgents, pointsCritiques, pointsNonVerifies, pointsGeolocalises, totalPersonnesEstimees, totalRepas, totalBenevoles, derniersPoints, dernieresInterventions, pointsPrioritaires }
+
+  }, [points, interventions])
 
   if (isLoading) {
     return (
@@ -179,27 +185,27 @@ export default function DashboardPage() {
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <p className="text-sm text-slate-500">Points actifs</p>
           <p className="mt-2 text-3xl font-bold text-slate-950">
-            {pointsActifs.length}
+            {stats.pointsActifs.length}
           </p>
           <p className="mt-1 text-xs text-slate-500">
-            {pointsGeolocalises.length} géolocalisé(s)
+            {stats.pointsGeolocalises.length} géolocalisé(s)
           </p>
         </div>
 
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <p className="text-sm text-slate-500">Points urgents</p>
           <p className="mt-2 text-3xl font-bold text-slate-950">
-            {pointsUrgents.length}
+            {stats.pointsUrgents.length}
           </p>
           <p className="mt-1 text-xs text-slate-500">
-            {pointsCritiques.length} critique(s)
+            {stats.pointsCritiques.length} critique(s)
           </p>
         </div>
 
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <p className="text-sm text-slate-500">Personnes estimées</p>
           <p className="mt-2 text-3xl font-bold text-slate-950">
-            {totalPersonnesEstimees}
+            {stats.totalPersonnesEstimees}
           </p>
           <p className="mt-1 text-xs text-slate-500">
             Sur les points actifs
@@ -209,7 +215,7 @@ export default function DashboardPage() {
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <p className="text-sm text-slate-500">Points non vérifiés</p>
           <p className="mt-2 text-3xl font-bold text-slate-950">
-            {pointsNonVerifies.length}
+            {stats.pointsNonVerifies.length}
           </p>
           <p className="mt-1 text-xs text-slate-500">
             À confirmer sur le terrain
@@ -221,21 +227,21 @@ export default function DashboardPage() {
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <p className="text-sm text-slate-500">Interventions déclarées</p>
           <p className="mt-2 text-3xl font-bold text-slate-950">
-            {interventions.length}
+            {stats.dernieresInterventions.length}
           </p>
         </div>
 
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <p className="text-sm text-slate-500">Repas distribués</p>
           <p className="mt-2 text-3xl font-bold text-slate-950">
-            {totalRepas}
+            {stats.totalRepas}
           </p>
         </div>
 
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <p className="text-sm text-slate-500">Bénévoles mobilisés</p>
           <p className="mt-2 text-3xl font-bold text-slate-950">
-            {totalBenevoles}
+            {stats.totalBenevoles}
           </p>
         </div>
       </div>
@@ -255,13 +261,13 @@ export default function DashboardPage() {
             </Link>
           </div>
 
-          {pointsPrioritaires.length === 0 ? (
+          {stats.pointsPrioritaires.length === 0 ? (
             <p className="rounded-lg border border-dashed border-slate-300 p-4 text-sm text-slate-500">
               Aucun point prioritaire pour le moment.
             </p>
           ) : (
             <div className="space-y-3">
-              {pointsPrioritaires.map((point) => (
+              {stats.pointsPrioritaires.map((point) => (
                 <Link
                   key={point.id}
                   to={`/points/${point.id}`}
@@ -302,13 +308,13 @@ export default function DashboardPage() {
             </Link>
           </div>
 
-          {dernieresInterventions.length === 0 ? (
+          {stats.dernieresInterventions.length === 0 ? (
             <p className="rounded-lg border border-dashed border-slate-300 p-4 text-sm text-slate-500">
               Aucune intervention déclarée pour le moment.
             </p>
           ) : (
             <div className="space-y-3">
-              {dernieresInterventions.map((intervention) => (
+              {stats.dernieresInterventions.map((intervention) => (
                 <article
                   key={intervention.id}
                   className="rounded-lg border border-slate-200 p-4"
@@ -346,13 +352,13 @@ export default function DashboardPage() {
           Derniers points signalés
         </h2>
 
-        {derniersPoints.length === 0 ? (
+        {stats.derniersPoints.length === 0 ? (
           <p className="mt-4 rounded-lg border border-dashed border-slate-300 p-4 text-sm text-slate-500">
             Aucun point signalé pour le moment.
           </p>
         ) : (
           <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-            {derniersPoints.map((point) => (
+            {stats.derniersPoints.map((point) => (
               <Link
                 key={point.id}
                 to={`/points/${point.id}`}
