@@ -33,6 +33,7 @@ export type Point = {
   created_by: string
   created_at: string | null
   updated_at: string | null
+  date_derniere_maj: string | null
 }
 
 export async function createPoint(input: CreatePointInput) {
@@ -81,7 +82,6 @@ export async function createPoint(input: CreatePointInput) {
       niveau_fiabilite: 'non_verifie',
       actif: true,
       cree_par: session.user.id,
-      created_by: session.user.id,
       date_observation: now,
       date_derniere_maj: now,
     })
