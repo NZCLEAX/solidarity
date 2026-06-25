@@ -1,30 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { getInterventions } from '@/features/interventions/api/interventions'
-
-function formatDate(value: string | null) {
-  if (!value) return 'Non renseignée'
-  return new Date(value).toLocaleDateString('fr-FR')
-}
-
-function formatTime(value: string | null) {
-  if (!value) return '--:--'
-  return value.slice(0, 5)
-}
-
-function formatStatut(value: string | null) {
-  if (!value) return 'Déclarée'
-
-  const labels: Record<string, string> = {
-    declaree: 'Déclarée',
-    planifiee: 'Planifiée',
-    en_cours: 'En cours',
-    terminee: 'Terminée',
-    annulee: 'Annulée',
-  }
-
-  return labels[value] || value
-}
+import { formatDate, formatLabel, formatTime } from '@/utils/formatters'
 
 export default function InterventionsPage() {
   const {
@@ -96,7 +73,7 @@ export default function InterventionsPage() {
                 </div>
 
                 <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700">
-                  {formatStatut(intervention.statut)}
+                  {formatLabel(intervention.statut)}
                 </span>
               </div>
 

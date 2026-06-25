@@ -1,28 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { getPointById } from '@/features/points/api/points'
-
-function formatLabel(value: string | null) {
-  if (!value) return 'Non renseigné'
-
-  const labels: Record<string, string> = {
-    signale: 'Signalé',
-    a_confirmer: 'À confirmer',
-    confirme: 'Confirmé',
-    actif: 'Actif',
-    inactif: 'Inactif',
-    archive: 'Archivé',
-    non_verifie: 'Non vérifié',
-    verifie_terrain: 'Vérifié terrain',
-    multi_verifie: 'Multi-vérifié',
-    basse: 'Basse',
-    moyenne: 'Moyenne',
-    haute: 'Haute',
-    critique: 'Critique',
-  }
-
-  return labels[value] || value
-}
+import { formatLabel } from '@/utils/formatters'
 
 export default function PointDetailsPage() {
   const { pointId } = useParams()

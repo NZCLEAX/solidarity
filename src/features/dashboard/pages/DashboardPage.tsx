@@ -3,43 +3,7 @@ import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getPoints } from '@/features/points/api/points'
 import { getInterventions } from '@/features/interventions/api/interventions'
-
-function formatLabel(value: string | null) {
-  if (!value) return 'Non renseigné'
-
-  const labels: Record<string, string> = {
-    signale: 'Signalé',
-    a_confirmer: 'À confirmer',
-    confirme: 'Confirmé',
-    actif: 'Actif',
-    inactif: 'Inactif',
-    archive: 'Archivé',
-    non_verifie: 'Non vérifié',
-    verifie_terrain: 'Vérifié terrain',
-    multi_verifie: 'Multi-vérifié',
-    basse: 'Basse',
-    moyenne: 'Moyenne',
-    haute: 'Haute',
-    critique: 'Critique',
-    declaree: 'Déclarée',
-    planifiee: 'Planifiée',
-    en_cours: 'En cours',
-    terminee: 'Terminée',
-    annulee: 'Annulée',
-  }
-
-  return labels[value] || value
-}
-
-function formatDate(value: string | null) {
-  if (!value) return 'Non renseignée'
-  return new Date(value).toLocaleDateString('fr-FR')
-}
-
-function formatTime(value: string | null) {
-  if (!value) return '--:--'
-  return value.slice(0, 5)
-}
+import { formatDate, formatLabel, formatTime } from '@/utils/formatters'
 
 export default function DashboardPage() {
   const {

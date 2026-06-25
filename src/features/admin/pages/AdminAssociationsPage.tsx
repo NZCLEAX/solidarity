@@ -13,6 +13,7 @@ import {
   type Association,
   type AssociationStatus,
 } from '@/features/admin/api/associations'
+import { formatDate, formatLabel } from '@/utils/formatters'
 
 const statusValues: [AssociationStatus, ...AssociationStatus[]] = ['en_attente', 'active', 'suspendue', 'archivee']
 
@@ -49,25 +50,6 @@ const statusOptions: Array<{
   { label: 'Suspendue', value: 'suspendue' },
   { label: 'Archivée', value: 'archivee' },
 ]
-
-function formatStatus(status: string | null | undefined) {
-  const labels: Record<string, string> = {
-    en_attente: 'En attente',
-    active: 'Active',
-    suspendue: 'Suspendue',
-    archivee: 'Archivée',
-  }
-
-  if (!status) return 'Non renseigné'
-
-  return labels[status] || status
-}
-
-function formatDate(value: string | null) {
-  if (!value) return 'Non renseignée'
-
-  return new Date(value).toLocaleDateString('fr-FR')
-}
 
 export default function AdminAssociationsPage() {
   const queryClient = useQueryClient()
@@ -424,7 +406,7 @@ export default function AdminAssociationsPage() {
                   </div>
 
                   <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700">
-                    {formatStatus(association.statut)}
+                    {formatLabel(association.statut)}
                   </span>
                 </div>
 

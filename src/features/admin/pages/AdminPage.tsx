@@ -15,6 +15,7 @@ import {
   formatRole,
   type UserRole,
 } from '@/features/auth/utils/roles'
+import { formatDate, formatLabel } from '@/utils/formatters'
 
 const userStatusOptions: Array<{
   label: string
@@ -33,24 +34,6 @@ const userStatusOptions: Array<{
     value: 'inactif',
   },
 ]
-
-function formatStatus(status: string | null | undefined) {
-  const labels: Record<string, string> = {
-    actif: 'Actif',
-    suspendu: 'Suspendu',
-    inactif: 'Inactif',
-  }
-
-  if (!status) return 'Non renseigné'
-
-  return labels[status] || status
-}
-
-function formatDate(value: string | null) {
-  if (!value) return 'Non renseignée'
-
-  return new Date(value).toLocaleDateString('fr-FR')
-}
 
 export default function AdminPage() {
   const queryClient = useQueryClient()
@@ -317,7 +300,7 @@ export default function AdminPage() {
                     </select>
 
                     <p className="mt-1 text-xs text-slate-500">
-                      Actuel : {formatStatus(user.statut_compte)}
+                      Actuel : {formatLabel(user.statut_compte)}
                     </p>
                   </div>
 
