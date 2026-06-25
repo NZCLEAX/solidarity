@@ -59,7 +59,10 @@ export default function CreatePointPage() {
     }
 
     try {
-      await createPoint(data)
+      await createPoint({
+        ...data,
+        typologie: data.typologie || '',
+      })
 
       void logSecurityEvent({
         action: 'report.create.success',
