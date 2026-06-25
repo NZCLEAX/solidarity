@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { getPointById } from '@/features/points/api/points'
-import { formatLabel } from '@/utils/formatters'
+import { formatLabel } from '../../../utils/formatters'
 
 export default function PointDetailsPage() {
   const { pointId } = useParams()

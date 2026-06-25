@@ -13,7 +13,7 @@ import {
   type Association,
   type AssociationStatus,
 } from '@/features/admin/api/associations'
-import { formatDate, formatLabel } from '@/utils/formatters'
+import { formatDate, formatLabel } from '../../../utils/formatters'
 
 const statusValues: [AssociationStatus, ...AssociationStatus[]] = ['en_attente', 'active', 'suspendue', 'archivee']
 
