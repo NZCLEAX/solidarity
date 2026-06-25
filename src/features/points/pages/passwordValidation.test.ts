@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { isValidPassword, passwordValidationMessage } from './passwordValidation'
+import { isValidPassword } from '../../auth/utils/passwordValidation'
 
 describe('isValidPassword', () => {
   it('should return false for passwords shorter than 15 characters', () => {

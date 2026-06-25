@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm, Controller, type SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 
-import { getPointById, updatePoint } from '@/features/points/api/points'
+import { getPointById, updatePoint, type Point } from '@/features/points/api/points'
 import { pointUpdateSchema, type PointUpdate } from '@/features/security/model/schemas'
 import { logSecurityEvent } from '@/features/security/services/security-audit'
 
@@ -21,144 +21,77 @@ const besoinOptions = [
 export default function EditPointPage() {
   const { pointId } = useParams()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const requiredPointId = pointId as string
 
-  const [point, setPoint] = useState<Point | null>(null)
-  const [adresse, setAdresse] = useState('')
-  const [latitude, setLatitude] = useState('')
-  const [longitude, setLongitude] = useState('')
-  const [nombrePersonnesEstime, setNombrePersonnesEstime] = useState('')
-  const [typologie, setTypologie] = useState('')
-  const [niveauUrgence, setNiveauUrgence] = useState<'basse' | 'moyenne' | 'haute' | 'critique'>('moyenne')
-  const [statut, setStatut] = useState<'signale' | 'a_confirmer' | 'confirme' | 'actif' | 'inactif' | 'archive'>('signale')
-  const [besoins, setBesoins] = useState<string[]>([])
-  const [commentaire, setCommentaire] = useState('')
+  const { data: point, isLoading, isError, error } = useQuery({
+    queryKey: ['point', requiredPointId],
+    queryFn: () => getPointById(requiredPointId),
+    enabled: Boolean(requiredPointId),
+  })
 
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const {
+    register,
+    handleSubmit,
+    control,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<PointUpdate>({
+    resolver: zodResolver(pointUpdateSchema),
+  })
 
   useEffect(() => {
-    const loadPoint = async () => {
-      if (!pointId) {
-        setError('Identifiant du point introuvable.')
-        setLoading(false)
-        return
-      }
-
-      try {
-        const data = await getPointById(pointId)
-        setPoint(data)
-        setAdresse(data.adresse || '')
-        setLatitude(data.latitude?.toString() || '')
-        setLongitude(data.longitude?.toString() || '')
-        setNombrePersonnesEstime(data.nombre_personnes_estime?.toString() || '')
-        setTypologie(data.typologie || '')
-        setNiveauUrgence(
-          (data.niveau_urgence as 'basse' | 'moyenne' | 'haute' | 'critique') || 'moyenne'
-        )
-        setStatut(
-          (data.statut as
-            | 'signale'
-            | 'a_confirmer'
-            | 'confirme'
-            | 'actif'
-            | 'inactif'
-            | 'archive') || 'signale'
-        )
-        setBesoins(
-          data.besoins ? data.besoins.split(',').map((besoin) => besoin.trim()) : []
-        )
-        setCommentaire(data.commentaire || '')
-      } catch (err: any) {
-        setError(err.message || 'Erreur lors du chargement du point.')
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    loadPoint()
-  }, [pointId])
-
-  const toggleBesoin = (besoin: string) => {
-    setBesoins((current) =>
-      current.includes(besoin)
-        ? current.filter((item) => item !== besoin)
-        : [...current, besoin]
-    )
-  }
-
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault()
-    setError(null)
-    setSaving(true)
-
-    if (!pointId) {
-      setError('Identifiant du point introuvable.')
-      setSaving(false)
-      return
-    }
-
-    const parsed = pointUpdateSchema.safeParse({
-      adresse,
-      latitude: Number(latitude),
-      longitude: Number(longitude),
-      nombrePersonnesEstime: Number(nombrePersonnesEstime),
-      typologie,
-      niveauUrgence,
-      statut,
-      besoins,
-      commentaire,
-    })
-
-    if (!parsed.success) {
-      const errorMessage = parsed.error.issues[0]?.message ?? 'Point invalide'
-      setError(errorMessage)
-      void logSecurityEvent({
-        action: 'report.update.validation_failed',
-        resource: 'points',
-        outcome: 'failure',
-        details: { error: errorMessage, mode: 'edit' },
+    if (point) {
+      reset({
+        adresse: point.adresse || '',
+        latitude: point.latitude ?? undefined,
+        longitude: point.longitude ?? undefined,
+        nombrePersonnesEstime: point.nombre_personnes_estime ?? undefined,
+        typologie: point.typologie || '',
+        niveauUrgence: point.niveau_urgence || 'moyenne',
+        statut: point.statut || 'signale',
+        besoins: point.besoins ? point.besoins.split(',').map((b) => b.trim()) : [],
+        commentaire: point.commentaire || '',
       })
-      setSaving(false)
-      return
     }
+  }, [point, reset])
 
-    try {
-      await updatePoint(pointId, {
-        adresse: parsed.data.adresse,
-        latitude: parsed.data.latitude,
-        longitude: parsed.data.longitude,
-        nombrePersonnesEstime: parsed.data.nombrePersonnesEstime,
-        typologie: parsed.data.typologie || '',
-        niveauUrgence: parsed.data.niveauUrgence,
-        statut: parsed.data.statut,
-        besoins: parsed.data.besoins,
-        commentaire: parsed.data.commentaire || '',
-      })
-
+  const mutation = useMutation({
+    mutationFn: (data: PointUpdate) => updatePoint(requiredPointId, data),
+    onSuccess: () => {
       void logSecurityEvent({
         action: 'report.update.success',
         resource: 'points',
         outcome: 'success',
-        details: { mode: 'edit', point_id: pointId },
+        details: { mode: 'edit', point_id: requiredPointId },
       })
-
+      // Invalidate queries to refetch data on other pages
+      void queryClient.invalidateQueries({ queryKey: ['points'] })
+      void queryClient.invalidateQueries({ queryKey: ['point', requiredPointId] })
       navigate('/points')
-    } catch (err: any) {
-      setError(err.message || 'Erreur lors de la mise a jour du point.')
-    } finally {
-      setSaving(false)
-    }
+    },
+    onError: (err) => {
+      void logSecurityEvent({
+        action: 'report.update.failed',
+        resource: 'points',
+        outcome: 'failure',
+        details: { error: err.message, mode: 'edit' },
+      })
+    },
+  })
+
+  const onSubmit: SubmitHandler<PointUpdate> = (data) => {
+    mutation.mutate(data)
   }
 
-  if (loading) {
+  if (isLoading) {
     return <div className="rounded-xl bg-white p-6 text-slate-600">Chargement du point...</div>
   }
 
-  if (!point) {
+  if (isError || !point) {
     return (
       <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-red-700">
-        {error || 'Point introuvable.'}
+        {(error as Error)?.message || 'Point introuvable.'}
       </div>
     )
   }
@@ -283,7 +216,7 @@ export default function EditPointPage() {
                       className="mr-2"
                       checked={field.value.includes(besoin)}
                       onChange={() => {
-                        const newValue = field.value.includes(besoin)
+                        const newValue = field.value?.includes(besoin)
                           ? field.value.filter((item) => item !== besoin)
                           : [...field.value, besoin]
                         field.onChange(newValue)
