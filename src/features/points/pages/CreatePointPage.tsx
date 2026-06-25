@@ -223,4 +223,23 @@ export default function CreatePointPage() {
           </div>
         ) : null}
 
-        <div className="flex items-c
+        <div className="flex gap-3">
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="rounded-lg bg-indigo-600 px-5 py-2 font-medium text-white hover:bg-indigo-700 disabled:opacity-60"
+          >
+            {isSubmitting ? 'Signalement...' : 'Signaler le point'}
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate('/points')}
+            className="rounded-lg border border-slate-300 px-5 py-2 font-medium text-slate-700 hover:bg-slate-50"
+          >
+            Annuler
+          </button>
+        </div>
+      </form>
+    </div>
+  )
+}
