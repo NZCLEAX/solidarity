@@ -176,10 +176,20 @@ export default function AdminAssociationsPage() {
   }
 
   const onSubmit: SubmitHandler<AssociationFormValues> = (data) => {
+    const inputForApi = {
+      ...data,
+      description: data.description || '',
+      email: data.email || '',
+      telephone: data.telephone || '',
+      ville: data.ville || '',
+      zoneAction: data.zoneAction || '',
+      typeAidePrincipale: data.typeAidePrincipale || '',
+    }
+
     if (editingAssociation) {
-      updateMutation.mutate({ associationId: editingAssociation.id, input: data })
+      updateMutation.mutate({ associationId: editingAssociation.id, input: inputForApi })
     } else {
-      createMutation.mutate(data)
+      createMutation.mutate(inputForApi)
     }
   }
 
