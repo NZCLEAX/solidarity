@@ -14,7 +14,7 @@ describe('isValidPassword', () => {
     expect(isValidPassword('abcdefghijklmno1')).toBe(false)
   })
 
-  it('should return false for passwords without a digit', () => {
+  it('Should return false for passwords without a digit', () => {
     expect(isValidPassword('AbcdefghijklmnoP')).toBe(false)
   })
 
