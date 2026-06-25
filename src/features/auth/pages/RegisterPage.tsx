@@ -38,7 +38,8 @@ export default function RegisterPage() {
   })
 
   const mutation = useMutation({
-    mutationFn: (data: RegisterFormValues) => signUp(data.email, data.password, data.name, data.role),
+    mutationFn: (data: RegisterFormValues) =>
+      signUp(data.email, data.password, data.name, data.role as PublicRegisterRole),
     onSuccess: () => {
       navigate('/dashboard')
     },

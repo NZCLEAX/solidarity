@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm, type SubmitHandler } from 'react-hook-form'
@@ -9,7 +9,7 @@ import { getPoints } from '@/features/points/api/points'
 import { createIntervention } from '@/features/interventions/api/interventions'
 import {
   interventionSubmissionSchema,
-  type InterventionSubmission,
+  type InterventionSubmissionValues as InterventionSubmission,
 } from '@/features/security/model/schemas'
 import { logSecurityEvent } from '@/features/security/services/security-audit'
 
@@ -39,8 +39,6 @@ export default function CreateInterventionPage() {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-    watch,
-    setError,
   } = useForm<InterventionSubmission>({
     resolver: zodResolver(interventionSubmissionSchema),
     defaultValues: {
@@ -67,7 +65,7 @@ export default function CreateInterventionPage() {
     onError: (err) => {
       setServerError(err.message || "Erreur lors de la déclaration de l'intervention.")
       void logSecurityEvent({
-        action: 'intervention.create.failed',
+        action: 'intervention.create.attempt',
         resource: 'interventions',
         outcome: 'failure',
         details: { error: err.message },

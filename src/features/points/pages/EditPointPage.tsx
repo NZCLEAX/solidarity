@@ -4,8 +4,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm, Controller, type SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 
-import { getPointById, updatePoint, type Point } from '@/features/points/api/points'
-import { pointUpdateSchema, type PointUpdate } from '@/features/security/model/schemas'
+import { getPointById, updatePoint } from '@/features/points/api/points'
+import {
+  pointUpdateSchema,
+  type PointUpdateValues as PointUpdate,
+} from '@/features/security/model/schemas'
 import { logSecurityEvent } from '@/features/security/services/security-audit'
 
 const besoinOptions = [
@@ -72,7 +75,7 @@ export default function EditPointPage() {
     },
     onError: (err) => {
       void logSecurityEvent({
-        action: 'report.update.failed',
+        action: 'report.update.attempt',
         resource: 'points',
         outcome: 'failure',
         details: { error: err.message, mode: 'edit' },
@@ -216,8 +219,8 @@ export default function EditPointPage() {
                       className="mr-2"
                       checked={field.value.includes(besoin)}
                       onChange={() => {
-                        const newValue = field.value?.includes(besoin)
-                          ? field.value.filter((item) => item !== besoin)
+                        const newValue = field.value.includes(besoin)
+                          ? field.value.filter((item: string) => item !== besoin)
                           : [...field.value, besoin]
                         field.onChange(newValue)
                       }}

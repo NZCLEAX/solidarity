@@ -5,7 +5,10 @@ import { zodResolver } from '@hookform/resolvers/zod'
 
 import { usePermissions } from '@/features/auth/hooks/usePermissions'
 import { createPoint } from '@/features/points/api/points'
-import { pointSubmissionSchema, type PointSubmission } from '@/features/security/model/schemas'
+import {
+  pointSubmissionSchema,
+  type PointSubmissionValues as PointSubmission,
+} from '@/features/security/model/schemas'
 import { logSecurityEvent } from '@/features/security/services/security-audit'
 
 const besoinOptions = [
@@ -183,7 +186,7 @@ export default function CreatePointPage() {
                       checked={field.value.includes(besoin)}
                       onChange={() => {
                         const newValue = field.value.includes(besoin)
-                          ? field.value.filter((item) => item !== besoin)
+                          ? field.value.filter((item: string) => item !== besoin)
                           : [...field.value, besoin]
                         field.onChange(newValue)
                       }}
