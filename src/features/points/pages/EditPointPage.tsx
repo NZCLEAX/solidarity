@@ -1,8 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useForm, Controller, type SubmitHandler } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 
-import { getPointById, updatePoint, type Point } from '@/features/points/api/points'
-import { pointUpdateSchema } from '@/features/security/model/schemas'
+import { getPointById, updatePoint } from '@/features/points/api/points'
+import { pointUpdateSchema, type PointUpdate } from '@/features/security/model/schemas'
 import { logSecurityEvent } from '@/features/security/services/security-audit'
 
 const besoinOptions = [
@@ -174,17 +177,17 @@ export default function EditPointPage() {
       <p className="mt-2 text-slate-600">Mets a jour les informations du point sélectionné.</p>
 
       <form
-        onSubmit={handleSubmit}
+        onSubmit={handleSubmit(onSubmit)}
         className="mt-6 space-y-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
       >
         <div>
           <label className="block text-sm font-medium text-slate-700">Adresse ou lieu *</label>
           <input
             type="text"
-            value={adresse}
-            onChange={(e) => setAdresse(e.target.value)}
+            {...register('adresse')}
             className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2"
           />
+          {errors.adresse && <p className="mt-1 text-sm text-red-600">{errors.adresse.message}</p>}
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
@@ -193,10 +196,10 @@ export default function EditPointPage() {
             <input
               type="number"
               step="any"
-              value={latitude}
-              onChange={(e) => setLatitude(e.target.value)}
+              {...register('latitude', { valueAsNumber: true })}
               className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2"
             />
+            {errors.latitude && <p className="mt-1 text-sm text-red-600">{errors.latitude.message}</p>}
           </div>
 
           <div>
@@ -204,10 +207,10 @@ export default function EditPointPage() {
             <input
               type="number"
               step="any"
-              value={longitude}
-              onChange={(e) => setLongitude(e.target.value)}
+              {...register('longitude', { valueAsNumber: true })}
               className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2"
             />
+            {errors.longitude && <p className="mt-1 text-sm text-red-600">{errors.longitude.message}</p>}
           </div>
         </div>
 
@@ -219,21 +222,18 @@ export default function EditPointPage() {
             <input
               type="number"
               min="1"
-              value={nombrePersonnesEstime}
-              onChange={(e) => setNombrePersonnesEstime(e.target.value)}
+              {...register('nombrePersonnesEstime', { valueAsNumber: true })}
               className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2"
             />
+            {errors.nombrePersonnesEstime && (
+              <p className="mt-1 text-sm text-red-600">{errors.nombrePersonnesEstime.message}</p>
+            )}
           </div>
 
           <div>
             <label className="block text-sm font-medium text-slate-700">Niveau d'urgence *</label>
             <select
-              value={niveauUrgence}
-              onChange={(e) =>
-                setNiveauUrgence(
-                  e.target.value as 'basse' | 'moyenne' | 'haute' | 'critique'
-                )
-              }
+              {...register('niveauUrgence')}
               className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2"
             >
               <option value="basse">Basse</option>
@@ -241,24 +241,14 @@ export default function EditPointPage() {
               <option value="haute">Haute</option>
               <option value="critique">Critique</option>
             </select>
+            {errors.niveauUrgence && <p className="mt-1 text-sm text-red-600">{errors.niveauUrgence.message}</p>}
           </div>
         </div>
 
         <div>
           <label className="block text-sm font-medium text-slate-700">Statut *</label>
           <select
-            value={statut}
-            onChange={(e) =>
-              setStatut(
-                e.target.value as
-                  | 'signale'
-                  | 'a_confirmer'
-                  | 'confirme'
-                  | 'actif'
-                  | 'inactif'
-                  | 'archive'
-              )
-            }
+            {...register('statut')}
             className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2"
           >
             <option value="signale">Signalé</option>
@@ -268,66 +258,79 @@ export default function EditPointPage() {
             <option value="inactif">Inactif</option>
             <option value="archive">Archivé</option>
           </select>
+          {errors.statut && <p className="mt-1 text-sm text-red-600">{errors.statut.message}</p>}
         </div>
 
         <div>
           <label className="block text-sm font-medium text-slate-700">Besoins observés *</label>
-
-          <div className="mt-3 grid gap-3 sm:grid-cols-2 md:grid-cols-3">
-            {besoinOptions.map((besoin) => (
-              <label
-                key={besoin}
-                className={`cursor-pointer rounded-lg border px-3 py-2 text-sm ${
-                  besoins.includes(besoin)
-                    ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
-                    : 'border-slate-300 bg-white text-slate-700'
-                }`}
-              >
-                <input
-                  type="checkbox"
-                  checked={besoins.includes(besoin)}
-                  onChange={() => toggleBesoin(besoin)}
-                  className="mr-2"
-                />
-                {besoin}
-              </label>
-            ))}
-          </div>
+          <Controller
+            name="besoins"
+            control={control}
+            defaultValue={[]}
+            render={({ field }) => (
+              <div className="mt-3 grid gap-3 sm:grid-cols-2 md:grid-cols-3">
+                {besoinOptions.map((besoin) => (
+                  <label
+                    key={besoin}
+                    className={`cursor-pointer rounded-lg border px-3 py-2 text-sm ${
+                      field.value.includes(besoin)
+                        ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
+                        : 'border-slate-300 bg-white text-slate-700'
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      className="mr-2"
+                      checked={field.value.includes(besoin)}
+                      onChange={() => {
+                        const newValue = field.value.includes(besoin)
+                          ? field.value.filter((item) => item !== besoin)
+                          : [...field.value, besoin]
+                        field.onChange(newValue)
+                      }}
+                    />
+                    {besoin}
+                  </label>
+                ))}
+              </div>
+            )}
+          />
+          {errors.besoins && <p className="mt-1 text-sm text-red-600">{errors.besoins.message}</p>}
         </div>
 
         <div>
           <label className="block text-sm font-medium text-slate-700">Typologie</label>
           <input
             type="text"
-            value={typologie}
-            onChange={(e) => setTypologie(e.target.value)}
+            {...register('typologie')}
             className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2"
           />
+          {errors.typologie && <p className="mt-1 text-sm text-red-600">{errors.typologie.message}</p>}
         </div>
 
         <div>
           <label className="block text-sm font-medium text-slate-700">Commentaire</label>
           <textarea
-            value={commentaire}
-            onChange={(e) => setCommentaire(e.target.value)}
+            {...register('commentaire')}
             rows={4}
             className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2"
           />
+          {errors.commentaire && <p className="mt-1 text-sm text-red-600">{errors.commentaire.message}</p>}
         </div>
 
-        {error ? (
+        {mutation.isError ? (
           <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            {error}
+            {(mutation.error as Error).message || 'Erreur lors de la mise a jour du point.'}
           </div>
         ) : null}
 
         <div className="flex gap-3">
           <button
             type="submit"
-            disabled={saving}
+            disabled={isSubmitting}
             className="rounded-lg bg-indigo-600 px-5 py-2 font-medium text-white hover:bg-indigo-700 disabled:opacity-60"
           >
-            {saving ? 'Mise a jour...' : 'Mettre a jour'}
+            {isSubmitting ? 'Mise a jour...' : 'Mettre a jour'}
           </button>
 
           <button
