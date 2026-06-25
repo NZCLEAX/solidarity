@@ -92,7 +92,7 @@ Le processus est conçu pour être sûr et collaboratif :
 1.  **Poussez votre branche de fonctionnalité** : Poussez votre branche (par exemple, `feature/ma-nouvelle-fonction`) sur GitHub. Vercel créera automatiquement un déploiement de **Preview**.
 2.  **Créez une Pull Request (PR)** : Sur GitHub, ouvrez une Pull Request de votre branche de fonctionnalité vers la branche `main`.
 3.  **Validez la Preview** : Vercel ajoutera un commentaire dans votre PR avec un lien vers le déploiement de Preview. C'est l'occasion pour vous et votre équipe de tester les changements dans un environnement réel, mais isolé.
-4.  **Fusionnez la PR** : Une fois que tout est validé, fusionnez la Pull Request dans la branche `main`.
+4.  **Fusionnez la PR** : une fois que tout est validé, fusionnez la Pull Request dans la branche `main`.
 5.  **Déploiement automatique en production** : Vercel détectera la fusion et lancera automatiquement un nouveau déploiement en utilisant le code de la branche `main`. Votre nouvelle fonctionnalité est maintenant en ligne !
 
 #### Où trouver l'URL de Preview ?
