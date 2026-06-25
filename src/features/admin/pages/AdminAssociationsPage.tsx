@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { useForm, type SubmitHandler } from 'react-hook-form'
@@ -110,7 +110,18 @@ export default function AdminAssociationsPage() {
   })
 
   const createMutation = useMutation({
-    mutationFn: createAssociation,
+    mutationFn: (data: AssociationFormValues) => {
+      const inputForApi = {
+        ...data,
+        description: data.description || '',
+        email: data.email || '',
+        telephone: data.telephone || '',
+        ville: data.ville || '',
+        zoneAction: data.zoneAction || '',
+        typeAidePrincipale: data.typeAidePrincipale || '',
+      }
+      return createAssociation(inputForApi)
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-associations'] })
       reset(emptyForm)
@@ -122,9 +133,20 @@ export default function AdminAssociationsPage() {
       associationId,
       input,
     }: {
-      associationId: string
-      input: AssociationFormValues
-    }) => updateAssociation(associationId, input),
+      associationId: string;
+      input: AssociationFormValues;
+    }) => {
+      const inputForApi = {
+        ...input,
+        description: input.description || '',
+        email: input.email || '',
+        telephone: input.telephone || '',
+        ville: input.ville || '',
+        zoneAction: input.zoneAction || '',
+        typeAidePrincipale: input.typeAidePrincipale || '',
+      }
+      return updateAssociation(associationId, inputForApi)
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-associations'] })
       setEditingAssociation(null)
@@ -176,20 +198,10 @@ export default function AdminAssociationsPage() {
   }
 
   const onSubmit: SubmitHandler<AssociationFormValues> = (data) => {
-    const inputForApi = {
-      ...data,
-      description: data.description || '',
-      email: data.email || '',
-      telephone: data.telephone || '',
-      ville: data.ville || '',
-      zoneAction: data.zoneAction || '',
-      typeAidePrincipale: data.typeAidePrincipale || '',
-    }
-
     if (editingAssociation) {
-      updateMutation.mutate({ associationId: editingAssociation.id, input: inputForApi })
+      updateMutation.mutate({ associationId: editingAssociation.id, input: data })
     } else {
-      createMutation.mutate(inputForApi)
+      createMutation.mutate(data)
     }
   }
 
