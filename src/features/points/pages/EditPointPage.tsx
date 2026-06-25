@@ -51,8 +51,9 @@ export default function EditPointPage() {
         longitude: point.longitude ?? undefined,
         nombrePersonnesEstime: point.nombre_personnes_estime ?? undefined,
         typologie: point.typologie || '',
-        niveauUrgence: point.niveau_urgence || 'moyenne',
-        statut: point.statut || 'signale',
+        niveauUrgence:
+          (point.niveau_urgence as PointUpdate['niveauUrgence']) || 'moyenne',
+        statut: (point.statut as PointUpdate['statut']) || 'signale',
         besoins: point.besoins ? point.besoins.split(',').map((b) => b.trim()) : [],
         commentaire: point.commentaire || '',
       })
@@ -60,7 +61,11 @@ export default function EditPointPage() {
   }, [point, reset])
 
   const mutation = useMutation({
-    mutationFn: (data: PointUpdate) => updatePoint(requiredPointId, data),
+    mutationFn: (data: PointUpdate) =>
+      updatePoint(requiredPointId, {
+        ...data,
+        typologie: data.typologie || '',
+      }),
     onSuccess: () => {
       void logSecurityEvent({
         action: 'report.update.success',
