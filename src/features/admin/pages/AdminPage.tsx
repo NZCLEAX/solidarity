@@ -15,7 +15,7 @@ import {
   formatRole,
   type UserRole,
 } from '@/features/auth/utils/roles'
-import { formatDate, formatLabel } from '../../../utils/formatters'
+import { formatDate, formatLabel } from '@/utils/formatters'
 
 const userStatusOptions: Array<{
   label: string
