@@ -4,7 +4,6 @@ import { AuthLayout } from './layouts/AuthLayout'
 
 import LoginPage from '@/features/auth/pages/LoginPage'
 import RegisterPage from '@/features/auth/pages/RegisterPage'
-
 import RequireAccess from '@/features/auth/components/RequireAccess'
 
 import AdminPage from '@/features/admin/pages/AdminPage'
@@ -32,11 +31,17 @@ import AssociationRequestsPage from '@/features/associations/pages/AssociationRe
 import AssociationRegisterPage from '@/features/associations/pages/AssociationRegisterPage'
 import AssociationTeamPage from '@/features/associations/pages/AssociationTeamPage'
 
-import AppLayout from '@/shared/components/AppLayout'
 import PlanningPage from '@/features/planning/pages/PlanningPage'
 import NotificationsPage from '@/features/notifications/pages/NotificationsPage'
 
+import AppLayout from '@/shared/components/AppLayout'
+
 export const router = createBrowserRouter([
+  {
+    path: '/',
+    element: <Navigate to="/register" replace />,
+  },
+
   {
     element: <AuthLayout />,
     children: [
@@ -56,41 +61,34 @@ export const router = createBrowserRouter([
   },
 
   {
-    path: '/',
     element: <AppLayout />,
     children: [
       {
-  index: true,
-  element: <Navigate to="/carte" replace />,
-},
-
-      {
-        path: 'dashboard',
+        path: '/dashboard',
         element: (
           <RequireAccess permission="dashboard">
             <DashboardPage />
           </RequireAccess>
         ),
       },
-
       {
-        path: 'carte',
+        path: '/carte',
         element: (
           <RequireAccess permission="view_map">
             <MapPage />
           </RequireAccess>
         ),
       },
-{
-  path: 'notifications',
-  element: (
-    <RequireAccess permission="dashboard">
-      <NotificationsPage />
-    </RequireAccess>
-  ),
-},
       {
-        path: 'points',
+        path: '/notifications',
+        element: (
+          <RequireAccess permission="dashboard">
+            <NotificationsPage />
+          </RequireAccess>
+        ),
+      },
+      {
+        path: '/points',
         element: (
           <RequireAccess permission="view_points">
             <PointsPage />
@@ -98,124 +96,111 @@ export const router = createBrowserRouter([
         ),
       },
       {
-  path: 'planning',
-  element: (
-    <RequireAccess permission="manage_interventions">
-      <PlanningPage />
-    </RequireAccess>
-  ),
-},
-
+        path: '/planning',
+        element: (
+          <RequireAccess permission="manage_interventions">
+            <PlanningPage />
+          </RequireAccess>
+        ),
+      },
       {
-        path: 'points/new',
+        path: '/points/new',
         element: (
           <RequireAccess permission="create_point">
             <CreatePointPage />
           </RequireAccess>
         ),
       },
-
       {
-        path: 'points/:pointId',
+        path: '/points/:pointId',
         element: (
           <RequireAccess permission="view_points">
             <PointDetailsPage />
           </RequireAccess>
         ),
       },
-
       {
-        path: 'points/:pointId/edit',
+        path: '/points/:pointId/edit',
         element: (
           <RequireAccess permission="view_points">
             <EditPointPage />
           </RequireAccess>
         ),
       },
-
       {
-        path: 'associations',
+        path: '/associations',
         element: (
           <RequireAccess permission="view_associations">
             <AssociationsPage />
           </RequireAccess>
         ),
       },
-
       {
-        path: 'association/demandes',
+        path: '/association/demandes',
         element: (
           <RequireAccess permission="manage_association_requests">
             <AssociationRequestsPage />
           </RequireAccess>
         ),
       },
-
       {
-        path: 'association/equipe',
+        path: '/association/equipe',
         element: (
           <RequireAccess permission="manage_association_requests">
             <AssociationTeamPage />
           </RequireAccess>
         ),
       },
-
       {
-        path: 'interventions',
+        path: '/interventions',
         element: (
           <RequireAccess permission="manage_interventions">
             <InterventionsPage />
           </RequireAccess>
         ),
       },
-
       {
-        path: 'interventions/new',
+        path: '/interventions/new',
         element: (
           <RequireAccess permission="manage_interventions">
             <CreateInterventionPage />
           </RequireAccess>
         ),
       },
-
       {
-        path: 'moderation',
+        path: '/moderation',
         element: (
           <RequireAccess permission="moderation">
             <ModerationPage />
           </RequireAccess>
         ),
       },
-
       {
-        path: 'moderation/doublons',
+        path: '/moderation/doublons',
         element: (
           <RequireAccess permission="moderation">
             <DuplicatePointsPage />
           </RequireAccess>
         ),
       },
-
       {
-        path: 'administration',
+        path: '/administration',
         element: (
           <RequireAccess permission="administration">
             <AdminPage />
           </RequireAccess>
         ),
       },
-
       {
-        path: 'administration/associations',
+        path: '/administration/associations',
         element: (
           <RequireAccess permission="administration">
             <AdminAssociationsPage />
           </RequireAccess>
         ),
       },
-
       {
-        path: 'profile',
+        path: '/profile',
         element: (
           <RequireAccess permission="profile">
             <ProfilePage />
@@ -227,6 +212,6 @@ export const router = createBrowserRouter([
 
   {
     path: '*',
-    element: <Navigate to="/" replace />,
+    element: <Navigate to="/register" replace />,
   },
 ])
