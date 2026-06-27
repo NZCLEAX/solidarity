@@ -47,6 +47,16 @@ export async function signIn(email: string, password: string) {
 
   return data
 }
+export async function signInWithProvider(provider: 'google' | 'apple') {
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider,
+    options: {
+      redirectTo: `${window.location.origin}/carte`,
+    },
+  })
+
+  if (error) throw error
+}
 
 export async function signOut() {
   const { error } = await supabase.auth.signOut()

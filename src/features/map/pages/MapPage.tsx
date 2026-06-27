@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { divIcon } from 'leaflet'
+import L, { divIcon } from 'leaflet'
 import {
   MapContainer,
   Marker,
@@ -9,31 +9,31 @@ import {
   TileLayer,
   useMapEvents,
 } from 'react-leaflet'
+
 import { getPoints } from '@/features/points/api/points'
 import {
   getInterventions,
   type Intervention,
 } from '@/features/interventions/api/interventions'
+
 import {
   formatPointLabel,
   getStatusBadgeClass,
   getUrgencyBadgeClass,
-  getUrgencyMarkerColor,
 } from '@/shared/utils/pointStyles'
+import {
+  getPointInterventions,
+  getRepasCoverage,
+  formatInterventionDate,
+} from '@/features/map/utils/coverage'
 
 const DEFAULT_CENTER: [number, number] = [48.8566, 2.3522]
 
 function MapClickHandler({ onMapClick }: { onMapClick: () => void }) {
   useMapEvents({
-    click: () => {
-      onMapClick()
-    },
-    dragstart: () => {
-      onMapClick()
-    },
-    zoomstart: () => {
-      onMapClick()
-    },
+    click: onMapClick,
+    dragstart: onMapClick,
+    zoomstart: onMapClick,
   })
 
   return null
@@ -71,12 +71,8 @@ function getNeedIcon(need: string) {
   if (normalizedNeed.includes('repas')) return '🍽️'
   if (normalizedNeed.includes('eau')) return '💧'
   if (normalizedNeed.includes('hygiène')) return '🧼'
-  if (
-    normalizedNeed.includes('vetement') ||
-    normalizedNeed.includes('vêtement')
-  ) {
+  if (normalizedNeed.includes('vetement') || normalizedNeed.includes('vêtement'))
     return '👕'
-  }
   if (normalizedNeed.includes('couverture')) return '🛏️'
   if (normalizedNeed.includes('soin')) return '🏥'
 
@@ -88,9 +84,7 @@ function formatShortDate(value: string | null | undefined) {
 
   const date = new Date(value)
 
-  if (Number.isNaN(date.getTime())) {
-    return 'Non renseignée'
-  }
+  if (Number.isNaN(date.getTime())) return 'Non renseignée'
 
   return new Intl.DateTimeFormat('fr-FR', {
     day: '2-digit',
@@ -110,83 +104,50 @@ function truncateText(value: string, maxLength = 70) {
   return `${value.slice(0, maxLength)}...`
 }
 
+function getPulseClass(urgency: string | null | undefined) {
+  const value = urgency?.toLowerCase()
+
+  if (value === 'critique') return 'pulse-marker pulse-marker-critical'
+  if (value === 'haute') return 'pulse-marker pulse-marker-high'
+  if (value === 'moyenne') return 'pulse-marker pulse-marker-medium'
+  return 'pulse-marker pulse-marker-low'
+}
+
 function createPointIcon(
   urgency: string | null | undefined,
   interventionCount: number
 ) {
-  const color = getUrgencyMarkerColor(urgency)
   const isCritical = urgency === 'critique'
-  const size = isCritical ? 40 : 38
-  const label = isCritical ? '!' : ''
+  const size = isCritical ? 30 : 26
   const hasInterventions = interventionCount > 0
 
   return divIcon({
     className: '',
     html: `
-      <div
-        style="
-          position: relative;
-          width: ${size}px;
-          height: ${size}px;
-        "
-      >
-        <div
-          style="
-            width: ${size}px;
-            height: ${size}px;
-            border-radius: 9999px;
-            background: ${color};
-            border: 4px solid white;
-            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.25), 0 0 0 12px ${color}26;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 20px;
-            font-weight: 900;
-            line-height: 1;
-          "
-        >
-          ${label}
+      <div class="pulse-marker-wrapper" style="width:${size + 44}px;height:${size + 44}px;">
+        <div class="${getPulseClass(urgency)}" style="width:${size}px;height:${size}px;">
+          ${isCritical ? '<span class="pulse-marker-label">!</span>' : ''}
         </div>
 
         ${
           hasInterventions
             ? `
-              <div
-                style="
-                  position: absolute;
-                  right: -10px;
-                  top: -10px;
-                  min-width: 24px;
-                  height: 24px;
-                  padding: 0 6px;
-                  border-radius: 9999px;
-                  background: #059669;
-                  border: 3px solid white;
-                  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.25);
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                  color: white;
-                  font-size: 12px;
-                  font-weight: 900;
-                "
-              >
-                ${interventionCount}
+              <div class="association-on-point-badge">
+                🤝
               </div>
             `
             : ''
         }
       </div>
     `,
-    iconSize: [size + 12, size + 12],
-    iconAnchor: [size / 2, size / 2],
+    iconSize: [size + 44, size + 44],
+    iconAnchor: [(size + 44) / 2, (size + 44) / 2],
     popupAnchor: [0, -size / 2],
   })
 }
 
 export default function MapPage() {
+  const [mobilePoint, setMobilePoint] = useState<any | null>(null)
   const [search, setSearch] = useState('')
   const [showFilters, setShowFilters] = useState(false)
   const [urgencyFilter, setUrgencyFilter] = useState('all')
@@ -271,6 +232,7 @@ export default function MapPage() {
       const comment = normalizeText(point.commentaire)
 
       const pointInterventions = interventionsByPointId[point.id] ?? []
+
       const interventionsText = pointInterventions
         .map((intervention) =>
           [
@@ -341,8 +303,8 @@ export default function MapPage() {
   }
 
   return (
-    <div className="relative h-[calc(100dvh-80px)] min-h-[520px] w-full overflow-hidden bg-[#faf8f4]">
-      {isLoading && (
+<div className="relative h-[calc(100dvh-64px)] w-full overflow-hidden bg-[#faf8f4]">
+        {isLoading && (
         <div className="flex h-full items-center justify-center p-8 text-slate-600">
           Chargement de la carte...
         </div>
@@ -372,219 +334,369 @@ export default function MapPage() {
             />
 
             {filteredPoints.map((point) => {
-              const pointInterventions = interventionsByPointId[point.id] ?? []
+  const pointInterventions = interventionsByPointId[point.id] ?? []
 
-              const totalRepas = pointInterventions.reduce(
-                (total, intervention) =>
-                  total + (intervention.nombre_repas ?? 0),
-                0
-              )
+  const totalRepas = pointInterventions.reduce(
+    (total, intervention) => total + (intervention.nombre_repas ?? 0),
+    0
+  )
 
-              const totalBenevoles = pointInterventions.reduce(
-                (total, intervention) =>
-                  total + (intervention.nombre_benevoles ?? 0),
-                0
-              )
+  const totalBenevoles = pointInterventions.reduce(
+    (total, intervention) => total + (intervention.nombre_benevoles ?? 0),
+    0
+  )
 
-              const latestIntervention = pointInterventions[0]
+  const repasCoverage = getRepasCoverage(
+    point.nombre_personnes_estime,
+    pointInterventions
+  )
+
+  const hasRepasNeed = point.besoins?.toLowerCase().includes('repas') ?? false
+
+  const latestIntervention = pointInterventions[0]
+
 
               return (
-                <Marker
-                  key={point.id}
-                  position={[point.latitude!, point.longitude!]}
-                  icon={createPointIcon(
-                    point.niveau_urgence,
-                    pointInterventions.length
-                  )}
-                >
-                  <Popup maxWidth={390} minWidth={320}>
-  <div className="w-[360px] max-w-[74vw] overflow-hidden rounded-2xl bg-white text-[12px]">
-    <div className="border-b border-slate-100 bg-slate-50 px-3 py-2.5">
-      <p className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">
-        Point signalé
-      </p>
+  <Marker
+  key={point.id}
+  position={[point.latitude!, point.longitude!]}
+  icon={createPointIcon(point.niveau_urgence, pointInterventions.length)}
+  eventHandlers={{
+    click: (event) => {
+      const isMobile = window.innerWidth < 640
 
-      <h3 className="mt-1 text-sm font-black leading-snug text-slate-950">
-        {point.adresse || 'Adresse non renseignée'}
-      </h3>
+      if (isMobile) {
+        event.target.closePopup()
+      }
 
-      <div className="mt-2 flex flex-wrap gap-1">
-        <span
-          className={`rounded-full px-2 py-0.5 text-[10px] font-bold ring-1 ${getUrgencyBadgeClass(
-          point.niveau_urgence
-          )}`}
-        >
-          {formatPointLabel(point.niveau_urgence)}
-        </span>
+      setMobilePoint({
+        ...point,
+        pointInterventions,
+        totalRepas,
+        totalBenevoles,
+        repasCoverage,
+        hasRepasNeed,
+        latestIntervention,
+      })
+    },
+  }}
+>
+   <Popup maxWidth={320} className="solidarity-popup">
+  <div className="w-[300px] rounded-2xl bg-white p-4">
+    <p className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-400">
+      Point signalé
+    </p>
 
-        <span
-          className={`rounded-full px-2 py-0.5 text-[10px] font-bold ring-1 ${getStatusBadgeClass(
-            point.statut
-          )}`}
-        >
-          {formatPointLabel(point.statut)}
-        </span>
+    <h3 className="mt-2 text-base font-black leading-snug text-slate-950">
+      {point.adresse || 'Adresse non renseignée'}
+    </h3>
 
-        {pointInterventions.length > 0 && (
-          <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-black text-white">
-          {pointInterventions.length}
-          </span>
-        )}
+    <div className="mt-4 grid grid-cols-2 gap-2">
+      <div className="rounded-xl bg-slate-50 p-3">
+        <p className="text-[10px] font-black uppercase text-slate-500">
+          Personnes
+        </p>
+        <p className="mt-1 text-2xl font-black text-slate-950">
+          {point.nombre_personnes_estime ?? 0}
+        </p>
+      </div>
+
+      <div className="rounded-xl bg-orange-50 p-3">
+        <p className="text-[10px] font-black uppercase text-orange-700">
+          Urgence
+        </p>
+        <p className="mt-1 text-lg font-black text-orange-700">
+          {point.niveau_urgence || '—'}
+        </p>
       </div>
     </div>
 
-    <div className="grid gap-2 p-3 sm:grid-cols-[1fr_0.9fr]">
-      <div className="space-y-2">
-        <div className="grid grid-cols-2 gap-2">
-          <div className="rounded-xl bg-slate-50 p-2.5">
-            <p className="text-[9px] font-bold uppercase text-slate-500">
-              Personnes
-            </p>
-            <p className="mt-1 text-lg font-black text-slate-950">
-              {point.nombre_personnes_estime ?? '—'}
-            </p>
-          </div>
+    <div className="mt-3 rounded-xl bg-slate-50 p-3">
+      <p className="text-[10px] font-black uppercase text-slate-500">
+        Besoins
+      </p>
+      <p className="mt-1 text-sm font-bold text-slate-800">
+        {point.besoins || 'Aucun besoin renseigné'}
+      </p>
+    </div>
 
-          <div className="rounded-xl bg-slate-50 p-2.5">
-            <p className="text-[9px] font-bold uppercase text-slate-500">
-              Fiabilité
-            </p>
-            <p className="mt-1 text-[11px] font-black text-slate-950">
-              {formatPointLabel(point.niveau_fiabilite)}
-            </p>
-          </div>
-        </div>
+    <div className="mt-3 rounded-xl bg-emerald-50 p-3">
+      <p className="text-[10px] font-black uppercase text-emerald-700">
+        Associations présentes
+      </p>
 
-        <div>
-          <p className="mb-1 text-[9px] font-bold uppercase text-slate-500">
-            Besoins
-          </p>
+      {pointInterventions.length === 0 ? (
+        <p className="mt-2 text-sm font-semibold text-slate-500">
+          Aucune association positionnée
+        </p>
+      ) : (
+        <div className="mt-2 space-y-2">
+          {pointInterventions.slice(0, 3).map((intervention) => (
+            <div
+              key={intervention.id}
+              className="rounded-xl bg-white p-2 ring-1 ring-emerald-100"
+            >
+              <p className="text-sm font-black text-slate-950">
+                🤝 {intervention.association_nom || 'Association'}
+              </p>
 
-          {splitNeeds(point.besoins).length > 0 ? (
-            <div className="flex flex-wrap gap-1">
-              {splitNeeds(point.besoins)
-                .slice(0, 4)
-                .map((need) => (
-                  <span
-                    key={need}
-                    className="rounded-full bg-orange-50 px-2 py-0.5 text-[10px] font-bold text-orange-700 ring-1 ring-orange-200"
-                  >
-                    {getNeedIcon(need)} {need}
-                  </span>
-                ))}
+              <p className="mt-1 text-xs font-semibold text-slate-600">
+                {intervention.type_aide || 'Aide non renseignée'}
+              </p>
+
+              {intervention.nombre_repas ? (
+                <p className="mt-1 text-xs font-black text-orange-700">
+                  🍽️ {intervention.nombre_repas} repas
+                </p>
+              ) : null}
+
+              {intervention.nombre_benevoles ? (
+                <p className="mt-1 text-xs font-black text-emerald-700">
+                  👥 {intervention.nombre_benevoles} bénévoles
+                </p>
+              ) : null}
+
+              {intervention.date_intervention ? (
+                <p className="mt-1 text-xs font-semibold text-slate-500">
+                  📅 {formatShortDate(intervention.date_intervention)}
+                </p>
+              ) : null}
             </div>
-          ) : (
-            <p className="text-[11px] text-slate-500">
-              Aucun besoin renseigné.
+          ))}
+
+          {pointInterventions.length > 3 && (
+            <p className="text-xs font-bold text-emerald-700">
+              + {pointInterventions.length - 3} autre(s) association(s)
             </p>
           )}
         </div>
+      )}
+    </div>
 
-        {point.commentaire && point.commentaire.trim().length > 0 && (
-          <div className="rounded-xl border-l-4 border-orange-500 bg-orange-50 p-2.5">
-            <p className="text-[11px] italic leading-snug text-slate-700">
-              {truncateText(point.commentaire, 65)}
+    {hasRepasNeed && (
+      <div className="mt-3 rounded-xl bg-blue-50 p-3">
+        <p className="text-[10px] font-black uppercase text-blue-700">
+          Couverture repas
+        </p>
+
+        <div className="mt-2 grid grid-cols-3 gap-2">
+          <div>
+            <p className="text-[10px] font-bold text-slate-500">Besoin</p>
+            <p className="text-lg font-black text-slate-950">
+              {repasCoverage.totalBesoin}
             </p>
           </div>
-        )}
+
+          <div>
+            <p className="text-[10px] font-bold text-slate-500">Couverts</p>
+            <p className="text-lg font-black text-emerald-700">
+              {repasCoverage.repasCouverts}
+            </p>
+          </div>
+
+          <div>
+            <p className="text-[10px] font-bold text-slate-500">Restants</p>
+            <p className="text-lg font-black text-orange-700">
+              {repasCoverage.repasRestants}
+            </p>
+          </div>
+        </div>
+      </div>
+    )}
+
+    <Link
+      to={`/points/${point.id}`}
+      className="mt-4 block rounded-xl bg-[#d94a0b] py-3 text-center text-sm font-black text-white"
+    >
+      Voir le détail
+    </Link>
+  </div>
+</Popup>
+  </Marker>
+)
+            })}
+          </MapContainer>
+{mobilePoint && (
+  <div className="fixed inset-x-0 bottom-0 z-[2000] max-h-[82vh] overflow-y-auto rounded-t-[2rem] bg-white p-5 shadow-2xl ring-1 ring-slate-200 sm:hidden">
+    <div className="mx-auto mb-4 h-1.5 w-14 rounded-full bg-slate-300" />
+
+    <div className="flex items-start justify-between gap-3">
+      <div>
+        <p className="text-xs font-black uppercase tracking-[0.18em] text-[#d94a0b]">
+          Point terrain
+        </p>
+
+        <h3 className="mt-2 text-xl font-black leading-tight text-slate-950">
+          {mobilePoint.adresse || 'Adresse non renseignée'}
+        </h3>
+
+        <p className="mt-2 text-sm font-semibold text-slate-500">
+          {mobilePoint.typologie || 'Typologie non renseignée'}
+        </p>
       </div>
 
-      <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-2.5">
-        <div className="flex items-center justify-between gap-2">
-          <div>
-            <p className="text-[9px] font-black uppercase text-emerald-700">
-              Interventions
-            </p>
+      <button
+        type="button"
+        onClick={() => setMobilePoint(null)}
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-black text-slate-600"
+      >
+        ✕
+      </button>
+    </div>
 
-            <p className="mt-1 text-xs font-black text-emerald-900">
-              {pointInterventions.length > 0
-                ? `${pointInterventions.length} déclarée(s)`
-                : 'Aucune'}
-            </p>
-          </div>
-        </div>
+    <div className="mt-5 grid grid-cols-2 gap-3">
+      <div className="rounded-2xl bg-slate-50 p-4">
+        <p className="text-[10px] font-black uppercase text-slate-500">
+          Personnes
+        </p>
 
-        <div className="mt-2 grid grid-cols-2 gap-2">
-          <div className="rounded-lg bg-white/80 p-2">
-            <p className="text-[9px] font-bold uppercase text-emerald-700">
-              Repas
-            </p>
-            <p className="mt-1 text-base font-black text-emerald-900">
-              {totalRepas}
-            </p>
-          </div>
+        <p className="mt-1 text-2xl font-black text-slate-950">
+          {mobilePoint.nombre_personnes_estime ?? 0}
+        </p>
+      </div>
 
-          <div className="rounded-lg bg-white/80 p-2">
-            <p className="text-[9px] font-bold uppercase text-emerald-700">
-              Bénévoles
-            </p>
-            <p className="mt-1 text-base font-black text-emerald-900">
-              {totalBenevoles}
-            </p>
-          </div>
-        </div>
+      <div className="rounded-2xl bg-orange-50 p-4">
+        <p className="text-[10px] font-black uppercase text-orange-600">
+          Urgence
+        </p>
 
-        {latestIntervention && (
-          <div className="mt-2 rounded-lg bg-white p-2 ring-1 ring-emerald-100">
-            <p className="text-[11px] font-black leading-snug text-slate-950">
-              {latestIntervention.type_aide || 'Intervention'}
-            </p>
-
-            <p className="mt-1 text-[10px] font-medium text-slate-500">
-              {formatShortDate(latestIntervention.date_intervention)}
-            </p>
-
-            <p className="mt-0.5 text-[10px] font-medium text-slate-500">
-              {' '}
-              {formatTimeRange(
-                latestIntervention.heure_debut,
-                latestIntervention.heure_fin
-              )}
-            </p>
-          </div>
-        )}
+        <p className="mt-1 text-lg font-black text-orange-700">
+          {mobilePoint.niveau_urgence || '—'}
+        </p>
       </div>
     </div>
 
-    <div className="grid grid-cols-2 gap-2 border-t border-slate-100 bg-white px-3 py-2.5">
+    <div className="mt-3 rounded-2xl bg-slate-50 p-4">
+      <p className="text-[10px] font-black uppercase text-slate-500">
+        Besoins
+      </p>
+
+      <p className="mt-2 text-sm font-bold text-slate-800">
+        {mobilePoint.besoins || 'Aucun besoin renseigné'}
+      </p>
+    </div>
+
+    {mobilePoint.hasRepasNeed ? (
+      <div className="mt-3 rounded-2xl bg-slate-50 p-4">
+        <p className="text-[10px] font-black uppercase text-slate-500">
+          Couverture repas
+        </p>
+
+        <div className="mt-4 grid grid-cols-3 gap-3">
+          <div>
+            <p className="text-xs font-semibold text-slate-500">Besoin</p>
+            <p className="mt-1 text-xl font-black text-slate-950">
+              {mobilePoint.repasCoverage.totalBesoin}
+            </p>
+          </div>
+
+          <div>
+            <p className="text-xs font-semibold text-slate-500">Couverts</p>
+            <p className="mt-1 text-xl font-black text-emerald-700">
+              {mobilePoint.repasCoverage.repasCouverts}
+            </p>
+          </div>
+
+          <div>
+            <p className="text-xs font-semibold text-slate-500">Restants</p>
+            <p className="mt-1 text-xl font-black text-orange-700">
+              {mobilePoint.repasCoverage.repasRestants}
+            </p>
+          </div>
+        </div>
+      </div>
+    ) : (
+      <div className="mt-3 rounded-2xl bg-emerald-50 p-4">
+        <p className="text-[10px] font-black uppercase text-emerald-600">
+          Interventions prévues
+        </p>
+
+        <p className="mt-1 text-2xl font-black text-emerald-700">
+          {mobilePoint.pointInterventions.length}
+        </p>
+      </div>
+    )}
+
+    <div className="mt-3 rounded-2xl bg-emerald-50 p-4">
+      <p className="text-[10px] font-black uppercase text-emerald-700">
+        Associations mobilisées
+      </p>
+
+      <div className="mt-3 rounded-2xl bg-emerald-50 p-4">
+  <p className="text-[10px] font-black uppercase text-emerald-700">
+    Associations
+  </p>
+
+  <p className="mt-1 text-sm font-black text-emerald-800">
+    {mobilePoint.pointInterventions.length > 0
+      ? `${mobilePoint.pointInterventions.length} association(s) positionnée(s)`
+      : 'Aucune association positionnée'}
+  </p>
+</div>
+
+      {mobilePoint.pointInterventions.length === 0 ? (
+        <p className="mt-2 text-sm font-semibold text-slate-500">
+          Aucune association positionnée.
+        </p>
+      ) : (
+        <div className="mt-3 max-h-40 space-y-2 overflow-y-auto pr-1">
+          {mobilePoint.pointInterventions.map((intervention: any) => (
+            <div
+              key={intervention.id}
+              className="rounded-xl bg-white p-3 ring-1 ring-emerald-100"
+            >
+              <p className="text-sm font-black text-slate-950">
+                {intervention.association_nom || 'Association'}
+              </p>
+
+              <p className="mt-1 text-xs font-semibold text-slate-600">
+                {intervention.type_aide || 'Aide non renseignée'}
+              </p>
+
+              {intervention.date_intervention && (
+                <p className="mt-1 text-xs font-semibold text-slate-500">
+                  {formatShortDate(intervention.date_intervention)}
+                </p>
+              )}
+
+              {intervention.nombre_repas ? (
+                <p className="mt-1 text-xs font-black text-orange-700">
+                  {intervention.nombre_repas} repas prévus
+                </p>
+              ) : null}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+
+    <div className="mt-5 grid grid-cols-2 gap-3">
       <Link
-        to={`/points/${point.id}`}
-        className="rounded-xl bg-[#d94a0b] px-3 py-2 text-center text-[11px] font-black text-white transition hover:bg-[#b93607]"
+        to={`/points/${mobilePoint.id}`}
+        className="rounded-2xl bg-[#d94a0b] px-4 py-3 text-center text-sm font-black text-white"
       >
         Voir détail
       </Link>
 
       <Link
-        to={`/points/${point.id}/edit`}
-        className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-center text-[11px] font-black text-slate-700 transition hover:bg-slate-50"
+        to="/interventions/new"
+        className="rounded-2xl border border-slate-300 bg-white px-4 py-3 text-center text-sm font-black text-slate-700"
       >
-        Modifier
+        Intervenir
       </Link>
     </div>
   </div>
-</Popup>
-                </Marker>
-              )
-            })}
-          </MapContainer>
-
+)}
           {showMapControls && (
             <div className="pointer-events-none absolute left-3 right-3 top-3 z-[1000] space-y-3 sm:left-5 sm:right-5 sm:top-5">
-              <div className="pointer-events-auto rounded-3xl bg-[#faf8f4]/95 p-4 shadow-xl shadow-slate-900/10 ring-1 ring-[#eadfd6] backdrop-blur">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-orange-100 text-xl text-[#d94a0b]">
-                      ⊙
-                    </div>
-
-                    <div>
-                      <h1 className="text-2xl font-extrabold tracking-tight text-slate-950 sm:text-3xl">
-                        Carte terrain
-                      </h1>
-                      <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                        Vue temps réel
-                      </p>
-                    </div>
+<div className="pointer-events-auto rounded-[1.5rem] bg-[#faf8f4]/95 p-3 shadow-xl shadow-slate-900/10 ring-1 ring-[#eadfd6] backdrop-blur sm:p-4 lg:rounded-[2rem]">                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h1 className="text-2xl font-extrabold tracking-tight text-slate-950 sm:text-3xl">
+                      Carte terrain
+                    </h1>
+                    <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      Vue temps réel
+                    </p>
                   </div>
 
                   <button
@@ -596,8 +708,7 @@ export default function MapPage() {
                   </button>
                 </div>
 
-                <div className="mt-4 grid grid-cols-3 gap-2">
-                  <div className="rounded-2xl border border-[#e7ddd4] bg-white px-3 py-3 shadow-sm">
+<div className="grid grid-cols-1 sm:grid-cols-3 gap-2">                  <div className="rounded-2xl border border-[#e7ddd4] bg-white px-3 py-3 shadow-sm">
                     <p className="text-xl font-extrabold text-slate-900">
                       {filteredPoints.length}
                     </p>
@@ -626,26 +737,26 @@ export default function MapPage() {
                 </div>
               </div>
 
-              <div className="pointer-events-auto flex flex-col gap-2 sm:max-w-3xl sm:flex-row">
-                <div className="flex flex-1 items-center gap-3 rounded-3xl bg-white px-4 py-3 shadow-xl shadow-slate-900/10 ring-1 ring-slate-200">
-                  <input
-                    value={search}
-                    onChange={(event) => setSearch(event.target.value)}
-                    placeholder="Rechercher une adresse, un lieu, une intervention..."
-                    className="w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400 sm:text-base"
-                  />
+              <div className="pointer-events-auto grid grid-cols-[1fr_auto] gap-2 sm:max-w-3xl">
+  <div className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3 shadow-xl shadow-slate-900/10 ring-1 ring-slate-200">
+    <input
+      value={search}
+      onChange={(event) => setSearch(event.target.value)}
+      placeholder="Rechercher..."
+      className="w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
+    />
 
-                  <span className="text-xl text-slate-400">⌕</span>
-                </div>
+    <span className="text-lg text-slate-400">⌕</span>
+  </div>
 
-                <button
-                  type="button"
-                  onClick={() => setShowFilters((value) => !value)}
-                  className="rounded-3xl bg-white px-4 py-3 text-sm font-bold text-slate-800 shadow-xl shadow-slate-900/10 ring-1 ring-slate-200 transition hover:bg-orange-50 hover:text-[#d94a0b] sm:px-5 sm:text-base"
-                >
-                  Filtres
-                </button>
-              </div>
+  <button
+    type="button"
+    onClick={() => setShowFilters((value) => !value)}
+    className="rounded-2xl bg-white px-4 py-3 text-sm font-black text-slate-800 shadow-xl shadow-slate-900/10 ring-1 ring-slate-200"
+  >
+    Filtres
+  </button>
+</div>
 
               {showFilters && (
                 <div className="pointer-events-auto rounded-3xl bg-white p-4 shadow-2xl shadow-slate-900/15 ring-1 ring-slate-200 sm:max-w-3xl">
@@ -728,49 +839,78 @@ export default function MapPage() {
             <button
               type="button"
               onClick={() => setShowMapControls(true)}
-              className="absolute left-3 top-3 z-[1000] rounded-2xl bg-white px-4 py-3 text-sm font-black text-slate-700 shadow-xl ring-1 ring-slate-200 transition hover:bg-orange-50 hover:text-[#d94a0b] sm:left-5 sm:top-5"
+              className="absolute left-3 top-3 z-[1000] rounded-2xl bg-white px-4 py-3 text-sm font-black text-slate-700 shadow-xl ring-1 ring-slate-200 transition hover:bg-orange-50 hover:text-[#d94a0b]"
             >
               ☰ Afficher infos
             </button>
           )}
 
-          {showMapControls && (
-            <div className="absolute bottom-4 left-3 z-[1000] rounded-3xl bg-white p-4 shadow-xl shadow-slate-900/10 ring-1 ring-slate-200 sm:bottom-6 sm:left-6 sm:p-5">
-              <p className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-500">
-                Urgence
-              </p>
+         {showMapControls && (
+  <>
+    <div className="absolute bottom-28 left-3 z-[1000] rounded-2xl bg-white/95 px-3 py-2 shadow-xl ring-1 ring-slate-200 backdrop-blur sm:hidden">
+      <p className="mb-2 text-[10px] font-black uppercase text-slate-500">
+        Urgence
+      </p>
 
-              <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs text-slate-700 sm:gap-x-5 sm:text-sm">
-                <div className="flex items-center gap-2">
-                  <span className="h-3 w-3 rounded-full bg-red-600" />
-                  Critique
-                </div>
+      <div className="flex items-center gap-3 text-[11px] font-bold text-slate-700">
+        <span className="flex items-center gap-1">
+          <span className="h-2.5 w-2.5 rounded-full bg-red-600" />
+          Crit.
+        </span>
 
-                <div className="flex items-center gap-2">
-                  <span className="h-3 w-3 rounded-full bg-orange-600" />
-                  Haute
-                </div>
+        <span className="flex items-center gap-1">
+          <span className="h-2.5 w-2.5 rounded-full bg-orange-600" />
+          Haute
+        </span>
 
-                <div className="flex items-center gap-2">
-                  <span className="h-3 w-3 rounded-full bg-yellow-600" />
-                  Moyenne
-                </div>
+        <span className="flex items-center gap-1">
+          <span className="h-2.5 w-2.5 rounded-full bg-yellow-600" />
+          Moy.
+        </span>
 
-                <div className="flex items-center gap-2">
-                  <span className="h-3 w-3 rounded-full bg-emerald-600" />
-                  Basse
-                </div>
-              </div>
-            </div>
-          )}
+        <span className="flex items-center gap-1">
+          <span className="h-2.5 w-2.5 rounded-full bg-emerald-600" />
+          Basse
+        </span>
+      </div>
+    </div>
+
+    <div className="absolute bottom-6 left-6 z-[1000] hidden rounded-3xl bg-white p-5 shadow-xl ring-1 ring-slate-200 sm:block">
+      <p className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-500">
+        Urgence
+      </p>
+
+      <div className="grid grid-cols-2 gap-x-5 gap-y-2 text-sm text-slate-700">
+        <div className="flex items-center gap-2">
+          <span className="h-3 w-3 rounded-full bg-red-600" />
+          Critique
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="h-3 w-3 rounded-full bg-orange-600" />
+          Haute
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="h-3 w-3 rounded-full bg-yellow-600" />
+          Moyenne
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="h-3 w-3 rounded-full bg-emerald-600" />
+          Basse
+        </div>
+      </div>
+    </div>
+  </>
+)}
 
           <Link
-            to="/points/new"
-            className="absolute bottom-4 right-3 z-[1000] flex h-14 items-center gap-2 rounded-3xl bg-[#d94a0b] px-5 text-sm font-bold text-white shadow-2xl shadow-orange-900/30 transition hover:bg-[#b93607] sm:bottom-8 sm:right-8 sm:h-16 sm:gap-3 sm:px-7 sm:text-lg"
-          >
-            <span className="text-2xl leading-none sm:text-3xl">+</span>
-            <span className="hidden sm:inline">Signaler</span>
-          </Link>
+  to="/points/new"
+  className="absolute bottom-28 right-4 z-[1000] rounded-2xl bg-[#d94a0b] px-5 py-3 text-sm font-black text-white shadow-xl lg:bottom-8 lg:right-8"
+>
+  + Signaler
+</Link>
         </>
       )}
     </div>

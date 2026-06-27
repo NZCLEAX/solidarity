@@ -18,8 +18,12 @@ export type Intervention = {
   created_by: string
   assigned_to: string | null
   is_sensitive: boolean
+  association_nom: string | null
   points?: {
     adresse: string | null
+  } | null
+  associations?: {
+    nom: string | null
   } | null
 }
 
@@ -41,9 +45,7 @@ async function getCurrentProfileAssociationId(userId: string) {
     .eq('id', userId)
     .single()
 
-  if (error) {
-    return null
-  }
+  if (error) return null
 
   return data?.association_id ?? null
 }
@@ -72,17 +74,17 @@ export async function createIntervention(input: CreateInterventionInput) {
       heure_debut: input.heureDebut,
       heure_fin: input.heureFin,
       type_aide: input.typeAide,
-      nombre_repas: input.nombreRepas,
+      nombre_repas: input.typeAide.toLowerCase().includes('repas')
+        ? input.nombreRepas
+        : 0,
       nombre_benevoles: input.nombreBenevoles,
       commentaire: input.commentaire?.trim() || null,
-      statut: null,    
+      statut: 'planifiee',
     })
     .select()
     .single()
 
-  if (error) {
-    throw error
-  }
+  if (error) throw error
 
   return data
 }
@@ -95,14 +97,18 @@ export async function getInterventions(): Promise<Intervention[]> {
       *,
       points (
         adresse
+      ),
+      associations (
+        nom
       )
     `
     )
     .order('created_at', { ascending: false })
 
-  if (error) {
-    throw error
-  }
+  if (error) throw error
 
-  return data ?? []
+  return (data ?? []).map((item: any) => ({
+    ...item,
+    association_nom: item.associations?.nom ?? null,
+  }))
 }

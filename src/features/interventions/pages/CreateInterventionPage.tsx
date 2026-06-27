@@ -1,8 +1,12 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useMutation, useQuery } from '@tanstack/react-query'
+
 import { getPoints } from '@/features/points/api/points'
-import { createIntervention } from '@/features/interventions/api/interventions'
+import {
+  createIntervention,
+  getInterventions,
+} from '@/features/interventions/api/interventions'
 
 const typeAideOptions = [
   { value: 'Distribution de repas', label: 'Repas', icon: '🍽️' },
@@ -15,20 +19,20 @@ const typeAideOptions = [
 ]
 
 function formatPointLabel(adresse: string | null | undefined) {
-  if (!adresse || adresse.trim().length === 0) {
-    return 'Adresse non renseignée'
-  }
-
-  return adresse
+  return adresse?.trim() || 'Adresse non renseignée'
 }
 
-function formatDatePreview(date: string) {
+function formatDatePreview(date: string | null | undefined) {
   if (!date) return 'Non renseignée'
 
   const parsedDate = new Date(date)
   if (Number.isNaN(parsedDate.getTime())) return date
 
   return parsedDate.toLocaleDateString('fr-FR')
+}
+
+function hasRepas(typeAide: string | null | undefined) {
+  return typeAide?.toLowerCase().includes('repas') ?? false
 }
 
 export default function CreateInterventionPage() {
@@ -56,12 +60,44 @@ export default function CreateInterventionPage() {
     queryFn: getPoints,
   })
 
+  const {
+    data: interventions = [],
+    isLoading: interventionsLoading,
+  } = useQuery({
+    queryKey: ['interventions'],
+    queryFn: getInterventions,
+  })
+
   const selectedPoint = useMemo(() => {
     return points.find((point) => point.id === pointId) ?? null
   }, [points, pointId])
 
+  const selectedPointInterventions = useMemo(() => {
+    return interventions.filter((intervention) => intervention.point_id === pointId)
+  }, [interventions, pointId])
+
+  const repasDejaCouverts = useMemo(() => {
+    return selectedPointInterventions
+      .filter((intervention) => hasRepas(intervention.type_aide))
+      .reduce(
+        (total, intervention) => total + (intervention.nombre_repas ?? 0),
+        0
+      )
+  }, [selectedPointInterventions])
+
+  const repasRestants = useMemo(() => {
+    return Math.max(
+      (selectedPoint?.nombre_personnes_estime ?? 0) - repasDejaCouverts,
+      0
+    )
+  }, [selectedPoint, repasDejaCouverts])
+
   const selectedTypesAide = useMemo(() => {
     return typeAideOptions.filter((option) => typesAide.includes(option.value))
+  }, [typesAide])
+
+  const repasSelected = useMemo(() => {
+    return typesAide.some((type) => hasRepas(type))
   }, [typesAide])
 
   const createMutation = useMutation({
@@ -79,6 +115,35 @@ export default function CreateInterventionPage() {
         ? currentTypes.filter((type) => type !== value)
         : [...currentTypes, value]
     )
+  }
+
+  function handlePointChange(selectedId: string) {
+    setPointId(selectedId)
+
+    const point = points.find((item) => item.id === selectedId)
+
+    if (!point) {
+      setNombreRepas('')
+      return
+    }
+
+    const interventionsDuPoint = interventions.filter(
+      (intervention) => intervention.point_id === selectedId
+    )
+
+    const repasCouverts = interventionsDuPoint
+      .filter((intervention) => hasRepas(intervention.type_aide))
+      .reduce(
+        (total, intervention) => total + (intervention.nombre_repas ?? 0),
+        0
+      )
+
+    const restant = Math.max(
+      (point.nombre_personnes_estime ?? 0) - repasCouverts,
+      0
+    )
+
+    setNombreRepas(String(restant))
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -115,7 +180,7 @@ export default function CreateInterventionPage() {
       return
     }
 
-    if (!nombreRepas || Number(nombreRepas) < 0) {
+    if (repasSelected && (!nombreRepas || Number(nombreRepas) < 0)) {
       setError('Veuillez renseigner un nombre de repas valide.')
       return
     }
@@ -132,7 +197,7 @@ export default function CreateInterventionPage() {
         heureDebut,
         heureFin,
         typeAide: typesAide.join(', '),
-        nombreRepas: Number(nombreRepas),
+        nombreRepas: repasSelected ? Number(nombreRepas) : 0,
         nombreBenevoles: Number(nombreBenevoles),
         commentaire: commentaire.trim() || undefined,
       })
@@ -205,7 +270,7 @@ export default function CreateInterventionPage() {
 
                 <select
                   value={pointId}
-                  onChange={(event) => setPointId(event.target.value)}
+                  onChange={(event) => handlePointChange(event.target.value)}
                   className="min-h-12 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-[#d94a0b] focus:ring-4 focus:ring-orange-100"
                 >
                   <option value="">Sélectionner un point</option>
@@ -218,13 +283,123 @@ export default function CreateInterventionPage() {
               </div>
 
               {selectedPoint && (
-                <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4">
-                  <p className="text-sm font-bold text-emerald-800">
+                <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+                  <p className="text-sm font-black text-emerald-800">
                     Point sélectionné
                   </p>
-                  <p className="mt-1 text-sm text-emerald-700">
+
+                  <p className="mt-1 text-sm font-semibold text-emerald-700">
                     {formatPointLabel(selectedPoint.adresse)}
                   </p>
+
+                  <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                    <div className="rounded-2xl bg-white p-4">
+                      <p className="text-xs font-black uppercase text-slate-500">
+                        Personnes estimées
+                      </p>
+                      <p className="mt-1 text-3xl font-black text-slate-950">
+                        {selectedPoint.nombre_personnes_estime ?? 0}
+                      </p>
+                    </div>
+
+                    <div className="rounded-2xl bg-white p-4">
+                      <p className="text-xs font-black uppercase text-slate-500">
+                        Urgence
+                      </p>
+                      <p className="mt-1 text-lg font-black text-orange-700">
+                        {selectedPoint.niveau_urgence || 'Non renseignée'}
+                      </p>
+                    </div>
+
+                    <div className="rounded-2xl bg-white p-4">
+                      <p className="text-xs font-black uppercase text-slate-500">
+                        Besoins
+                      </p>
+                      <p className="mt-1 text-sm font-bold text-slate-950">
+                        {selectedPoint.besoins || 'Non renseignés'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 rounded-2xl bg-white p-4">
+                    <p className="text-xs font-black uppercase text-slate-500">
+                      Couverture repas
+                    </p>
+
+                    <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                      <div>
+                        <p className="text-xs font-bold text-slate-500">
+                          Besoin total
+                        </p>
+                        <p className="text-2xl font-black text-slate-950">
+                          {selectedPoint.nombre_personnes_estime ?? 0}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-xs font-bold text-slate-500">
+                          Déjà couverts
+                        </p>
+                        <p className="text-2xl font-black text-emerald-700">
+                          {repasDejaCouverts}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-xs font-bold text-slate-500">
+                          Restants
+                        </p>
+                        <p className="text-2xl font-black text-orange-700">
+                          {repasRestants}
+                        </p>
+                      </div>
+                    </div>
+
+                    <p className="mt-3 text-sm font-semibold text-slate-700">
+                      Prévois environ {repasRestants} repas/eaux pour compléter
+                      le besoin restant.
+                    </p>
+                  </div>
+
+                  <div className="mt-4 rounded-2xl bg-white p-4">
+                    <p className="text-xs font-black uppercase text-slate-500">
+                      Associations déjà positionnées
+                    </p>
+
+                    {interventionsLoading ? (
+                      <p className="mt-2 text-sm font-semibold text-slate-500">
+                        Chargement des interventions...
+                      </p>
+                    ) : selectedPointInterventions.length === 0 ? (
+                      <p className="mt-2 text-sm font-semibold text-slate-500">
+                        Aucune association positionnée pour le moment.
+                      </p>
+                    ) : (
+                      <div className="mt-3 space-y-2">
+                        {selectedPointInterventions.map((intervention) => (
+                          <div
+                            key={intervention.id}
+                            className="rounded-xl border border-slate-200 bg-slate-50 p-3"
+                          >
+                            <p className="text-sm font-black text-slate-950">
+                              {intervention.association_nom || 'Association'}
+                            </p>
+
+                            <p className="mt-1 text-xs font-semibold text-slate-600">
+                              {intervention.type_aide || 'Aide non renseignée'} —{' '}
+                              {formatDatePreview(intervention.date_intervention)}
+                            </p>
+
+                            {hasRepas(intervention.type_aide) && (
+                              <p className="mt-1 text-xs font-bold text-orange-700">
+                                {intervention.nombre_repas ?? 0} repas prévus
+                              </p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </section>
@@ -340,16 +515,28 @@ export default function CreateInterventionPage() {
               <div className="grid gap-5 md:grid-cols-2">
                 <div>
                   <label className="mb-2 block text-sm font-bold text-slate-700">
-                    Nombre de repas *
+                    Nombre de repas {repasSelected ? '*' : ''}
                   </label>
+
                   <input
                     type="number"
                     min="0"
                     value={nombreRepas}
+                    disabled={!repasSelected}
                     onChange={(event) => setNombreRepas(event.target.value)}
-                    placeholder="Ex : 80"
-                    className="min-h-12 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#d94a0b] focus:ring-4 focus:ring-orange-100"
+                    placeholder={
+                      repasSelected
+                        ? `Restants : ${repasRestants}`
+                        : 'Repas non sélectionné'
+                    }
+                    className="min-h-12 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#d94a0b] focus:ring-4 focus:ring-orange-100 disabled:bg-slate-100 disabled:text-slate-400"
                   />
+
+                  {!repasSelected && (
+                    <p className="mt-2 text-xs font-semibold text-slate-500">
+                      Ce champ est désactivé car tu n’as pas sélectionné Repas.
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -435,6 +622,38 @@ export default function CreateInterventionPage() {
 
                 <div className="rounded-2xl bg-slate-50 p-4">
                   <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
+                    Couverture repas
+                  </p>
+                  <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+                    <div>
+                      <p className="text-lg font-black text-slate-950">
+                        {selectedPoint?.nombre_personnes_estime ?? 0}
+                      </p>
+                      <p className="text-[10px] font-bold text-slate-500">
+                        Besoin
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-lg font-black text-emerald-700">
+                        {repasDejaCouverts}
+                      </p>
+                      <p className="text-[10px] font-bold text-slate-500">
+                        Couvert
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-lg font-black text-orange-700">
+                        {repasRestants}
+                      </p>
+                      <p className="text-[10px] font-bold text-slate-500">
+                        Restant
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-2xl bg-slate-50 p-4">
+                  <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
                     Date
                   </p>
                   <p className="mt-2 text-sm font-bold text-slate-900">
@@ -479,10 +698,10 @@ export default function CreateInterventionPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
                     <p className="text-xs font-bold uppercase tracking-wide text-emerald-600">
-                      Repas
+                      Repas déclarés
                     </p>
                     <p className="mt-2 text-2xl font-black text-emerald-700">
-                      {nombreRepas || '0'}
+                      {repasSelected ? nombreRepas || '0' : '0'}
                     </p>
                   </div>
 
@@ -501,8 +720,9 @@ export default function CreateInterventionPage() {
                     Conseil
                   </p>
                   <p className="mt-2 text-sm leading-relaxed text-orange-700">
-                    Tu peux sélectionner plusieurs types d’aide si
-                    l’intervention comprend plusieurs actions en même temps.
+                    Pour les repas, le champ se remplit avec le nombre restant à
+                    couvrir. Pour les soins, vêtements, eau ou maraude, le nombre
+                    de repas reste à 0.
                   </p>
                 </div>
               </div>

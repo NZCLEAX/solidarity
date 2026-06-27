@@ -34,6 +34,8 @@ import AssociationRegisterPage from '@/features/associations/pages/AssociationRe
 import AssociationTeamPage from '@/features/associations/pages/AssociationTeamPage'
 
 import AppLayout from '@/shared/components/AppLayout'
+import PlanningPage from '@/features/planning/pages/PlanningPage'
+import NotificationsPage from '@/features/notifications/pages/NotificationsPage'
 
 export const router = createBrowserRouter([
   {
@@ -59,9 +61,9 @@ export const router = createBrowserRouter([
     element: <AppLayout />,
     children: [
       {
-        index: true,
-        element: <HomeRedirect />,
-      },
+  index: true,
+  element: <Navigate to="/carte" replace />,
+},
 
       {
         path: 'dashboard',
@@ -80,7 +82,14 @@ export const router = createBrowserRouter([
           </RequireAccess>
         ),
       },
-
+{
+  path: 'notifications',
+  element: (
+    <RequireAccess permission="dashboard">
+      <NotificationsPage />
+    </RequireAccess>
+  ),
+},
       {
         path: 'points',
         element: (
@@ -89,6 +98,14 @@ export const router = createBrowserRouter([
           </RequireAccess>
         ),
       },
+      {
+  path: 'planning',
+  element: (
+    <RequireAccess permission="manage_interventions">
+      <PlanningPage />
+    </RequireAccess>
+  ),
+},
 
       {
         path: 'points/new',

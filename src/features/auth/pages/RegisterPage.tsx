@@ -9,6 +9,7 @@ import {
   isValidPassword,
   passwordValidationMessage,
 } from '../utils/passwordValidation'
+import { signInWithProvider } from '@/features/auth/api/auth'
 
 export default function RegisterPage() {
   const navigate = useNavigate()
@@ -109,7 +110,22 @@ export default function RegisterPage() {
           </div>
 
           {error && <p className="text-sm text-red-600">{error}</p>}
+<div className="space-y-3">
+  <button
+    type="button"
+    onClick={() => signInWithProvider('google')}
+    className="flex min-h-12 w-full items-center justify-center rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-black text-slate-800 transition hover:bg-slate-50"
+  >
+    S’inscrire avec Google
+  </button>
 
+</div>
+
+<div className="my-4 flex items-center gap-3">
+  <div className="h-px flex-1 bg-slate-200" />
+  <span className="text-xs font-bold text-slate-400">ou</span>
+  <div className="h-px flex-1 bg-slate-200" />
+</div>
           <button
             type="submit"
             disabled={loading}
@@ -117,8 +133,8 @@ export default function RegisterPage() {
           >
             {loading ? 'Inscription...' : "S'inscrire"}
           </button>
+          
         </form>
-
         <p className="mt-4 text-sm text-slate-600">
           Déjà un compte ?{' '}
           <Link to="/login" className="text-indigo-600 font-medium">

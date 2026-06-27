@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { signIn } from '@/features/auth/api/auth'
 import { getCurrentProfile } from '@/features/auth/api/profile'
 import { getDefaultPathForProfile } from '@/features/auth/utils/permissions'
+import { signInWithProvider } from '@/features/auth/api/auth'
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -67,7 +68,22 @@ export default function LoginPage() {
             placeholder="Mot de passe"
             className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-[#d94a0b] focus:ring-4 focus:ring-orange-100"
           />
+<div className="space-y-3">
+  <button
+    type="button"
+    onClick={() => signInWithProvider('google')}
+    className="flex min-h-12 w-full items-center justify-center rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-black text-slate-800 transition hover:bg-slate-50"
+  >
+    Continuer avec Google
+  </button>
 
+</div>
+
+<div className="my-4 flex items-center gap-3">
+  <div className="h-px flex-1 bg-slate-200" />
+  <span className="text-xs font-bold text-slate-400">ou</span>
+  <div className="h-px flex-1 bg-slate-200" />
+</div>
           <button
             type="submit"
             disabled={mutation.isPending}

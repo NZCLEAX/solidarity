@@ -1,9 +1,28 @@
-import { useState, type FormEvent } from 'react'
+import { useState, type ChangeEvent, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
-import { createAssociationRequest } from '@/features/associations/api/associations'
+import {
+  createAssociationRequest,
+  uploadAssociationDocuments,
+  type AssociationDocumentType,
+} from '@/features/associations/api/associations'
+import {
+  verifyOfficialAssociation,
+  type OfficialAssociationData,
+} from '@/features/associations/api/officialVerification'
+import { verifyAssociationDossier } from '@/features/associations/services/verificationService'
 
 const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{15,}$/
+
+const documentLabels: Array<{
+  type: AssociationDocumentType
+  label: string
+  required: boolean
+}> = [
+  { type: 'statuts', label: 'Statuts de l’association', required: true },
+  { type: 'recepisse', label: 'Récépissé de déclaration', required: true },
+  { type: 'pv_bureau', label: 'PV de nomination du bureau', required: true },
+]
 
 export default function AssociationRegisterPage() {
   const navigate = useNavigate()
@@ -16,22 +35,90 @@ export default function AssociationRegisterPage() {
   const [zoneAction, setZoneAction] = useState('')
   const [typeAidePrincipale, setTypeAidePrincipale] = useState('')
   const [description, setDescription] = useState('')
+  const [siren, setSiren] = useState('')
+  const [siret, setSiret] = useState('')
+  const [representantNom, setRepresentantNom] = useState('')
+  const [representantFonction, setRepresentantFonction] = useState('')
+  const [officialData, setOfficialData] =
+    useState<OfficialAssociationData | null>(null)
+  const [verifyError, setVerifyError] = useState('')
+  const [documents, setDocuments] = useState<
+    Partial<Record<AssociationDocumentType, File>>
+  >({})
 
-  const mutation = useMutation({
-    mutationFn: createAssociationRequest,
-    onSuccess: () => {
-      navigate('/profile')
+  const verificationMutation = useMutation({
+    mutationFn: async () => {
+      const query = siret.trim() || siren.trim() || nom.trim()
+
+      if (!query) {
+        throw new Error('Renseigne au moins un SIRET, un SIREN ou un nom.')
+      }
+
+      const result = await verifyOfficialAssociation(query)
+
+      if (!result) {
+        throw new Error('Aucune donnée officielle trouvée.')
+      }
+
+      return result
+    },
+    onSuccess: (result) => {
+      setOfficialData(result)
+      setVerifyError('')
+
+      if (result.officialName) setNom(result.officialName)
+      if (result.officialCity) setVille(result.officialCity)
+      if (result.officialSiren) setSiren(result.officialSiren)
+      if (result.officialSiret) setSiret(result.officialSiret)
+    },
+    onError: (error) => {
+      setOfficialData(null)
+      setVerifyError(
+        (error as Error)?.message ||
+          'Impossible de vérifier automatiquement.'
+      )
     },
   })
 
-  const isPasswordValid = passwordRegex.test(password)
+ const createMutation = useMutation({
+  mutationFn: async () => {
+    const filesToUpload = Object.entries(documents)
+      .filter(([, file]) => Boolean(file))
+      .map(([type, file]) => ({
+        type: type as AssociationDocumentType,
+        file: file as File,
+      }))
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
+    const requiredMissing = documentLabels.some(
+      (item) => item.required && !documents[item.type]
+    )
 
-    if (!isPasswordValid) return
+    if (requiredMissing) {
+      throw new Error(
+        'Les statuts, le récépissé et le PV du bureau sont obligatoires.'
+      )
+    }
 
-    mutation.mutate({
+    const verification = await verifyAssociationDossier(
+      {
+        nom,
+        siren,
+        siret,
+        representantNom,
+        officialData,
+      },
+      documents
+    )
+
+    if (verification.score < 50) {
+      throw new Error(
+        `Dossier trop incomplet. Score : ${verification.score}/100. ${verification.notes.join(
+          ' '
+        )}`
+      )
+    }
+
+    const associationId = await createAssociationRequest({
       nom,
       email,
       password,
@@ -40,7 +127,44 @@ export default function AssociationRegisterPage() {
       zoneAction,
       typeAidePrincipale,
       description,
+      siren,
+      siret,
+      representantNom,
+      representantFonction,
+      officialData,
     })
+
+    await uploadAssociationDocuments(associationId, filesToUpload)
+
+    return associationId
+  },
+  onSuccess: () => {
+    navigate('/profile')
+  },
+})
+
+  const isPasswordValid = passwordRegex.test(password)
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+
+    if (!isPasswordValid) return
+
+    createMutation.mutate()
+  }
+
+  function handleDocumentChange(
+    type: AssociationDocumentType,
+    event: ChangeEvent<HTMLInputElement>
+  ) {
+    const file = event.target.files?.[0]
+
+    if (!file) return
+
+    setDocuments((current) => ({
+      ...current,
+      [type]: file,
+    }))
   }
 
   return (
@@ -60,13 +184,13 @@ export default function AssociationRegisterPage() {
           </h1>
 
           <p className="mt-4 text-base leading-relaxed text-slate-600">
-            Crée un compte association. La demande sera mise en attente jusqu’à
-            validation par un administrateur.
+            Crée ton dossier avec SIREN/SIRET, informations officielles et
+            documents justificatifs.
           </p>
 
           <div className="mt-8 rounded-3xl bg-orange-50 p-5 text-sm font-semibold leading-relaxed text-orange-800">
-            Une fois validée, ton association pourra accéder à la carte, aux
-            points, aux interventions et aux demandes bénévoles.
+            Documents obligatoires : statuts, récépissé de déclaration et PV du
+            bureau.
           </div>
 
           <div className="mt-6 text-sm text-slate-600">
@@ -85,21 +209,37 @@ export default function AssociationRegisterPage() {
         </section>
 
         <section className="rounded-[2rem] border border-[#eadfd6] bg-white p-6 shadow-sm sm:p-8">
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <h2 className="text-2xl font-black text-slate-950">
                 Informations de l’association
               </h2>
 
               <p className="mt-2 text-sm text-slate-500">
-                Remplis les informations principales pour créer la demande.
+                Renseigne les informations principales et vérifie-les
+                automatiquement.
               </p>
             </div>
 
-            {mutation.isError && (
+            {createMutation.isError && (
               <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700">
-                {(mutation.error as Error)?.message ||
+                {(createMutation.error as Error)?.message ||
                   'Impossible de créer la demande association.'}
+              </div>
+            )}
+
+            {verifyError && (
+              <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700">
+                {verifyError}
+              </div>
+            )}
+
+            {officialData && (
+              <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-800">
+                Données officielles trouvées :{' '}
+                {officialData.officialName || 'Nom non renseigné'} —{' '}
+                {officialData.officialCity || 'Ville non renseignée'} — SIREN{' '}
+                {officialData.officialSiren || 'non renseigné'}
               </div>
             )}
 
@@ -113,14 +253,14 @@ export default function AssociationRegisterPage() {
                   value={nom}
                   onChange={(event) => setNom(event.target.value)}
                   required
-                  placeholder="Ex : SOAD"
+                  placeholder="Ex : HUMAN'S LIFE"
                   className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-[#d94a0b] focus:ring-4 focus:ring-orange-100"
                 />
               </div>
 
               <div>
                 <label className="mb-2 block text-sm font-bold text-slate-800">
-                  Email
+                  Email de contact
                 </label>
 
                 <input
@@ -168,6 +308,73 @@ export default function AssociationRegisterPage() {
                   value={zoneAction}
                   onChange={(event) => setZoneAction(event.target.value)}
                   placeholder="Ex : Val-d’Oise"
+                  className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-[#d94a0b] focus:ring-4 focus:ring-orange-100"
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-bold text-slate-800">
+                  SIRET
+                </label>
+
+                <input
+                  value={siret}
+                  onChange={(event) => setSiret(event.target.value)}
+                  placeholder="14 chiffres"
+                  className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-[#d94a0b] focus:ring-4 focus:ring-orange-100"
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-bold text-slate-800">
+                  SIREN
+                </label>
+
+                <input
+                  value={siren}
+                  onChange={(event) => setSiren(event.target.value)}
+                  placeholder="9 chiffres"
+                  className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-[#d94a0b] focus:ring-4 focus:ring-orange-100"
+                />
+              </div>
+
+              <div className="flex items-end sm:col-span-2">
+                <button
+                  type="button"
+                  onClick={() => verificationMutation.mutate()}
+                  disabled={verificationMutation.isPending}
+                  className="min-h-12 w-full rounded-2xl border border-orange-200 bg-orange-50 px-5 py-3 text-sm font-black text-[#d94a0b] transition hover:bg-orange-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
+                >
+                  {verificationMutation.isPending
+                    ? 'Vérification...'
+                    : 'Vérifier automatiquement'}
+                </button>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-bold text-slate-800">
+                  Représentant
+                </label>
+
+                <input
+                  value={representantNom}
+                  onChange={(event) => setRepresentantNom(event.target.value)}
+                  placeholder="Nom du président / responsable"
+                  className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-[#d94a0b] focus:ring-4 focus:ring-orange-100"
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-bold text-slate-800">
+                  Fonction du représentant
+                </label>
+
+                <input
+                  value={representantFonction}
+                  onChange={(event) =>
+                    setRepresentantFonction(event.target.value)
+                  }
+                  placeholder="Président, trésorier..."
                   className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-[#d94a0b] focus:ring-4 focus:ring-orange-100"
                 />
               </div>
@@ -238,14 +445,58 @@ export default function AssociationRegisterPage() {
               </div>
             </div>
 
+            <div className="rounded-[2rem] border border-[#eadfd6] bg-slate-50 p-5">
+              <h3 className="text-xl font-black text-slate-950">
+                Documents justificatifs
+              </h3>
+
+              <p className="mt-2 text-sm text-slate-500">
+                PDF uniquement, 10 Mo maximum par fichier.
+              </p>
+
+              <div className="mt-5 grid gap-4">
+                {documentLabels.map((document) => (
+                  <label
+                    key={document.type}
+                    className="rounded-2xl border border-slate-300 bg-white p-4"
+                  >
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <p className="text-sm font-black text-slate-950">
+                          {document.label}{' '}
+                          {document.required && (
+                            <span className="text-red-500">*</span>
+                          )}
+                        </p>
+
+                        <p className="mt-1 text-xs text-slate-500">
+                          {documents[document.type]?.name ||
+                            'Aucun fichier sélectionné'}
+                        </p>
+                      </div>
+
+                      <input
+                        type="file"
+                        accept="application/pdf"
+                        onChange={(event) =>
+                          handleDocumentChange(document.type, event)
+                        }
+                        className="text-sm"
+                      />
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </div>
+
             <button
               type="submit"
-              disabled={mutation.isPending || !isPasswordValid}
+              disabled={createMutation.isPending || !isPasswordValid}
               className="inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-[#d94a0b] px-5 py-3 text-sm font-black text-white transition hover:bg-[#b93607] disabled:cursor-not-allowed disabled:bg-slate-300"
             >
-              {mutation.isPending
-                ? 'Création en cours...'
-                : 'Envoyer la demande association'}
+              {createMutation.isPending
+                ? 'Création du dossier...'
+                : 'Envoyer le dossier association'}
             </button>
           </form>
         </section>
