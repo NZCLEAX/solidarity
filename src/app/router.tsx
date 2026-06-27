@@ -6,7 +6,6 @@ import LoginPage from '@/features/auth/pages/LoginPage'
 import RegisterPage from '@/features/auth/pages/RegisterPage'
 
 import RequireAccess from '@/features/auth/components/RequireAccess'
-import HomeRedirect from '@/features/auth/components/HomeRedirect'
 
 import AdminPage from '@/features/admin/pages/AdminPage'
 import AdminAssociationsPage from '@/features/admin/pages/AdminAssociationsPage'

@@ -10,7 +10,7 @@ import {
   verifyOfficialAssociation,
   type OfficialAssociationData,
 } from '@/features/associations/api/officialVerification'
-import { verifyAssociationDossier } from '@/features/associations/services/verificationService'
+import { verifyAssociationDossier } from '../services/verificationService'
 
 const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{15,}$/
 
@@ -80,68 +80,69 @@ export default function AssociationRegisterPage() {
     },
   })
 
- const createMutation = useMutation({
-  mutationFn: async () => {
-    const filesToUpload = Object.entries(documents)
-      .filter(([, file]) => Boolean(file))
-      .map(([type, file]) => ({
-        type: type as AssociationDocumentType,
-        file: file as File,
-      }))
-
-    const requiredMissing = documentLabels.some(
-      (item) => item.required && !documents[item.type]
-    )
-
-    if (requiredMissing) {
-      throw new Error(
-        'Les statuts, le récépissé et le PV du bureau sont obligatoires.'
+  const createMutation = useMutation({
+    mutationFn: async () => {
+      const requiredMissing = documentLabels.some(
+        (item) => item.required && !documents[item.type]
       )
-    }
 
-    const verification = await verifyAssociationDossier(
-      {
+      if (requiredMissing) {
+        throw new Error(
+          'Les statuts, le récépissé et le PV du bureau sont obligatoires.'
+        )
+      }
+
+      const verification = await verifyAssociationDossier(
+        {
+    nom,
+    siren,
+    siret,
+    rna: '',
+    representantNom,
+    officialData,
+  },
+        documents
+      )
+
+      if (verification.score < 50) {
+        throw new Error(
+          `Dossier trop incomplet. Score : ${verification.score}/100. ${verification.notes.join(
+            ' '
+          )}`
+        )
+      }
+
+      const associationId = await createAssociationRequest({
         nom,
+        email,
+        password,
+        telephone,
+        ville,
+        zoneAction,
+        typeAidePrincipale,
+        description,
         siren,
         siret,
         representantNom,
+        representantFonction,
         officialData,
-      },
-      documents
-    )
+      })
 
-    if (verification.score < 50) {
-      throw new Error(
-        `Dossier trop incomplet. Score : ${verification.score}/100. ${verification.notes.join(
-          ' '
-        )}`
-      )
-    }
+      const filesToUpload = Object.entries(documents)
+        .filter(([, file]) => Boolean(file))
+        .map(([type, file]) => ({
+          type: type as AssociationDocumentType,
+          file: file as File,
+        }))
 
-    const associationId = await createAssociationRequest({
-      nom,
-      email,
-      password,
-      telephone,
-      ville,
-      zoneAction,
-      typeAidePrincipale,
-      description,
-      siren,
-      siret,
-      representantNom,
-      representantFonction,
-      officialData,
-    })
+      await uploadAssociationDocuments(associationId, filesToUpload)
 
-    await uploadAssociationDocuments(associationId, filesToUpload)
-
-    return associationId
-  },
-  onSuccess: () => {
-    navigate('/profile')
-  },
-})
+      return associationId
+    },
+    onSuccess: () => {
+      navigate('/profile')
+    },
+  })
 
   const isPasswordValid = passwordRegex.test(password)
 

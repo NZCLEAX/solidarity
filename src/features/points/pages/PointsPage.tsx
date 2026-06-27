@@ -58,10 +58,6 @@ export default function PointsPage() {
     0
   )
 
-  const totalConfirmed = filteredPoints.filter(
-    (point) => point.statut === 'confirme'
-  ).length
-
   const totalUnverified = filteredPoints.filter(
     (point) => point.niveau_fiabilite === 'non_verifie'
   ).length

@@ -1,0 +1,31 @@
+[33ma21ad6d[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/feature/SEC-sprint-3-security-hardening-2.1[m[33m)[m test
+[33m9adc74d[m last try
+[33m924b307[m fix end vite
+[33m31a7c7d[m new testing fix
+[33m87a04a3[m fixe bug deploy vite
+[33m409b36c[m fixe deploy vercel
+[33m6870804[m test
+[33mf58fbe4[m activation des tests sur n'importe quel branche
+[33m64b3e3c[m test unitaire et recette metier
+[33m7c1509f[m fix(auth): make MFA verification action visible
+[33mb8574ef[m fix(dev): remove CSP from index and keep dev headers lighter
+[33mf271e37[m feat(security): port sprint 1-3 hardening onto associations branch
+[33me090052[m feat(security): deliver sprint 3 hardening
+[33m6a7b7d2[m feat(security): add sprint 2 validation, audit logs, and security headers
+[33mfa14bdd[m feat(security): finalize Supabase auth, RBAC, and sprint 1 hardening
+[33m2e342df[m[33m ([m[1;31morigin/feature/NZCLEAX-37-gestion-associations-admin[m[33m, [m[1;32mfeature/NZCLEAX-37-gestion-associations-admin[m[33m)[m feat: ajouter la gestion des associations
+[33m4311134[m[33m ([m[1;31morigin/feature/NZCLEAX-36-gestion-utilisateurs-admin[m[33m, [m[1;32mfeature/NZCLEAX-36-gestion-utilisateurs-admin[m[33m)[m feat: ajouter la gestion des utilisateurs
+[33m9e28319[m[33m ([m[1;31morigin/feature/NZCLEAX-32-types-utilisateurs[m[33m, [m[1;32mfeature/NZCLEAX-32-types-utilisateurs[m[33m)[m feat: ajouter les types utilisateurs
+[33m307756e[m[33m ([m[1;31morigin/feature/NZCLEAX-30-liste-interventions[m[33m, [m[1;32mfeature/NZCLEAX-30-liste-interventions[m[33m)[m feat: ajouter les roles utilisateurs a l inscription
+[33m87117dc[m feat: ajouter les roles utilisateurs a l inscription
+[33mc987837[m feat: afficher la liste des interventions
+[33m680edf3[m feat: afficher la liste des interventions
+[33mf1fac0e[m[33m ([m[1;31morigin/feature/NZCLEAX-25-carte-interactive-points[m[33m, [m[1;32mfeature/NZCLEAX-25-carte-interactive-points[m[33m)[m feat: afficher les points sur une carte interactive
+[33md512ca4[m[33m ([m[1;31morigin/feature/NZCLEAX-23-fiche-detaillee-point[m[33m, [m[1;32mfeature/NZCLEAX-23-fiche-detaillee-point[m[33m)[m feat: ajouter la fiche detaillee d un point
+[33m354a180[m[33m ([m[1;31morigin/feature/NZCLEAX-24-mise-a-jour-point-existant[m[33m, [m[1;32mfeature/NZCLEAX-24-mise-a-jour-point-existant[m[33m)[m feat: ajouter la mise a jour d un point existant
+[33mbcc440a[m[33m ([m[1;31morigin/feature/NZCLEAX-21-creation-point-precarite[m[33m, [m[1;32mfeature/NZCLEAX-21-creation-point-precarite[m[33m)[m ajouter la creation de point de precarite
+[33ma7fea7c[m[33m ([m[1;31morigin/Profile[m[33m, [m[1;32mProfile[m[33m)[m Merge auth feature into Profile
+[33m2935802[m Ajout de la table profiles et page profile
+[33m5fb6104[m[33m ([m[1;31morigin/feature/NZCLEAX-7-inscri-deco-con[m[33m, [m[1;32mfeature/NZCLEAX-7-inscri-deco-con[m[33m)[m feat: Permettre l’inscription, la connexion et la déconnexion
+[33m25e4e2f[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/feature/NZCLEAX-28-declaration-intervention-association[m[33m, [m[1;31morigin/develop[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mfeature/NZCLEAX-28-declaration-intervention-association[m[33m, [m[1;32mdevelop[m[33m)[m ajout du .dist
+[33md9c84c4[m chore: initial MVP scaffold

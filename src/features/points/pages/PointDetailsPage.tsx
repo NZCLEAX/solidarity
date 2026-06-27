@@ -9,7 +9,6 @@ import {
   getUrgencyMarkerColor,
 } from '@/shared/utils/pointStyles'
 
-const DEFAULT_CENTER: [number, number] = [48.8566, 2.3522]
 
 function formatDate(value: string | null | undefined) {
   if (!value) return 'Non renseigné'

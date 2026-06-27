@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import L, { divIcon } from 'leaflet'
+import { divIcon } from 'leaflet'
 import {
   MapContainer,
   Marker,
@@ -17,14 +17,7 @@ import {
 } from '@/features/interventions/api/interventions'
 
 import {
-  formatPointLabel,
-  getStatusBadgeClass,
-  getUrgencyBadgeClass,
-} from '@/shared/utils/pointStyles'
-import {
-  getPointInterventions,
   getRepasCoverage,
-  formatInterventionDate,
 } from '@/features/map/utils/coverage'
 
 const DEFAULT_CENTER: [number, number] = [48.8566, 2.3522]
@@ -65,19 +58,6 @@ function splitNeeds(value: string | null) {
     .filter(Boolean)
 }
 
-function getNeedIcon(need: string) {
-  const normalizedNeed = need.toLowerCase()
-
-  if (normalizedNeed.includes('repas')) return '🍽️'
-  if (normalizedNeed.includes('eau')) return '💧'
-  if (normalizedNeed.includes('hygiène')) return '🧼'
-  if (normalizedNeed.includes('vetement') || normalizedNeed.includes('vêtement'))
-    return '👕'
-  if (normalizedNeed.includes('couverture')) return '🛏️'
-  if (normalizedNeed.includes('soin')) return '🏥'
-
-  return '📦'
-}
 
 function formatShortDate(value: string | null | undefined) {
   if (!value) return 'Non renseignée'
@@ -91,17 +71,6 @@ function formatShortDate(value: string | null | undefined) {
     month: '2-digit',
     year: 'numeric',
   }).format(date)
-}
-
-function formatTimeRange(start: string | null, end: string | null) {
-  if (!start && !end) return 'Horaire non renseigné'
-  if (start && end) return `${start} - ${end}`
-  return start || end || 'Horaire non renseigné'
-}
-
-function truncateText(value: string, maxLength = 70) {
-  if (value.length <= maxLength) return value
-  return `${value.slice(0, maxLength)}...`
 }
 
 function getPulseClass(urgency: string | null | undefined) {
@@ -901,6 +870,7 @@ export default function MapPage() {
           Basse
         </div>
       </div>
+
     </div>
   </>
 )}
