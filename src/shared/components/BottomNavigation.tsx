@@ -48,17 +48,9 @@ export default function BottomNavigation() {
 
   let items = citoyenItems
 
-  if (role === 'benevole') {
-    items = benevoleItems
-  }
-
-  if (role === 'association') {
-    items = associationItems
-  }
-
-  if (role === 'admin') {
-    items = adminItems
-  }
+  if (role === 'benevole') items = benevoleItems
+  if (role === 'association') items = associationItems
+  if (role === 'admin') items = adminItems
 
   const columns =
     items.length === 3
@@ -112,15 +104,8 @@ export default function BottomNavigation() {
         </div>
       </nav>
 
-      <nav className="hidden h-16 border-b border-slate-200 bg-white lg:sticky lg:top-0 lg:z-[5000] lg:block">
-        <div className="mx-auto flex h-full max-w-7xl items-center justify-between px-6">
-          <NavLink
-            to="/carte"
-            className="text-xl font-black text-slate-950"
-          >
-            Solidarity
-          </NavLink>
-
+      <nav className="hidden h-16 border-b border-slate-200 bg-white lg:sticky lg:top-16 lg:z-[5000] lg:block">
+        <div className="mx-auto flex h-full max-w-7xl items-center justify-center px-6">
           <div className="flex items-center gap-8">
             {items.map((item) => (
               <NavLink

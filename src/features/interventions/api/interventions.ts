@@ -12,13 +12,12 @@ export type Intervention = {
   nombre_repas: number | null
   nombre_benevoles: number | null
   commentaire: string | null
-  statut: string | null
+  statut: 'prevue' | 'en_cours' | 'terminee' | 'annulee' | null
   created_at: string | null
   updated_at: string | null
   created_by: string
   assigned_to: string | null
   is_sensitive: boolean
-  association_nom: string | null
   points?: {
     adresse: string | null
   } | null
@@ -45,7 +44,9 @@ async function getCurrentProfileAssociationId(userId: string) {
     .eq('id', userId)
     .single()
 
-  if (error) return null
+  if (error) {
+    throw error
+  }
 
   return data?.association_id ?? null
 }
@@ -63,28 +64,40 @@ export async function createIntervention(input: CreateInterventionInput) {
 
   const associationId = await getCurrentProfileAssociationId(session.user.id)
 
+  if (!associationId) {
+    throw new Error(
+      "Ton compte n'est rattaché à aucune association. Impossible de déclarer une intervention."
+    )
+  }
+
+  const payload = {
+    point_id: input.pointId,
+    association_id: associationId,
+    cree_par: session.user.id,
+    created_by: session.user.id,
+    date_intervention: input.dateIntervention,
+    heure_debut: input.heureDebut,
+    heure_fin: input.heureFin,
+    type_aide: input.typeAide,
+    nombre_repas: Number(input.nombreRepas) || 0,
+    nombre_benevoles: Number(input.nombreBenevoles) || 0,
+    commentaire: input.commentaire?.trim() || null,
+
+    // Valeurs acceptées par ta contrainte SQL :
+    // prevue | en_cours | terminee | annulee
+    statut: 'prevue',
+  }
+
   const { data, error } = await supabase
     .from('interventions')
-    .insert({
-      point_id: input.pointId,
-      association_id: associationId,
-      cree_par: session.user.id,
-      created_by: session.user.id,
-      date_intervention: input.dateIntervention,
-      heure_debut: input.heureDebut,
-      heure_fin: input.heureFin,
-      type_aide: input.typeAide,
-      nombre_repas: input.typeAide.toLowerCase().includes('repas')
-        ? input.nombreRepas
-        : 0,
-      nombre_benevoles: input.nombreBenevoles,
-      commentaire: input.commentaire?.trim() || null,
-      statut: 'planifiee',
-    })
+    .insert(payload)
     .select()
     .single()
 
-  if (error) throw error
+  if (error) {
+    console.error('Erreur création intervention :', error)
+    throw new Error(error.message)
+  }
 
   return data
 }
@@ -105,10 +118,9 @@ export async function getInterventions(): Promise<Intervention[]> {
     )
     .order('created_at', { ascending: false })
 
-  if (error) throw error
+  if (error) {
+    throw new Error(error.message)
+  }
 
-  return (data ?? []).map((item: any) => ({
-    ...item,
-    association_nom: item.associations?.nom ?? null,
-  }))
+  return data ?? []
 }

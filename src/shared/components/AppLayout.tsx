@@ -36,121 +36,119 @@ export default function AppLayout() {
           : 'min-h-[100dvh] bg-[#faf8f4]'
       }
     >
-      <div className="lg:hidden">
-        <header className="h-16 border-b border-slate-200 bg-white/95">
-          <div className="flex h-full items-center justify-between px-4">
-            <Link to="/carte" className="text-xl font-black text-slate-950">
-              Solidarity
-            </Link>
+      <header className="sticky top-0 z-[6000] border-b border-slate-200 bg-white/95 backdrop-blur">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 lg:px-8">
+          <Link to="/carte" className="text-xl font-black text-slate-950">
+            Solidarity
+          </Link>
 
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setMenuOpen((value) => !value)}
-                className="flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-xl font-black text-slate-700 shadow-sm"
-              >
-                ☰
-              </button>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setMenuOpen((value) => !value)}
+              className="flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-xl font-black text-slate-700 shadow-sm transition hover:bg-slate-50"
+            >
+              ☰
+            </button>
 
-              {menuOpen && (
-                <div className="absolute right-0 z-[6000] mt-2 w-60 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
-                  <Link
-                    to="/profile"
-                    onClick={() => setMenuOpen(false)}
-                    className="block px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-                  >
-                    Mon profil
-                  </Link>
+            {menuOpen && (
+              <div className="absolute right-0 z-[7000] mt-2 w-60 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
+                <Link
+                  to="/profile"
+                  onClick={() => setMenuOpen(false)}
+                  className="block px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                >
+                  Mon profil
+                </Link>
 
-                  <Link
-                    to="/settings"
-                    onClick={() => setMenuOpen(false)}
-                    className="block px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-                  >
-                    Réglages
-                  </Link>
+                <Link
+                  to="/settings"
+                  onClick={() => setMenuOpen(false)}
+                  className="block px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                >
+                  Réglages
+                </Link>
 
-                  {isAssociation && (
-                    <>
-                      <div className="border-t border-slate-200" />
+                {isAssociation && (
+                  <>
+                    <div className="border-t border-slate-200" />
 
-                      <Link
-                        to="/association/equipe"
-                        onClick={() => setMenuOpen(false)}
-                        className="block px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-                      >
-                        Mon équipe
-                      </Link>
+                    <Link
+                      to="/association/equipe"
+                      onClick={() => setMenuOpen(false)}
+                      className="block px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                    >
+                      Mon équipe
+                    </Link>
 
-                      <Link
-                        to="/association/demandes"
-                        onClick={() => setMenuOpen(false)}
-                        className="block px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-                      >
-                        Mes demandes
-                      </Link>
-                    </>
-                  )}
+                    <Link
+                      to="/association/demandes"
+                      onClick={() => setMenuOpen(false)}
+                      className="block px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                    >
+                      Mes demandes
+                    </Link>
+                  </>
+                )}
 
-                  {(isBenevole || isCitoyen) && (
-                    <>
-                      <div className="border-t border-slate-200" />
+                {(isBenevole || isCitoyen) && (
+                  <>
+                    <div className="border-t border-slate-200" />
 
-                      <Link
-                        to="/interventions"
-                        onClick={() => setMenuOpen(false)}
-                        className="block px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-                      >
-                        Mes interventions
-                      </Link>
+                    <Link
+                      to="/interventions"
+                      onClick={() => setMenuOpen(false)}
+                      className="block px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                    >
+                      Mes interventions
+                    </Link>
 
-                      <Link
-                        to="/associations"
-                        onClick={() => setMenuOpen(false)}
-                        className="block px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-                      >
-                        Rejoindre une association
-                      </Link>
-                    </>
-                  )}
+                    <Link
+                      to="/associations"
+                      onClick={() => setMenuOpen(false)}
+                      className="block px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                    >
+                      Rejoindre une association
+                    </Link>
+                  </>
+                )}
 
-                  {isAdmin && (
-                    <>
-                      <div className="border-t border-slate-200" />
+                {isAdmin && (
+                  <>
+                    <div className="border-t border-slate-200" />
 
-                      <Link
-                        to="/administration"
-                        onClick={() => setMenuOpen(false)}
-                        className="block px-5 py-3 text-sm font-bold text-[#d94a0b] hover:bg-orange-50"
-                      >
-                        Administration
-                      </Link>
+                    <Link
+                      to="/administration"
+                      onClick={() => setMenuOpen(false)}
+                      className="block px-5 py-3 text-sm font-bold text-[#d94a0b] hover:bg-orange-50"
+                    >
+                      Administration
+                    </Link>
 
-                      <Link
-                        to="/administration/associations"
-                        onClick={() => setMenuOpen(false)}
-                        className="block px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-                      >
-                        Gestion associations
-                      </Link>
-                    </>
-                  )}
+                    <Link
+                      to="/administration/associations"
+                      onClick={() => setMenuOpen(false)}
+                      className="block px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                    >
+                      Gestion associations
+                    </Link>
+                  </>
+                )}
 
-                  <div className="border-t border-slate-200" />
+                <div className="border-t border-slate-200" />
 
-                  <button
-                    type="button"
-                    onClick={handleLogout}
-                    className="w-full px-5 py-3 text-left text-sm font-semibold text-red-600 hover:bg-red-50"
-                  >
-                    Déconnexion
-                  </button>
-                </div>
-              )}
-            </div>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="w-full px-5 py-3 text-left text-sm font-semibold text-red-600 hover:bg-red-50"
+                >
+                  Déconnexion
+                </button>
+              </div>
+            )}
           </div>
-        </header>
-      </div>
+        </div>
+      </header>
 
       <BottomNavigation />
 
