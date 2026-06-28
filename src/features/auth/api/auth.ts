@@ -1,106 +1,131 @@
-import { supabase } from '@/lib/supabase'
-import type { PublicRegisterRole } from '../utils/roles'
-import { logSecurityEvent } from '@/features/security/api/security'
+import type { UserRole } from '@/features/auth/utils/roles'
+import { clearCsrfTokenCache, withCsrfHeaders } from '@/lib/csrf'
+
+type BackendAuthUser = {
+  id: string
+  email: string | null
+  user_metadata?: Record<string, unknown>
+}
+
+async function readJsonResponse<T>(response: Response): Promise<T> {
+  const text = await response.text()
+
+  if (!text) {
+    return {} as T
+  }
+
+  return JSON.parse(text) as T
+}
 
 export async function signUp(
   email: string,
   password: string,
   name: string,
-  role: PublicRegisterRole
+  role: UserRole
 ) {
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: {
-        nom: name,
-        role,
-      },
-    },
+  const headers = await withCsrfHeaders({
+    'Content-Type': 'application/json',
   })
 
-  if (error) throw error
+  const response = await fetch('/api/auth/register', {
+    method: 'POST',
+    credentials: 'include',
+    headers,
+    body: JSON.stringify({
+      email,
+      password,
+      name,
+      role,
+    }),
+  })
 
-  if (!data.user) {
+  const payload = await readJsonResponse<{
+    user?: BackendAuthUser
+    error?: string
+  }>(response)
+
+  if (!response.ok) {
+    throw new Error(payload.error || "Erreur lors de l'inscription.")
+  }
+
+  if (!payload.user) {
     throw new Error('Utilisateur introuvable après inscription.')
   }
 
-  const { error: profileError } = await supabase.from('profiles').insert({
-    id: data.user.id,
-    email,
-    nom: name,
-    role,
-    statut_compte: 'actif',
-  })
-
-  if (profileError) throw profileError
-
-  await logSecurityEvent({
-    action: 'auth.signup',
-    resourceType: 'profile',
-    resourceId: data.user.id,
-    severity: 'info',
-    details: { role, email },
-  })
-
-  return data
+  return payload
 }
 
 export async function signIn(email: string, password: string) {
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
+  const headers = await withCsrfHeaders({
+    'Content-Type': 'application/json',
   })
 
-  if (error) throw error
-
-  await logSecurityEvent({
-    action: 'auth.signin',
-    resourceType: 'session',
-    resourceId: data.user?.id ?? null,
-    severity: 'info',
-    details: { email },
+  const response = await fetch('/api/auth/login', {
+    method: 'POST',
+    credentials: 'include',
+    headers,
+    body: JSON.stringify({
+      email,
+      password,
+    }),
   })
 
-  return data
+  const payload = await readJsonResponse<{ user?: BackendAuthUser; error?: string }>(
+    response
+  )
+
+  if (!response.ok) {
+    throw new Error(payload.error || 'Impossible de te connecter.')
+  }
+
+  return payload
 }
+
 export async function signInWithProvider(provider: 'google' | 'apple') {
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider,
-    options: {
-      redirectTo: `${window.location.origin}/carte`,
-    },
-  })
-
-  if (error) throw error
-
-  await logSecurityEvent({
-    action: 'auth.oauth.redirect',
-    resourceType: 'session',
-    severity: 'info',
-    details: { provider },
-  })
+  throw new Error(
+    `La connexion ${provider} n'est pas encore branchée sur le flux HttpOnly.`
+  )
 }
 
 export async function signOut() {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  await logSecurityEvent({
-    action: 'auth.signout',
-    resourceType: 'session',
-    resourceId: user?.id ?? null,
-    severity: 'info',
+  const headers = await withCsrfHeaders({
+    'Content-Type': 'application/json',
   })
 
-  const { error } = await supabase.auth.signOut()
-  if (error) throw error
+  const response = await fetch('/api/auth/logout', {
+    method: 'POST',
+    credentials: 'include',
+    headers,
+  })
+
+  if (!response.ok) {
+    const payload = await readJsonResponse<{ error?: string }>(response)
+    throw new Error(payload.error || 'Impossible de te déconnecter.')
+  }
+
+  clearCsrfTokenCache()
 }
 
 export async function getCurrentUser() {
-  const { data, error } = await supabase.auth.getUser()
+  const response = await fetch('/api/auth/me', {
+    method: 'GET',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  })
 
-  if (error) throw error
-  return data.user
+  if (response.status === 401) {
+    return null
+  }
+
+  const payload = await readJsonResponse<{ user?: BackendAuthUser; error?: string }>(
+    response
+  )
+
+  if (!response.ok) {
+    throw new Error(payload.error || 'Impossible de récupérer la session.')
+  }
+
+  return payload.user ?? null
 }

@@ -4,6 +4,7 @@ import {
   formatZodError,
 } from '@/features/security/model/schemas'
 import { logSecurityEvent } from '@/features/security/api/security'
+import { getCurrentUser } from '@/features/auth/api/auth'
 
 export type Intervention = {
   id: string
@@ -62,17 +63,15 @@ export async function createIntervention(input: CreateInterventionInput) {
     throw new Error(formatZodError(parsedInput.error))
   }
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
+  const user = await getCurrentUser()
 
-  if (!session?.user) {
+  if (!user) {
     throw new Error(
       'Session expirée ou utilisateur non connecté. Reconnecte-toi avant de déclarer une intervention.'
     )
   }
 
-  const associationId = await getCurrentProfileAssociationId(session.user.id)
+  const associationId = await getCurrentProfileAssociationId(user.id)
   const {
     pointId,
     dateIntervention,
@@ -89,8 +88,8 @@ export async function createIntervention(input: CreateInterventionInput) {
     .insert({
       point_id: pointId,
       association_id: associationId,
-      cree_par: session.user.id,
-      created_by: session.user.id,
+      cree_par: user.id,
+      created_by: user.id,
       date_intervention: dateIntervention,
       heure_debut: heureDebut,
       heure_fin: heureFin,

@@ -5,6 +5,7 @@ import {
   formatZodError,
 } from '@/features/security/model/schemas'
 import { logSecurityEvent } from '@/features/security/api/security'
+import { getCurrentUser } from '@/features/auth/api/auth'
 
 export type CreatePointInput = {
   adresse: string
@@ -61,11 +62,9 @@ export async function createPoint(input: CreatePointInput) {
     throw new Error(formatZodError(parsedInput.error))
   }
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
+  const user = await getCurrentUser()
 
-  if (!session?.user) {
+  if (!user) {
     throw new Error(
       'Session expirée ou utilisateur non connecté. Reconnecte-toi avant de créer un point.'
     )
@@ -106,8 +105,8 @@ export async function createPoint(input: CreatePointInput) {
       statut: 'signale',
       niveau_fiabilite: 'non_verifie',
       actif: true,
-      cree_par: session.user.id,
-      created_by: session.user.id,
+      cree_par: user.id,
+      created_by: user.id,
       date_observation: now,
       date_derniere_maj: now,
     })
@@ -166,11 +165,9 @@ export async function updatePoint(pointId: string, input: UpdatePointInput) {
     throw new Error(formatZodError(parsedInput.error))
   }
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
+  const user = await getCurrentUser()
 
-  if (!session?.user) {
+  if (!user) {
     throw new Error(
       'Session expirée ou utilisateur non connecté. Reconnecte-toi avant de modifier un point.'
     )

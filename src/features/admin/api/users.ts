@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase'
+import { getCurrentUser } from '@/features/auth/api/auth'
 import type { UserRole } from '@/features/auth/utils/roles'
 import { logSecurityEvent } from '@/features/security/api/security'
 
@@ -16,18 +17,16 @@ export type AdminUser = {
 }
 
 export async function getCurrentProfile() {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
+  const user = await getCurrentUser()
 
-  if (!session?.user) {
+  if (!user) {
     throw new Error('Utilisateur non connecté.')
   }
 
   const { data, error } = await supabase
     .from('profiles')
     .select('*')
-    .eq('id', session.user.id)
+    .eq('id', user.id)
     .single()
 
   if (error) {

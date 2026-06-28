@@ -1,3 +1,6 @@
+import { supabase } from '@/lib/supabase'
+import { getCurrentUser } from '@/features/auth/api/auth'
+
 export type UserRole =
   | 'citoyen'
   | 'benevole'
@@ -19,16 +22,7 @@ export interface UserProfile {
 }
 
 export async function getCurrentProfile() {
-  const { supabase } = await import('@/lib/supabase')
-
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser()
-
-  if (userError) {
-    throw userError
-  }
+  const user = await getCurrentUser()
 
   if (!user) {
     return null

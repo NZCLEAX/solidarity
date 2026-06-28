@@ -1,8 +1,10 @@
 import { supabase } from '@/lib/supabase'
-import {
-  normalizeRole,
-  type UserRole,
-} from '@/features/auth/utils/roles'
+import { getCurrentUser } from './auth'
+import { normalizeRole, type UserRole } from '@/features/auth/utils/roles'
+
+function asString(value: unknown) {
+  return typeof value === 'string' ? value : null
+}
 
 export type CurrentProfile = {
   id: string
@@ -16,16 +18,9 @@ export type CurrentProfile = {
 }
 
 export async function getCurrentProfile(): Promise<CurrentProfile> {
-  const {
-    data: { session },
-    error: sessionError,
-  } = await supabase.auth.getSession()
+  const user = await getCurrentUser()
 
-  if (sessionError) {
-    throw sessionError
-  }
-
-  if (!session?.user) {
+  if (!user) {
     throw new Error('Utilisateur non connecté.')
   }
 
@@ -43,7 +38,7 @@ export async function getCurrentProfile(): Promise<CurrentProfile> {
       updated_at
     `
     )
-    .eq('id', session.user.id)
+    .eq('id', user.id)
     .order('updated_at', { ascending: false, nullsFirst: false })
     .limit(1)
 
@@ -54,17 +49,14 @@ export async function getCurrentProfile(): Promise<CurrentProfile> {
   const profile = data?.[0]
 
   if (!profile) {
-    const metadataRole = session.user.user_metadata?.role
+    const metadataRole = asString(user.user_metadata?.role)
     const role: UserRole =
       normalizeRole(metadataRole) ?? 'citoyen'
 
     return {
-      id: session.user.id,
-      email: session.user.email ?? null,
-      nom:
-        session.user.user_metadata?.nom ??
-        session.user.user_metadata?.name ??
-        null,
+      id: user.id,
+      email: user.email ?? null,
+      nom: asString(user.user_metadata?.nom) ?? asString(user.user_metadata?.name),
       role,
       association_id: null,
       statut_compte: role === 'association' ? 'en_attente' : 'actif',

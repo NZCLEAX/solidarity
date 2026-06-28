@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import type { OfficialAssociationData } from './officialVerification'
+import { getCurrentUser, signUp } from '@/features/auth/api/auth'
 
 export type AssociationDocumentType =
   | 'statuts'
@@ -114,40 +115,7 @@ export async function createAssociationRequest(
   const email = input.email.trim()
   const password = input.password
 
-  const { error: signUpError } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: {
-        nom: input.nom.trim(),
-        name: input.nom.trim(),
-        role: 'association',
-      },
-    },
-  })
-
-  if (
-    signUpError &&
-    !signUpError.message.toLowerCase().includes('already registered')
-  ) {
-    throw signUpError
-  }
-
-  const { data: signInData, error: signInError } =
-    await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-
-  if (signInError) {
-    throw new Error(
-      "Ce compte existe déjà. Connecte-toi avec ce compte ou utilise le bon mot de passe."
-    )
-  }
-
-  if (!signInData.user) {
-    throw new Error('Utilisateur introuvable après connexion.')
-  }
+  await signUp(email, password, input.nom.trim(), 'association')
 
   const { data, error } = await supabase.rpc('upsert_association_dossier', {
     p_nom: input.nom?.trim() ?? '',
@@ -322,9 +290,7 @@ export async function requestJoinAssociation(
   associationId: string,
   message: string
 ) {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
 
   if (!user) {
     throw new Error('Utilisateur non connecté.')
@@ -347,9 +313,7 @@ export async function requestJoinAssociation(
 }
 
 export async function getMyJoinRequests(): Promise<MyJoinRequest[]> {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
 
   if (!user) return []
 
@@ -393,9 +357,7 @@ export async function getMyJoinRequests(): Promise<MyJoinRequest[]> {
 export async function getAssociationJoinRequests(): Promise<
   AssociationJoinRequest[]
 > {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
 
   if (!user) return []
 
@@ -485,9 +447,7 @@ export async function respondJoinRequest(
 export async function getAssociationVolunteers(): Promise<
   AssociationVolunteer[]
 > {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
 
   if (!user) return []
 
