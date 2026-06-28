@@ -486,8 +486,7 @@ export default function MapPage() {
             })}
           </MapContainer>
 {mobilePoint && (
-  <div className="fixed inset-x-0 bottom-0 z-[2000] max-h-[82vh] overflow-y-auto rounded-t-[2rem] bg-white p-5 shadow-2xl ring-1 ring-slate-200 sm:hidden">
-    <div className="mx-auto mb-4 h-1.5 w-14 rounded-full bg-slate-300" />
+<div className="fixed inset-x-0 bottom-24 top-20 z-[2000] overflow-y-auto rounded-t-[2rem] bg-white px-5 pb-6 pt-4 shadow-2xl ring-1 ring-slate-200 sm:hidden">    <div className="mx-auto mb-4 h-1.5 w-14 rounded-full bg-slate-300" />
 
     <div className="flex items-start justify-between gap-3">
       <div>

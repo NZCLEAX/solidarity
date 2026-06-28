@@ -39,7 +39,7 @@ import AppLayout from '@/shared/components/AppLayout'
 export const router = createBrowserRouter([
   {
     path: '/',
-    element: <Navigate to="/register" replace />,
+    element: <Navigate to="/login" replace />,
   },
 
   {
@@ -207,11 +207,19 @@ export const router = createBrowserRouter([
           </RequireAccess>
         ),
       },
+      {
+  path: 'settings',
+  element: (
+    <RequireAccess permission="dashboard">
+      <ProfilePage />
+    </RequireAccess>
+  ),
+},
     ],
   },
 
   {
-    path: '*',
-    element: <Navigate to="/register" replace />,
-  },
+  path: '*',
+  element: <Navigate to="/carte" replace />,
+}
 ])

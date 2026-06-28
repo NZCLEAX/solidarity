@@ -227,8 +227,34 @@ export default function PlanningPage() {
     0
   )
 
-  
-  return (
+  const [mobilePeriod, setMobilePeriod] = useState<'today' | 'week' | 'month'>('today')
+
+  const mobileInterventions = useMemo(() => {
+  const today = new Date()
+
+  return filteredInterventions.filter((intervention) => {
+    if (!intervention.date_intervention) return false
+
+    const date = new Date(intervention.date_intervention)
+
+    if (mobilePeriod === 'today') {
+      return sameDay(date, today)
+    }
+
+    if (mobilePeriod === 'week') {
+      const start = startOfWeek(today)
+      const end = addDays(start, 6)
+      return date >= start && date <= end
+    }
+
+    return (
+      date.getFullYear() === today.getFullYear() &&
+      date.getMonth() === today.getMonth()
+    )
+  })
+}, [filteredInterventions, mobilePeriod])
+
+return (
     <div className="min-h-[calc(100vh-80px)] bg-[#faf8f4] px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -298,79 +324,51 @@ export default function PlanningPage() {
       </div>
     </div>
 
-    <div className="rounded-[2rem] border border-[#eadfd6] bg-white p-4 shadow-sm">
-      <div className="grid grid-cols-3 gap-2 rounded-2xl bg-slate-100 p-1">
-        <button
-          type="button"
-          onClick={() => setViewMode('week')}
-          className={`rounded-xl px-3 py-2 text-xs font-black ${
-            viewMode === 'week'
-              ? 'bg-white text-[#d94a0b] shadow-sm'
-              : 'text-slate-500'
-          }`}
-        >
-          Semaine
-        </button>
+    <div className="grid grid-cols-3 gap-2 rounded-2xl bg-slate-100 p-1">
+  <button
+    type="button"
+    onClick={() => setMobilePeriod('today')}
+    className={`rounded-xl px-3 py-2 text-xs font-black ${
+      mobilePeriod === 'today'
+        ? 'bg-white text-[#d94a0b] shadow-sm'
+        : 'text-slate-500'
+    }`}
+  >
+    Aujourd’hui
+  </button>
 
-        <button
-          type="button"
-          onClick={() => setViewMode('month')}
-          className={`rounded-xl px-3 py-2 text-xs font-black ${
-            viewMode === 'month'
-              ? 'bg-white text-[#d94a0b] shadow-sm'
-              : 'text-slate-500'
-          }`}
-        >
-          Mois
-        </button>
+  <button
+    type="button"
+    onClick={() => setMobilePeriod('week')}
+    className={`rounded-xl px-3 py-2 text-xs font-black ${
+      mobilePeriod === 'week'
+        ? 'bg-white text-[#d94a0b] shadow-sm'
+        : 'text-slate-500'
+    }`}
+  >
+    Semaine
+  </button>
 
-        <button
-          type="button"
-          onClick={() => setViewMode('year')}
-          className={`rounded-xl px-3 py-2 text-xs font-black ${
-            viewMode === 'year'
-              ? 'bg-white text-[#d94a0b] shadow-sm'
-              : 'text-slate-500'
-          }`}
-        >
-          Année
-        </button>
-      </div>
-
-      <div className="mt-3 flex gap-2">
-        <button
-          type="button"
-          onClick={goPrevious}
-          className="flex-1 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-black text-slate-700"
-        >
-          Précédent
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setCurrentDate(new Date())}
-          className="flex-1 rounded-xl bg-[#d94a0b] px-3 py-2 text-xs font-black text-white"
-        >
-          Aujourd’hui
-        </button>
-
-        <button
-          type="button"
-          onClick={goNext}
-          className="flex-1 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-black text-slate-700"
-        >
-          Suivant
-        </button>
-      </div>
-    </div>
+  <button
+    type="button"
+    onClick={() => setMobilePeriod('month')}
+    className={`rounded-xl px-3 py-2 text-xs font-black ${
+      mobilePeriod === 'month'
+        ? 'bg-white text-[#d94a0b] shadow-sm'
+        : 'text-slate-500'
+    }`}
+  >
+    Mois
+  </button>
+</div>
 
     <div className="space-y-3">
-      {filteredInterventions.length === 0 ? (
+      {mobileInterventions.length === 0 ? (
         <div className="rounded-[2rem] bg-white p-5 text-sm font-semibold text-slate-500">
           Aucune intervention trouvée.
         </div>
       ) : (
-        filteredInterventions.map((intervention) => (
+        mobileInterventions.map((intervention) => (
           <button
             key={intervention.id}
             type="button"

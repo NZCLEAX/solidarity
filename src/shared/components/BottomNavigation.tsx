@@ -1,6 +1,28 @@
 import { NavLink } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 
-const items = [
+import { getCurrentProfile } from '@/features/auth/api/profile'
+
+type NavItem = {
+  label: string
+  path: string
+  center?: boolean
+}
+
+const citoyenItems: NavItem[] = [
+  { label: 'Accueil', path: '/dashboard' },
+  { label: 'Signaler', path: '/points/new', center: true },
+  { label: 'Espace', path: '/profile' },
+]
+
+const benevoleItems: NavItem[] = [
+  { label: 'Accueil', path: '/dashboard' },
+  { label: 'Signaler', path: '/points/new', center: true },
+  { label: 'Interventions', path: '/interventions' },
+  { label: 'Espace', path: '/profile' },
+]
+
+const associationItems: NavItem[] = [
   { label: 'Accueil', path: '/dashboard' },
   { label: 'Planning', path: '/planning' },
   { label: 'Carte', path: '/carte', center: true },
@@ -8,21 +30,57 @@ const items = [
   { label: 'Espace', path: '/profile' },
 ]
 
+const adminItems: NavItem[] = [
+  { label: 'Accueil', path: '/dashboard' },
+  { label: 'Planning', path: '/planning' },
+  { label: 'Carte', path: '/carte', center: true },
+  { label: 'Interventions', path: '/interventions' },
+  { label: 'Administration', path: '/administration' },
+]
+
 export default function BottomNavigation() {
+  const { data: profile } = useQuery({
+    queryKey: ['current-profile'],
+    queryFn: getCurrentProfile,
+  })
+
+  const role = profile?.role ?? 'citoyen'
+
+  let items = citoyenItems
+
+  if (role === 'benevole') {
+    items = benevoleItems
+  }
+
+  if (role === 'association') {
+    items = associationItems
+  }
+
+  if (role === 'admin') {
+    items = adminItems
+  }
+
+  const columns =
+    items.length === 3
+      ? 'grid-cols-3'
+      : items.length === 4
+        ? 'grid-cols-4'
+        : 'grid-cols-5'
+
   return (
     <>
       <nav className="fixed bottom-0 left-0 right-0 z-[5000] border-t border-slate-200 bg-white/95 px-2 pb-3 pt-2 shadow-2xl backdrop-blur lg:hidden">
-        <div className="mx-auto grid max-w-md grid-cols-5 items-end">
+        <div className={`mx-auto grid max-w-md ${columns} items-end`}>
           {items.map((item) => (
             <NavLink
               key={item.path}
               to={item.path}
               className={({ isActive }) =>
                 item.center
-                  ? `-mt-8 flex flex-col items-center justify-center ${
+                  ? `-mt-8 flex flex-col items-center ${
                       isActive ? 'text-[#d94a0b]' : 'text-slate-500'
                     }`
-                  : `flex flex-col items-center justify-center gap-1 px-1 py-2 text-[11px] font-black ${
+                  : `flex flex-col items-center gap-1 py-2 text-[11px] font-black ${
                       isActive ? 'text-[#d94a0b]' : 'text-slate-500'
                     }`
               }
@@ -35,9 +93,12 @@ export default function BottomNavigation() {
                         isActive ? 'bg-[#d94a0b]' : 'bg-slate-900'
                       }`}
                     >
-                      Carte
+                      {item.label}
                     </div>
-                    <span className="mt-1 text-[11px] font-black">Carte</span>
+
+                    <span className="mt-1 text-[11px] font-black">
+                      {item.label}
+                    </span>
                   </>
                 ) : (
                   <>
@@ -51,9 +112,12 @@ export default function BottomNavigation() {
         </div>
       </nav>
 
-      <nav className="hidden h-16 border-b border-slate-200 bg-white/95 backdrop-blur lg:sticky lg:top-0 lg:z-[5000] lg:block">
+      <nav className="hidden h-16 border-b border-slate-200 bg-white lg:sticky lg:top-0 lg:z-[5000] lg:block">
         <div className="mx-auto flex h-full max-w-7xl items-center justify-between px-6">
-          <NavLink to="/carte" className="text-xl font-black text-slate-950">
+          <NavLink
+            to="/carte"
+            className="text-xl font-black text-slate-950"
+          >
             Solidarity
           </NavLink>
 
@@ -63,7 +127,7 @@ export default function BottomNavigation() {
                 key={item.path}
                 to={item.path}
                 className={({ isActive }) =>
-                  `border-b-2 px-2 py-5 text-sm font-black transition ${
+                  `border-b-2 px-2 py-5 text-sm font-black ${
                     isActive
                       ? 'border-[#d94a0b] text-[#d94a0b]'
                       : 'border-transparent text-slate-600 hover:text-slate-950'
@@ -74,13 +138,6 @@ export default function BottomNavigation() {
               </NavLink>
             ))}
           </div>
-
-          <NavLink
-            to="/profile"
-            className="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-black text-slate-700 shadow-sm"
-          >
-            Réglages
-          </NavLink>
         </div>
       </nav>
     </>
