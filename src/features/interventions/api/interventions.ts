@@ -1,4 +1,9 @@
 import { supabase } from '@/lib/supabase'
+import {
+  createInterventionInputSchema,
+  formatZodError,
+} from '@/features/security/model/schemas'
+import { logSecurityEvent } from '@/features/security/api/security'
 
 export type Intervention = {
   id: string
@@ -51,6 +56,12 @@ async function getCurrentProfileAssociationId(userId: string) {
 }
 
 export async function createIntervention(input: CreateInterventionInput) {
+  const parsedInput = createInterventionInputSchema.safeParse(input)
+
+  if (!parsedInput.success) {
+    throw new Error(formatZodError(parsedInput.error))
+  }
+
   const {
     data: { session },
   } = await supabase.auth.getSession()
@@ -62,29 +73,51 @@ export async function createIntervention(input: CreateInterventionInput) {
   }
 
   const associationId = await getCurrentProfileAssociationId(session.user.id)
+  const {
+    pointId,
+    dateIntervention,
+    heureDebut,
+    heureFin,
+    typeAide,
+    nombreRepas,
+    nombreBenevoles,
+    commentaire,
+  } = parsedInput.data
 
   const { data, error } = await supabase
     .from('interventions')
     .insert({
-      point_id: input.pointId,
+      point_id: pointId,
       association_id: associationId,
       cree_par: session.user.id,
       created_by: session.user.id,
-      date_intervention: input.dateIntervention,
-      heure_debut: input.heureDebut,
-      heure_fin: input.heureFin,
-      type_aide: input.typeAide,
-      nombre_repas: input.typeAide.toLowerCase().includes('repas')
-        ? input.nombreRepas
+      date_intervention: dateIntervention,
+      heure_debut: heureDebut,
+      heure_fin: heureFin,
+      type_aide: typeAide,
+      nombre_repas: typeAide.toLowerCase().includes('repas')
+        ? nombreRepas
         : 0,
-      nombre_benevoles: input.nombreBenevoles,
-      commentaire: input.commentaire?.trim() || null,
+      nombre_benevoles: nombreBenevoles,
+      commentaire: commentaire?.trim() || null,
       statut: 'planifiee',
     })
     .select()
     .single()
 
   if (error) throw error
+
+  await logSecurityEvent({
+    action: 'intervention.created',
+    resourceType: 'intervention',
+    resourceId: data.id,
+    severity: 'info',
+    details: {
+      pointId,
+      dateIntervention,
+      nombreBenevoles,
+    },
+  })
 
   return data
 }

@@ -1,4 +1,4 @@
-import { ReactNode } from 'react'
+import { ReactNode, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { getCurrentProfile } from '@/features/auth/api/profile'
@@ -6,6 +6,7 @@ import {
   hasPermission,
   type AppPermission,
 } from '@/features/auth/utils/permissions'
+import { logSecurityEvent } from '@/features/security/api/security'
 
 type RequireAccessProps = {
   permission: AppPermission
@@ -26,6 +27,33 @@ export default function RequireAccess({
     queryFn: getCurrentProfile,
     retry: false,
   })
+
+  const loggedRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    if (isLoading || isError || !profile) return
+
+    if (hasPermission(profile, permission)) return
+
+    const logKey = `${window.location.pathname}:${permission}:${profile.role}:${profile.statut_compte}`
+
+    if (loggedRef.current === logKey) return
+
+    loggedRef.current = logKey
+
+    void logSecurityEvent({
+      action: 'route.access_denied',
+      resourceType: 'route',
+      resourceId: window.location.pathname,
+      severity: 'warning',
+      success: false,
+      details: {
+        permission,
+        role: profile.role,
+        statut_compte: profile.statut_compte,
+      },
+    })
+  }, [isError, isLoading, permission, profile])
 
   if (isLoading) {
     return (

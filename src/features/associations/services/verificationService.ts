@@ -1,9 +1,5 @@
-import * as pdfjsLib from 'pdfjs-dist'
-import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 import type { AssociationDocumentType } from '@/features/associations/api/associations'
 import type { OfficialAssociationData } from '@/features/associations/api/officialVerification'
-
-pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker
 
 export type VerificationContext = {
   nom: string
@@ -80,23 +76,8 @@ function normalizeText(value: string) {
 }
 
 async function extractPdfText(file: File) {
-  const arrayBuffer = await file.arrayBuffer()
-  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
-
-  let fullText = ''
-
-  for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
-    const page = await pdf.getPage(pageNumber)
-    const content = await page.getTextContent()
-
-    const pageText = content.items
-      .map((item) => ('str' in item ? item.str : ''))
-      .join(' ')
-
-    fullText += ` ${pageText}`
-  }
-
-  return fullText.trim()
+  const text = await file.text()
+  return text.trim()
 }
 
 export async function verifyDocumentFile(

@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import type { UserRole } from '@/features/auth/utils/roles'
+import { logSecurityEvent } from '@/features/security/api/security'
 
 export type UserStatus = 'actif' | 'suspendu' | 'inactif'
 
@@ -75,6 +76,14 @@ export async function updateUserRole(userId: string, role: UserRole) {
     throw error
   }
 
+  await logSecurityEvent({
+    action: 'admin.user.role_updated',
+    resourceType: 'profile',
+    resourceId: userId,
+    severity: 'warning',
+    details: { role },
+  })
+
   return data
 }
 
@@ -92,6 +101,14 @@ export async function updateUserStatus(userId: string, statutCompte: UserStatus)
   if (error) {
     throw error
   }
+
+  await logSecurityEvent({
+    action: 'admin.user.status_updated',
+    resourceType: 'profile',
+    resourceId: userId,
+    severity: 'warning',
+    details: { statutCompte },
+  })
 
   return data
 }

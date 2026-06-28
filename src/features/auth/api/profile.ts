@@ -1,5 +1,8 @@
 import { supabase } from '@/lib/supabase'
-import type { UserRole } from '@/features/auth/utils/roles'
+import {
+  normalizeRole,
+  type UserRole,
+} from '@/features/auth/utils/roles'
 
 export type CurrentProfile = {
   id: string
@@ -10,16 +13,6 @@ export type CurrentProfile = {
   statut_compte: string | null
   created_at: string | null
   updated_at: string | null
-}
-
-function isValidRole(value: unknown): value is UserRole {
-  return (
-    value === 'citoyen' ||
-    value === 'benevole' ||
-    value === 'association' ||
-    value === 'moderateur' ||
-    value === 'admin'
-  )
 }
 
 export async function getCurrentProfile(): Promise<CurrentProfile> {
@@ -62,7 +55,8 @@ export async function getCurrentProfile(): Promise<CurrentProfile> {
 
   if (!profile) {
     const metadataRole = session.user.user_metadata?.role
-    const role: UserRole = isValidRole(metadataRole) ? metadataRole : 'citoyen'
+    const role: UserRole =
+      normalizeRole(metadataRole) ?? 'citoyen'
 
     return {
       id: session.user.id,
@@ -79,5 +73,8 @@ export async function getCurrentProfile(): Promise<CurrentProfile> {
     }
   }
 
-  return profile as CurrentProfile
+  return {
+    ...(profile as CurrentProfile),
+    role: normalizeRole(profile.role) ?? 'citoyen',
+  }
 }

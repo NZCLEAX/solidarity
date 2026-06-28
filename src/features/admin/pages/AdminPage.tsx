@@ -13,6 +13,7 @@ import {
 import {
   adminManageableRoles,
   formatRole,
+  normalizeRole,
   type UserRole,
 } from '@/features/auth/utils/roles'
 
@@ -66,7 +67,7 @@ export default function AdminPage() {
     queryFn: getCurrentProfile,
   })
 
-  const isAdmin = currentProfile?.role === 'admin'
+  const isAdmin = normalizeRole(currentProfile?.role) === 'admin'
 
   const {
     data: users = [],
@@ -162,6 +163,13 @@ export default function AdminPage() {
           className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
         >
           Gestion des associations
+        </Link>
+
+        <Link
+          to="/administration/securite"
+          className="rounded-lg border border-orange-200 bg-orange-50 px-4 py-2 text-sm font-semibold text-[#d94a0b] hover:bg-orange-100"
+        >
+          Centre de sécurité
         </Link>
       </div>
 

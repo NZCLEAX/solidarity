@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import type { PublicRegisterRole } from '../utils/roles'
+import { logSecurityEvent } from '@/features/security/api/security'
 
 export async function signUp(
   email: string,
@@ -34,6 +35,14 @@ export async function signUp(
 
   if (profileError) throw profileError
 
+  await logSecurityEvent({
+    action: 'auth.signup',
+    resourceType: 'profile',
+    resourceId: data.user.id,
+    severity: 'info',
+    details: { role, email },
+  })
+
   return data
 }
 
@@ -44,6 +53,14 @@ export async function signIn(email: string, password: string) {
   })
 
   if (error) throw error
+
+  await logSecurityEvent({
+    action: 'auth.signin',
+    resourceType: 'session',
+    resourceId: data.user?.id ?? null,
+    severity: 'info',
+    details: { email },
+  })
 
   return data
 }
@@ -56,9 +73,27 @@ export async function signInWithProvider(provider: 'google' | 'apple') {
   })
 
   if (error) throw error
+
+  await logSecurityEvent({
+    action: 'auth.oauth.redirect',
+    resourceType: 'session',
+    severity: 'info',
+    details: { provider },
+  })
 }
 
 export async function signOut() {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  await logSecurityEvent({
+    action: 'auth.signout',
+    resourceType: 'session',
+    resourceId: user?.id ?? null,
+    severity: 'info',
+  })
+
   const { error } = await supabase.auth.signOut()
   if (error) throw error
 }

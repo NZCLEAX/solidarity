@@ -1,4 +1,5 @@
 import type { CurrentProfile } from '@/features/auth/api/profile'
+import { normalizeRole } from './roles'
 
 export type AppPermission =
   | 'dashboard'
@@ -17,8 +18,10 @@ export function isVolunteerValidated(
 ) {
   if (!profile) return false
 
+  const role = normalizeRole(profile.role) ?? profile.role
+
   return (
-    profile.role === 'benevole' &&
+    role === 'benevole' &&
     profile.statut_compte === 'actif' &&
     Boolean(profile.association_id)
   )
@@ -29,8 +32,10 @@ export function isAssociationValidated(
 ) {
   if (!profile) return false
 
+  const role = normalizeRole(profile.role) ?? profile.role
+
   return (
-    profile.role === 'association' &&
+    role === 'association' &&
     profile.statut_compte === 'actif' &&
     Boolean(profile.association_id)
   )
@@ -42,7 +47,7 @@ export function hasPermission(
 ) {
   if (!profile?.role) return false
 
-  const role = profile.role
+  const role = normalizeRole(profile.role) ?? profile.role
 
   if (permission === 'profile') {
     return true
@@ -108,20 +113,22 @@ export function getDefaultPathForProfile(
 ) {
   if (!profile?.role) return '/login'
 
-  if (profile.role === 'admin') return '/dashboard'
-  if (profile.role === 'moderateur') return '/dashboard'
+  const role = normalizeRole(profile.role) ?? profile.role
 
-  if (profile.role === 'association') {
+  if (role === 'admin') return '/dashboard'
+  if (role === 'moderateur') return '/dashboard'
+
+  if (role === 'association') {
     if (isAssociationValidated(profile)) return '/dashboard'
     return '/profile'
   }
 
-  if (profile.role === 'benevole') {
+  if (role === 'benevole') {
     if (isVolunteerValidated(profile)) return '/carte'
     return '/associations'
   }
 
-  if (profile.role === 'citoyen') return '/points/new'
+  if (role === 'citoyen') return '/points/new'
 
   return '/profile'
 }

@@ -7,6 +7,7 @@ import {
 } from '../utils/roles'
 import {
   isValidPassword,
+  containsCommonPasswordPattern,
   passwordValidationMessage,
 } from '../utils/passwordValidation'
 import { signInWithProvider } from '@/features/auth/api/auth'
@@ -40,6 +41,42 @@ export default function RegisterPage() {
 
     if (!isValidPassword(password)) {
       setError(passwordValidationMessage)
+      setLoading(false)
+      return
+    }
+
+    const normalizedPassword = password.toLowerCase().replace(/\s+/g, '')
+    const normalizedName = name.trim().toLowerCase().replace(/\s+/g, '')
+    const normalizedEmailLocal = email
+      .trim()
+      .toLowerCase()
+      .split('@')[0]
+      ?.replace(/[._-]/g, '')
+
+    if (containsCommonPasswordPattern(normalizedPassword)) {
+      setError(
+        'Choisis un mot de passe plus robuste, sans mot évident ou trop courant.'
+      )
+      setLoading(false)
+      return
+    }
+
+    if (normalizedName && normalizedPassword.includes(normalizedName)) {
+      setError(
+        'Le mot de passe ne doit pas contenir ton nom ou une partie évidente de ton identité.'
+      )
+      setLoading(false)
+      return
+    }
+
+    if (
+      normalizedEmailLocal &&
+      normalizedEmailLocal.length >= 4 &&
+      normalizedPassword.includes(normalizedEmailLocal)
+    ) {
+      setError(
+        'Le mot de passe ne doit pas reprendre une partie évidente de ton email.'
+      )
       setLoading(false)
       return
     }

@@ -4,10 +4,32 @@ export type UserRole =
   | 'association'
   | 'moderateur'
   | 'admin'
+  | 'administrateur'
+
+export function normalizeRole(role: string | null | undefined): UserRole | null {
+  if (!role) return null
+
+  const normalized = role.toLowerCase()
+
+  if (normalized === 'administrateur') return 'admin'
+  if (normalized === 'moderator') return 'moderateur'
+
+  if (
+    normalized === 'citoyen' ||
+    normalized === 'benevole' ||
+    normalized === 'association' ||
+    normalized === 'moderateur' ||
+    normalized === 'admin'
+  ) {
+    return normalized
+  }
+
+  return null
+}
 
 export type PublicRegisterRole = Exclude<
   UserRole,
-  'association' | 'admin' | 'moderateur'
+  'association' | 'admin' | 'moderateur' | 'administrateur'
 >
 
 export const publicRegisterRoles: Array<{
@@ -36,9 +58,12 @@ export function formatRole(role: string | null | undefined) {
     association: 'Association',
     moderateur: 'Modérateur',
     admin: 'Administrateur',
+    administrateur: 'Administrateur',
   }
 
   if (!role) return 'Non renseigné'
 
-  return labels[role] || role
+  const normalized = normalizeRole(role) ?? role
+
+  return labels[normalized] || labels[role] || role
 }

@@ -8,6 +8,7 @@ import RequireAccess from '@/features/auth/components/RequireAccess'
 
 import AdminPage from '@/features/admin/pages/AdminPage'
 import AdminAssociationsPage from '@/features/admin/pages/AdminAssociationsPage'
+import SecurityCenterPage from '@/features/security/pages/SecurityCenterPage'
 
 import DashboardPage from '@/features/dashboard/pages/DashboardPage'
 
@@ -196,6 +197,14 @@ export const router = createBrowserRouter([
         element: (
           <RequireAccess permission="administration">
             <AdminAssociationsPage />
+          </RequireAccess>
+        ),
+      },
+      {
+        path: '/administration/securite',
+        element: (
+          <RequireAccess permission="administration">
+            <SecurityCenterPage />
           </RequireAccess>
         ),
       },

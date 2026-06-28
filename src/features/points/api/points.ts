@@ -1,4 +1,10 @@
 import { supabase } from '@/lib/supabase'
+import {
+  createPointInputSchema,
+  updatePointInputSchema,
+  formatZodError,
+} from '@/features/security/model/schemas'
+import { logSecurityEvent } from '@/features/security/api/security'
 
 export type CreatePointInput = {
   adresse: string
@@ -49,6 +55,12 @@ export type MergeDuplicatePointsInput = {
 }
 
 export async function createPoint(input: CreatePointInput) {
+  const parsedInput = createPointInputSchema.safeParse(input)
+
+  if (!parsedInput.success) {
+    throw new Error(formatZodError(parsedInput.error))
+  }
+
   const {
     data: { session },
   } = await supabase.auth.getSession()
@@ -60,7 +72,8 @@ export async function createPoint(input: CreatePointInput) {
   }
 
   const now = new Date().toISOString()
-  const adresse = input.adresse.trim()
+  const { adresse, latitude, longitude, nombrePersonnesEstime, typologie, besoins, niveauUrgence, commentaire } =
+    parsedInput.data
 
   const { data: existingPoint, error: duplicateError } = await supabase
     .from('points')
@@ -83,13 +96,13 @@ export async function createPoint(input: CreatePointInput) {
     .from('points')
     .insert({
       adresse,
-      latitude: input.latitude,
-      longitude: input.longitude,
-      nombre_personnes_estime: input.nombrePersonnesEstime,
-      typologie: input.typologie || null,
-      besoins: input.besoins.join(', '),
-      niveau_urgence: input.niveauUrgence,
-      commentaire: input.commentaire?.trim() || null,
+      latitude,
+      longitude,
+      nombre_personnes_estime: nombrePersonnesEstime,
+      typologie: typologie || null,
+      besoins: besoins.join(', '),
+      niveau_urgence: niveauUrgence,
+      commentaire: commentaire?.trim() || null,
       statut: 'signale',
       niveau_fiabilite: 'non_verifie',
       actif: true,
@@ -104,6 +117,17 @@ export async function createPoint(input: CreatePointInput) {
   if (error) {
     throw error
   }
+
+  await logSecurityEvent({
+    action: 'point.created',
+    resourceType: 'point',
+    resourceId: data.id,
+    severity: 'info',
+    details: {
+      niveauUrgence,
+      nombrePersonnesEstime,
+    },
+  })
 
   return data
 }
@@ -136,6 +160,12 @@ export async function getPointById(pointId: string): Promise<Point> {
 }
 
 export async function updatePoint(pointId: string, input: UpdatePointInput) {
+  const parsedInput = updatePointInputSchema.safeParse(input)
+
+  if (!parsedInput.success) {
+    throw new Error(formatZodError(parsedInput.error))
+  }
+
   const {
     data: { session },
   } = await supabase.auth.getSession()
@@ -146,7 +176,17 @@ export async function updatePoint(pointId: string, input: UpdatePointInput) {
     )
   }
 
-  const adresse = input.adresse.trim()
+  const {
+    adresse,
+    latitude,
+    longitude,
+    nombrePersonnesEstime,
+    typologie,
+    besoins,
+    niveauUrgence,
+    commentaire,
+    statut,
+  } = parsedInput.data
 
   const { data: duplicatePoints, error: duplicateError } = await supabase
     .from('points')
@@ -168,15 +208,15 @@ export async function updatePoint(pointId: string, input: UpdatePointInput) {
     .from('points')
     .update({
       adresse,
-      latitude: input.latitude,
-      longitude: input.longitude,
-      nombre_personnes_estime: input.nombrePersonnesEstime,
-      typologie: input.typologie || null,
-      besoins: input.besoins.join(', '),
-      niveau_urgence: input.niveauUrgence,
-      commentaire: input.commentaire?.trim() || null,
-      statut: input.statut,
-      actif: input.statut !== 'archive' && input.statut !== 'inactif',
+      latitude,
+      longitude,
+      nombre_personnes_estime: nombrePersonnesEstime,
+      typologie: typologie || null,
+      besoins: besoins.join(', '),
+      niveau_urgence: niveauUrgence,
+      commentaire: commentaire?.trim() || null,
+      statut,
+      actif: statut !== 'archive' && statut !== 'inactif',
       date_derniere_maj: new Date().toISOString(),
     })
     .eq('id', pointId)
@@ -186,6 +226,17 @@ export async function updatePoint(pointId: string, input: UpdatePointInput) {
   if (error) {
     throw error
   }
+
+  await logSecurityEvent({
+    action: 'point.updated',
+    resourceType: 'point',
+    resourceId: data.id,
+    severity: 'warning',
+    details: {
+      statut,
+      niveauUrgence,
+    },
+  })
 
   return data
 }
@@ -207,6 +258,13 @@ export async function confirmPoint(pointId: string) {
     throw error
   }
 
+  await logSecurityEvent({
+    action: 'point.confirmed',
+    resourceType: 'point',
+    resourceId: data.id,
+    severity: 'warning',
+  })
+
   return data
 }
 
@@ -225,6 +283,13 @@ export async function rejectPoint(pointId: string) {
   if (error) {
     throw error
   }
+
+  await logSecurityEvent({
+    action: 'point.rejected',
+    resourceType: 'point',
+    resourceId: data.id,
+    severity: 'warning',
+  })
 
   return data
 }
@@ -385,6 +450,16 @@ export async function mergeDuplicatePoints({
   if (archiveDuplicateError) {
     throw archiveDuplicateError
   }
+
+  await logSecurityEvent({
+    action: 'point.duplicates_merged',
+    resourceType: 'point',
+    resourceId: mainPointId,
+    severity: 'warning',
+    details: {
+      duplicatePointId,
+    },
+  })
 
   return {
     mainPoint: updatedMainPoint,

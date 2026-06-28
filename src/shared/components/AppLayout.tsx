@@ -4,7 +4,8 @@ import { useQuery } from '@tanstack/react-query'
 
 import BottomNavigation from './BottomNavigation'
 import { getCurrentProfile } from '@/features/auth/api/profile'
-import { supabase } from '@/lib/supabase'
+import { signOut } from '@/features/auth/api/auth'
+import { normalizeRole } from '@/features/auth/utils/roles'
 
 export default function AppLayout() {
   const location = useLocation()
@@ -17,14 +18,14 @@ export default function AppLayout() {
     queryFn: getCurrentProfile,
   })
 
-  const role = profile?.role ?? 'citoyen'
+  const role = normalizeRole(profile?.role) ?? 'citoyen'
   const isAssociation = role === 'association'
   const isAdmin = role === 'admin'
   const isBenevole = role === 'benevole'
   const isCitoyen = role === 'citoyen'
 
   async function handleLogout() {
-    await supabase.auth.signOut()
+    await signOut()
     navigate('/login')
   }
 
@@ -132,6 +133,14 @@ export default function AppLayout() {
                         className="block px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
                       >
                         Gestion associations
+                      </Link>
+
+                      <Link
+                        to="/administration/securite"
+                        onClick={() => setMenuOpen(false)}
+                        className="block px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                      >
+                        Centre de sécurité
                       </Link>
                     </>
                   )}
