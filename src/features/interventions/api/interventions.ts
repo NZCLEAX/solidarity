@@ -4,6 +4,7 @@ export type Intervention = {
   id: string
   point_id: string | null
   association_id: string | null
+  association_nom: string | null
   cree_par: string | null
   date_intervention: string | null
   heure_debut: string | null
@@ -122,5 +123,8 @@ export async function getInterventions(): Promise<Intervention[]> {
     throw new Error(error.message)
   }
 
-  return data ?? []
+  return (data ?? []).map((item: any) => ({
+    ...item,
+    association_nom: item.associations?.nom ?? null,
+  }))
 }
