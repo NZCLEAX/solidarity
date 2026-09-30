@@ -1,8 +1,10 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
+
 import { getCurrentProfile } from '@/features/auth/api/profile'
 import { signOut } from '@/features/auth/api/auth'
 import { formatRole } from '@/features/auth/utils/roles'
+import { hasPermission } from '@/features/auth/utils/permissions'
 
 function formatDate(value: string | null | undefined) {
   if (!value) return 'Non renseignée'
@@ -51,56 +53,6 @@ function getStatusClass(value: string | null | undefined) {
   return 'bg-slate-100 text-slate-700 ring-slate-200'
 }
 
-function canAccessDashboard(role: string | null | undefined) {
-  return role === 'association' || role === 'moderateur' || role === 'admin'
-}
-
-function canAccessMap(
-  role: string | null | undefined,
-  statutCompte: string | null | undefined,
-  associationId: string | null | undefined
-) {
-  if (role === 'association' || role === 'moderateur' || role === 'admin') {
-    return true
-  }
-
-  if (role === 'benevole') {
-    return statutCompte === 'actif' && Boolean(associationId)
-  }
-
-  return false
-}
-
-function canAccessPoints(
-  role: string | null | undefined,
-  statutCompte: string | null | undefined,
-  associationId: string | null | undefined
-) {
-  return canAccessMap(role, statutCompte, associationId)
-}
-
-function canCreatePoint(role: string | null | undefined) {
-  return (
-    role === 'citoyen' ||
-    role === 'benevole' ||
-    role === 'association' ||
-    role === 'moderateur' ||
-    role === 'admin'
-  )
-}
-
-function canAccessInterventions(role: string | null | undefined) {
-  return role === 'association' || role === 'moderateur' || role === 'admin'
-}
-
-function canAccessModeration(role: string | null | undefined) {
-  return role === 'moderateur' || role === 'admin'
-}
-
-function canAccessAdministration(role: string | null | undefined) {
-  return role === 'admin'
-}
-
 function AccessCard({
   title,
   description,
@@ -114,7 +66,10 @@ function AccessCard({
     <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-base font-black text-slate-950">{title}</p>
+          <p className="text-base font-black text-slate-950">
+            {title}
+          </p>
+
           <p className="mt-1 text-sm leading-relaxed text-slate-500">
             {description}
           </p>
@@ -181,20 +136,62 @@ export default function ProfilePage() {
     'U'
 
   const role = profile.role
-  const statutCompte = profile.statut_compte
   const associationId = profile.association_id
 
-  const dashboardAllowed = canAccessDashboard(role)
-  const mapAllowed = canAccessMap(role, statutCompte, associationId)
-  const pointsAllowed = canAccessPoints(role, statutCompte, associationId)
-  const createPointAllowed = canCreatePoint(role)
-  const interventionsAllowed = canAccessInterventions(role)
-  const moderationAllowed = canAccessModeration(role)
-  const administrationAllowed = canAccessAdministration(role)
+  // =========================================================
+  // PERMISSIONS
+  // On utilise maintenant exactement les mêmes permissions
+  // que le router.
+  // =========================================================
+
+  const dashboardAllowed = hasPermission(
+    profile,
+    'dashboard'
+  )
+
+  const planningAllowed = hasPermission(
+    profile,
+    'planning'
+  )
+
+  const mapAllowed = hasPermission(
+    profile,
+    'view_map'
+  )
+
+  const pointsAllowed = hasPermission(
+    profile,
+    'view_points'
+  )
+
+  const createPointAllowed = hasPermission(
+    profile,
+    'create_point'
+  )
+
+  const interventionsAllowed = hasPermission(
+    profile,
+    'manage_interventions'
+  )
+
+  const moderationAllowed = hasPermission(
+    profile,
+    'moderation'
+  )
+
+  const administrationAllowed = hasPermission(
+    profile,
+    'administration'
+  )
 
   return (
     <div className="min-h-[calc(100vh-80px)] bg-[#faf8f4] px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-7xl">
+
+        {/* =====================================================
+            TITRE
+        ===================================================== */}
+
         <div className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#d94a0b]">
@@ -207,7 +204,7 @@ export default function ProfilePage() {
 
             <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-600 sm:text-lg">
               Consulte ton rôle, ton statut et les accès disponibles sur
-              Solidarity.
+              PULSE.
             </p>
           </div>
 
@@ -232,6 +229,11 @@ export default function ProfilePage() {
         </div>
 
         <div className="grid gap-6 xl:grid-cols-[0.85fr_1.15fr]">
+
+          {/* =====================================================
+              PROFIL
+          ===================================================== */}
+
           <section className="overflow-hidden rounded-[2rem] border border-[#eadfd6] bg-white shadow-sm">
             <div className="bg-gradient-to-br from-orange-50 via-white to-[#faf8f4] p-6 sm:p-8">
               <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
@@ -266,6 +268,9 @@ export default function ProfilePage() {
             </div>
 
             <div className="p-6 sm:p-8">
+
+              {/* RÔLE */}
+
               <div className="rounded-3xl bg-slate-50 p-5">
                 <p className="text-sm font-bold uppercase tracking-wide text-slate-500">
                   Rôle actuel
@@ -277,16 +282,14 @@ export default function ProfilePage() {
 
                 {role === 'citoyen' && (
                   <p className="mt-3 text-sm leading-relaxed text-slate-600">
-                    Tu peux signaler une situation de précarité, mais tu ne peux
-                    pas gérer les points, les interventions, la modération ou
-                    l’administration.
+                    Tu peux signaler une situation de précarité.
                   </p>
                 )}
 
                 {role === 'benevole' && (
                   <p className="mt-3 text-sm leading-relaxed text-slate-600">
-                    Tu peux signaler une situation. Pour visualiser les points,
-                    ton compte doit être rattaché et validé par une association.
+                    Tu peux signaler des situations et consulter les
+                    informations terrain de ton association.
                   </p>
                 )}
 
@@ -311,28 +314,32 @@ export default function ProfilePage() {
                 )}
               </div>
 
+              {/* AVERTISSEMENT ASSOCIATION */}
+
               {role === 'association' && !associationId && (
                 <div className="mt-4 rounded-3xl border border-orange-200 bg-orange-50 p-5 text-sm leading-relaxed text-orange-800">
-                  Ton compte est en rôle association, mais aucune association
-                  n’est encore rattachée. Un administrateur doit rattacher ton
-                  compte à une association validée.
+                  Ton compte association n’est encore rattaché à aucune
+                  association validée.
                 </div>
               )}
 
               {role === 'benevole' && !mapAllowed && (
                 <div className="mt-4 rounded-3xl border border-orange-200 bg-orange-50 p-5 text-sm leading-relaxed text-orange-800">
-                  Ton compte bénévole doit être validé par une association
-                  avant de pouvoir voir la carte et les points.
+                  Ton compte bénévole doit être rattaché et validé par une
+                  association avant de pouvoir accéder aux outils terrain.
                 </div>
               )}
+
+              {/* STATUT + ASSOCIATION */}
 
               <div className="mt-6 grid gap-4 sm:grid-cols-2">
                 <div className="rounded-3xl bg-slate-50 p-5">
                   <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
                     Statut du compte
                   </p>
+
                   <p className="mt-2 text-lg font-black text-slate-950">
-                    {formatStatus(statutCompte)}
+                    {formatStatus(profile.statut_compte)}
                   </p>
                 </div>
 
@@ -340,15 +347,26 @@ export default function ProfilePage() {
                   <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
                     Association
                   </p>
-                  <p className="mt-2 break-all text-lg font-black text-slate-950">
-                    {associationId || 'Aucun rattachement'}
+
+                  <p className="mt-2 text-lg font-black text-slate-950">
+                    {profile.association_nom ||
+                      (associationId
+                        ? 'Association rattachée'
+                        : 'Aucun rattachement')}
                   </p>
                 </div>
               </div>
             </div>
           </section>
 
+          {/* =====================================================
+              COLONNE DROITE
+          ===================================================== */}
+
           <section className="space-y-6">
+
+            {/* PERMISSIONS */}
+
             <div className="rounded-[2rem] border border-[#eadfd6] bg-white p-6 shadow-sm sm:p-8">
               <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#d94a0b]">
                 Accès
@@ -363,6 +381,12 @@ export default function ProfilePage() {
                   title="Dashboard"
                   description="Vue globale de coordination."
                   allowed={dashboardAllowed}
+                />
+
+                <AccessCard
+                  title="Planning"
+                  description="Consulter le planning des actions terrain."
+                  allowed={planningAllowed}
                 />
 
                 <AccessCard
@@ -385,7 +409,7 @@ export default function ProfilePage() {
 
                 <AccessCard
                   title="Interventions"
-                  description="Déclarer et suivre les actions terrain."
+                  description="Déclarer et gérer les actions terrain."
                   allowed={interventionsAllowed}
                 />
 
@@ -395,15 +419,15 @@ export default function ProfilePage() {
                   allowed={moderationAllowed}
                 />
 
-                <div className="sm:col-span-2">
-                  <AccessCard
-                    title="Administration"
-                    description="Gestion des utilisateurs, rôles et associations."
-                    allowed={administrationAllowed}
-                  />
-                </div>
+                <AccessCard
+                  title="Administration"
+                  description="Gestion de la plateforme."
+                  allowed={administrationAllowed}
+                />
               </div>
             </div>
+
+            {/* INFORMATIONS */}
 
             <div className="rounded-[2rem] border border-[#eadfd6] bg-white p-6 shadow-sm sm:p-8">
               <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#d94a0b]">
@@ -419,6 +443,7 @@ export default function ProfilePage() {
                   <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
                     Nom
                   </p>
+
                   <p className="mt-2 text-lg font-black text-slate-950">
                     {profile.nom || 'Non renseigné'}
                   </p>
@@ -428,6 +453,7 @@ export default function ProfilePage() {
                   <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
                     Email
                   </p>
+
                   <p className="mt-2 break-all text-lg font-black text-slate-950">
                     {profile.email || 'Non renseigné'}
                   </p>
@@ -435,32 +461,37 @@ export default function ProfilePage() {
 
                 <div className="rounded-3xl bg-slate-50 p-5">
                   <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
-                    Créé le
+                    Association
                   </p>
+
                   <p className="mt-2 text-lg font-black text-slate-950">
-                    {formatDate(profile.created_at)}
+                    {profile.association_nom || 'Aucune'}
                   </p>
                 </div>
 
                 <div className="rounded-3xl bg-slate-50 p-5">
                   <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
-                    Mis à jour le
+                    Créé le
                   </p>
+
                   <p className="mt-2 text-lg font-black text-slate-950">
-                    {formatDate(profile.updated_at)}
+                    {formatDate(profile.created_at)}
                   </p>
                 </div>
 
                 <div className="rounded-3xl bg-slate-50 p-5 sm:col-span-2">
                   <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
-                    Identifiant utilisateur
+                    Mis à jour le
                   </p>
-                  <p className="mt-2 break-all text-sm font-black text-slate-950">
-                    {profile.id}
+
+                  <p className="mt-2 text-lg font-black text-slate-950">
+                    {formatDate(profile.updated_at)}
                   </p>
                 </div>
               </div>
             </div>
+
+            {/* RACCOURCIS */}
 
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {dashboardAllowed && (
@@ -469,6 +500,15 @@ export default function ProfilePage() {
                   className="rounded-3xl border border-[#eadfd6] bg-white p-5 text-center text-sm font-black text-slate-700 shadow-sm transition hover:bg-orange-50 hover:text-[#d94a0b]"
                 >
                   Dashboard
+                </Link>
+              )}
+
+              {planningAllowed && (
+                <Link
+                  to="/planning"
+                  className="rounded-3xl border border-[#eadfd6] bg-white p-5 text-center text-sm font-black text-slate-700 shadow-sm transition hover:bg-orange-50 hover:text-[#d94a0b]"
+                >
+                  Planning
                 </Link>
               )}
 

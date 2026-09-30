@@ -242,7 +242,7 @@ export async function updateAssociationVerificationScore(associationId: string) 
   let score = 0
   const notes: string[] = []
 
-  if (association.siren || association.siret ) {
+  if (association.siren || association.siret) {
     score += 25
     notes.push('Identifiant administratif renseigné.')
   } else {
@@ -395,51 +395,38 @@ export async function getAssociationJoinRequests(): Promise<
 > {
   const {
     data: { user },
+    error: userError,
   } = await supabase.auth.getUser()
 
-  if (!user) return []
+  if (userError) {
+    throw userError
+  }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('association_id')
-    .eq('id', user.id)
-    .single()
+  if (!user) {
+    return []
+  }
 
-  if (!profile?.association_id) return []
+  const { data, error } = await supabase.rpc(
+    'get_association_join_requests'
+  )
 
-  const { data, error } = await supabase
-    .from('association_join_requests')
-    .select(
-      `
-      id,
-      association_id,
-      benevole_id,
-      message,
-      statut,
-      created_at,
-      updated_at,
-      associations (
-        nom
-      ),
-      profiles (
-        nom,
-        email
-      )
-    `
+  if (error) {
+    console.error(
+      'Erreur récupération demandes bénévoles :',
+      error
     )
-    .eq('association_id', profile.association_id)
-    .order('created_at', { ascending: false })
 
-  if (error) throw error
+    throw new Error(error.message)
+  }
 
   return (data ?? []).map((item: any) => ({
     id: item.id,
     association_id: item.association_id,
-    association_nom: item.associations?.nom ?? null,
+    association_nom: item.association_nom ?? null,
     benevole_id: item.benevole_id,
-    benevole_nom: item.profiles?.nom ?? null,
-    benevole_email: item.profiles?.email ?? null,
-    message: item.message,
+    benevole_nom: item.benevole_nom ?? null,
+    benevole_email: item.benevole_email ?? null,
+    message: item.message ?? null,
     statut: item.statut,
     created_at: item.created_at,
     updated_at: item.updated_at,
@@ -450,38 +437,36 @@ export async function respondJoinRequest(
   requestId: string,
   decision: 'acceptee' | 'refusee'
 ) {
-  const { data: request, error: requestError } = await supabase
-    .from('association_join_requests')
-    .select('id, association_id, benevole_id')
-    .eq('id', requestId)
-    .single()
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser()
 
-  if (requestError) throw requestError
+  if (userError) {
+    throw userError
+  }
 
-  const { error: updateRequestError } = await supabase
-    .from('association_join_requests')
-    .update({
-      statut: decision,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', requestId)
+  if (!user) {
+    throw new Error('Utilisateur non connecté.')
+  }
 
-  if (updateRequestError) throw updateRequestError
+  const { error } = await supabase.rpc(
+    'respond_association_join_request',
+    {
+      p_request_id: requestId,
+      p_decision: decision,
+    }
+  )
 
-  if (decision === 'acceptee') {
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .update({
-        association_id: request.association_id,
-        statut_compte: 'actif',
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', request.benevole_id)
+  if (error) {
+    console.error(
+      'Erreur traitement demande bénévole :',
+      error
+    )
 
-    if (profileError) throw profileError
+    throw new Error(error.message)
   }
 }
-
 export async function getAssociationVolunteers(): Promise<
   AssociationVolunteer[]
 > {
@@ -491,12 +476,13 @@ export async function getAssociationVolunteers(): Promise<
 
   if (!user) return []
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('association_id')
     .eq('id', user.id)
     .single()
 
+  if (profileError) throw profileError
   if (!profile?.association_id) return []
 
   const { data, error } = await supabase

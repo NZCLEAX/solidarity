@@ -1,22 +1,44 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
+
 import { getInterventions } from '@/features/interventions/api/interventions'
 
 function formatDate(value: string | null) {
   if (!value) return 'Date non renseignée'
 
+  const date = new Date(`${value}T00:00:00`)
+
+  if (Number.isNaN(date.getTime())) {
+    return value
+  }
+
   return new Intl.DateTimeFormat('fr-FR', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
-  }).format(new Date(value))
+  }).format(date)
+}
+
+function formatTime(value: string | null) {
+  if (!value) return null
+
+  return value.slice(0, 5)
 }
 
 function formatTimeRange(start: string | null, end: string | null) {
-  if (!start && !end) return 'Horaire non renseigné'
-  if (start && end) return `${start} - ${end}`
-  return start || end || 'Horaire non renseigné'
+  const formattedStart = formatTime(start)
+  const formattedEnd = formatTime(end)
+
+  if (!formattedStart && !formattedEnd) {
+    return 'Horaire non renseigné'
+  }
+
+  if (formattedStart && formattedEnd) {
+    return `${formattedStart} - ${formattedEnd}`
+  }
+
+  return formattedStart || formattedEnd || 'Horaire non renseigné'
 }
 
 function formatStatus(value: string | null) {
@@ -24,8 +46,8 @@ function formatStatus(value: string | null) {
 
   const labels: Record<string, string> = {
     prevue: 'Prévue',
-    declaree: 'Déclarée',
-    realisee: 'Réalisée',
+    en_cours: 'En cours',
+    terminee: 'Terminée',
     annulee: 'Annulée',
   }
 
@@ -36,15 +58,32 @@ function getStatusClass(value: string | null) {
   switch (value) {
     case 'prevue':
       return 'bg-blue-50 text-blue-700 ring-blue-200'
-    case 'declaree':
-      return 'bg-indigo-50 text-indigo-700 ring-indigo-200'
-    case 'realisee':
+
+    case 'en_cours':
+      return 'bg-orange-50 text-orange-700 ring-orange-200'
+
+    case 'terminee':
       return 'bg-emerald-50 text-emerald-700 ring-emerald-200'
+
     case 'annulee':
       return 'bg-red-50 text-red-700 ring-red-200'
+
     default:
       return 'bg-slate-50 text-slate-700 ring-slate-200'
   }
+}
+
+function getTypeIcon(type: string | null) {
+  const value = type?.toLowerCase() ?? ''
+
+  if (value.includes('repas')) return '🍽️'
+  if (value.includes('eau')) return '💧'
+  if (value.includes('vêtement') || value.includes('vetement')) return '👕'
+  if (value.includes('maraude')) return '🚶'
+  if (value.includes('soin')) return '🏥'
+  if (value.includes('accompagnement')) return '🤝'
+
+  return '📦'
 }
 
 function normalizeText(value: string | null | undefined) {
@@ -60,9 +99,13 @@ export default function InterventionsPage() {
     isLoading,
     isError,
     error,
+    refetch,
+    isFetching,
   } = useQuery({
     queryKey: ['interventions'],
     queryFn: getInterventions,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
   })
 
   const filteredInterventions = useMemo(() => {
@@ -70,8 +113,10 @@ export default function InterventionsPage() {
 
     return interventions.filter((intervention) => {
       const pointAddress = intervention.points?.adresse || ''
+
       const content = [
         intervention.type_aide,
+        intervention.association_nom,
         pointAddress,
         intervention.commentaire,
         intervention.statut,
@@ -81,23 +126,29 @@ export default function InterventionsPage() {
         .join(' ')
         .toLowerCase()
 
-      const matchesSearch = search.length === 0 || content.includes(search)
+      const matchesSearch =
+        search.length === 0 || content.includes(search)
 
-      const normalizedStatus = intervention.statut || 'non_renseigne'
+      const normalizedStatus =
+        intervention.statut || 'non_renseigne'
+
       const matchesStatus =
-        statusFilter === 'all' || normalizedStatus === statusFilter
+        statusFilter === 'all' ||
+        normalizedStatus === statusFilter
 
       return matchesSearch && matchesStatus
     })
   }, [interventions, searchTerm, statusFilter])
 
   const totalRepas = filteredInterventions.reduce(
-    (total, intervention) => total + (intervention.nombre_repas ?? 0),
+    (total, intervention) =>
+      total + (intervention.nombre_repas ?? 0),
     0
   )
 
   const totalBenevoles = filteredInterventions.reduce(
-    (total, intervention) => total + (intervention.nombre_benevoles ?? 0),
+    (total, intervention) =>
+      total + (intervention.nombre_benevoles ?? 0),
     0
   )
 
@@ -136,9 +187,18 @@ export default function InterventionsPage() {
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row">
+            <button
+              type="button"
+              onClick={() => refetch()}
+              disabled={isFetching}
+              className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-slate-300 bg-white px-5 py-3 text-sm font-black text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+            >
+              {isFetching ? 'Actualisation...' : 'Actualiser'}
+            </button>
+
             <Link
               to="/interventions/new"
-              className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-indigo-600 px-6 py-3 text-sm font-black text-white shadow-sm transition hover:bg-indigo-700"
+              className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#d94a0b] px-6 py-3 text-sm font-black text-white shadow-sm transition hover:bg-[#b93607]"
             >
               + Nouvelle intervention
             </Link>
@@ -150,9 +210,11 @@ export default function InterventionsPage() {
             <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
               Interventions
             </p>
+
             <p className="mt-3 text-4xl font-black text-slate-950">
               {filteredInterventions.length}
             </p>
+
             <p className="mt-2 text-sm font-medium text-slate-500">
               Action(s) affichée(s)
             </p>
@@ -162,9 +224,11 @@ export default function InterventionsPage() {
             <p className="text-xs font-bold uppercase tracking-wide text-blue-600">
               Prévues
             </p>
+
             <p className="mt-3 text-4xl font-black text-blue-700">
               {upcomingCount}
             </p>
+
             <p className="mt-2 text-sm font-medium text-blue-600">
               À organiser
             </p>
@@ -172,11 +236,13 @@ export default function InterventionsPage() {
 
           <article className="rounded-[1.5rem] border border-emerald-200 bg-emerald-50 p-5 shadow-sm">
             <p className="text-xs font-bold uppercase tracking-wide text-emerald-600">
-              Repas distribués
+              Repas
             </p>
+
             <p className="mt-3 text-4xl font-black text-emerald-700">
               {totalRepas}
             </p>
+
             <p className="mt-2 text-sm font-medium text-emerald-600">
               Total déclaré
             </p>
@@ -186,9 +252,11 @@ export default function InterventionsPage() {
             <p className="text-xs font-bold uppercase tracking-wide text-orange-600">
               Bénévoles
             </p>
+
             <p className="mt-3 text-4xl font-black text-orange-700">
               {totalBenevoles}
             </p>
+
             <p className="mt-2 text-sm font-medium text-orange-600">
               Mobilisé(s)
             </p>
@@ -205,8 +273,10 @@ export default function InterventionsPage() {
               <input
                 type="text"
                 value={searchTerm}
-                onChange={(event) => setSearchTerm(event.target.value)}
-                placeholder="Type d’aide, point concerné, commentaire..."
+                onChange={(event) =>
+                  setSearchTerm(event.target.value)
+                }
+                placeholder="Association, type d’aide, adresse, commentaire..."
                 className="min-h-12 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#d94a0b] focus:ring-4 focus:ring-orange-100"
               />
             </div>
@@ -218,15 +288,34 @@ export default function InterventionsPage() {
 
               <select
                 value={statusFilter}
-                onChange={(event) => setStatusFilter(event.target.value)}
+                onChange={(event) =>
+                  setStatusFilter(event.target.value)
+                }
                 className="min-h-12 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-[#d94a0b] focus:ring-4 focus:ring-orange-100"
               >
-                <option value="all">Tous les statuts</option>
-                <option value="prevue">Prévue</option>
-                <option value="declaree">Déclarée</option>
-                <option value="realisee">Réalisée</option>
-                <option value="annulee">Annulée</option>
-                <option value="non_renseigne">Non renseigné</option>
+                <option value="all">
+                  Tous les statuts
+                </option>
+
+                <option value="prevue">
+                  Prévue
+                </option>
+
+                <option value="en_cours">
+                  En cours
+                </option>
+
+                <option value="terminee">
+                  Terminée
+                </option>
+
+                <option value="annulee">
+                  Annulée
+                </option>
+
+                <option value="non_renseigne">
+                  Non renseigné
+                </option>
               </select>
             </div>
 
@@ -241,10 +330,15 @@ export default function InterventionsPage() {
 
           <div className="mt-4 flex flex-wrap gap-2 text-sm text-slate-500">
             <span>
-              {filteredInterventions.length} intervention(s) affichée(s)
+              {filteredInterventions.length} intervention(s)
+              affichée(s)
             </span>
+
             <span>•</span>
-            <span>{pointsCouverts} point(s) couvert(s)</span>
+
+            <span>
+              {pointsCouverts} point(s) couvert(s)
+            </span>
           </div>
         </section>
 
@@ -261,134 +355,176 @@ export default function InterventionsPage() {
           </div>
         )}
 
-        {!isLoading && !isError && filteredInterventions.length === 0 && (
-          <div className="rounded-[2rem] border border-dashed border-slate-300 bg-white p-10 text-center shadow-sm">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-100 text-2xl">
-              
+        {!isLoading &&
+          !isError &&
+          filteredInterventions.length === 0 && (
+            <div className="rounded-[2rem] border border-dashed border-slate-300 bg-white p-10 text-center shadow-sm">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-100 text-2xl">
+                📅
+              </div>
+
+              <h2 className="mt-4 text-xl font-black text-slate-950">
+                Aucune intervention trouvée
+              </h2>
+
+              <p className="mt-2 text-sm text-slate-500">
+                Aucune intervention ne correspond aux filtres
+                actuellement sélectionnés.
+              </p>
+
+              {(searchTerm || statusFilter !== 'all') && (
+                <button
+                  type="button"
+                  onClick={resetFilters}
+                  className="mt-5 inline-flex min-h-11 items-center justify-center rounded-xl bg-[#d94a0b] px-5 text-sm font-black text-white"
+                >
+                  Réinitialiser les filtres
+                </button>
+              )}
             </div>
+          )}
 
-            <h2 className="mt-4 text-xl font-black text-slate-950">
-              Aucune intervention trouvée
-            </h2>
+        {!isLoading &&
+          !isError &&
+          filteredInterventions.length > 0 && (
+            <div className="grid gap-5">
+              {filteredInterventions.map((intervention) => (
+                <article
+                  key={intervention.id}
+                  className="rounded-[2rem] border border-[#eadfd6] bg-white p-5 shadow-sm transition hover:shadow-md sm:p-6"
+                >
+                  <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                        <div>
+                          <div className="flex flex-wrap items-center gap-3">
+                            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-orange-50 text-xl">
+                              {getTypeIcon(
+                                intervention.type_aide
+                              )}
+                            </div>
 
-            <p className="mt-2 text-sm text-slate-500">
-              Essaie de modifier ta recherche ou de créer une nouvelle
-              intervention.
-            </p>
-          </div>
-        )}
+                            <div>
+                              <h2 className="text-xl font-black text-slate-950 sm:text-2xl">
+                                {intervention.type_aide ||
+                                  'Intervention'}
+                              </h2>
 
-        {!isLoading && !isError && filteredInterventions.length > 0 && (
-          <div className="grid gap-5">
-            {filteredInterventions.map((intervention) => (
-              <article
-                key={intervention.id}
-                className="rounded-[2rem] border border-[#eadfd6] bg-white p-5 shadow-sm transition hover:shadow-md sm:p-6"
-              >
-                <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                      <div>
-                        <div className="flex flex-wrap items-center gap-3">
-                          <h2 className="text-xl font-black text-slate-950 sm:text-2xl">
-                            {intervention.type_aide || 'Intervention'}
-                          </h2>
+                              {intervention.association_nom && (
+                                <p className="mt-0.5 text-sm font-bold text-[#d94a0b]">
+                                  {
+                                    intervention.association_nom
+                                  }
+                                </p>
+                              )}
+                            </div>
 
-                          <span
-                            className={`rounded-full px-3 py-1 text-xs font-bold ring-1 ${getStatusClass(
-                              intervention.statut
-                            )}`}
-                          >
-                            {formatStatus(intervention.statut)}
-                          </span>
-                        </div>
+                            <span
+                              className={`rounded-full px-3 py-1 text-xs font-bold ring-1 ${getStatusClass(
+                                intervention.statut
+                              )}`}
+                            >
+                              {formatStatus(
+                                intervention.statut
+                              )}
+                            </span>
+                          </div>
 
-                        <p className="mt-2 text-sm font-medium text-slate-500">
-                          Point concerné :{' '}
-                          <span className="font-bold text-slate-700">
-                            {intervention.points?.adresse ||
-                              'Point non renseigné'}
-                          </span>
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                      <div className="rounded-2xl bg-slate-50 p-4">
-                        <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
-                          Date
-                        </p>
-                        <p className="mt-2 font-black text-slate-950">
-                          {formatDate(intervention.date_intervention)}
-                        </p>
-                      </div>
-
-                      <div className="rounded-2xl bg-slate-50 p-4">
-                        <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
-                          Horaires
-                        </p>
-                        <p className="mt-2 font-black text-slate-950">
-                          {formatTimeRange(
-                            intervention.heure_debut,
-                            intervention.heure_fin
-                          )}
-                        </p>
-                      </div>
-
-                      <div className="rounded-2xl bg-emerald-50 p-4">
-                        <p className="text-xs font-bold uppercase tracking-wide text-emerald-600">
-                          Repas
-                        </p>
-                        <p className="mt-2 text-2xl font-black text-emerald-700">
-                          {intervention.nombre_repas ?? 0}
-                        </p>
-                      </div>
-
-                      <div className="rounded-2xl bg-orange-50 p-4">
-                        <p className="text-xs font-bold uppercase tracking-wide text-orange-600">
-                          Bénévoles
-                        </p>
-                        <p className="mt-2 text-2xl font-black text-orange-700">
-                          {intervention.nombre_benevoles ?? 0}
-                        </p>
-                      </div>
-                    </div>
-
-                    {intervention.commentaire &&
-                      intervention.commentaire.trim().length > 0 && (
-                        <div className="mt-5 rounded-2xl bg-slate-50 p-4">
-                          <p className="mb-2 text-sm font-bold text-slate-700">
-                            Commentaire
-                          </p>
-                          <p className="text-sm leading-relaxed text-slate-600">
-                            {intervention.commentaire}
+                          <p className="mt-3 text-sm font-medium text-slate-500">
+                            Point concerné :{' '}
+                            <span className="font-bold text-slate-700">
+                              {intervention.points?.adresse ||
+                                'Point non renseigné'}
+                            </span>
                           </p>
                         </div>
+                      </div>
+
+                      <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                        <div className="rounded-2xl bg-slate-50 p-4">
+                          <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
+                            Date
+                          </p>
+
+                          <p className="mt-2 font-black text-slate-950">
+                            {formatDate(
+                              intervention.date_intervention
+                            )}
+                          </p>
+                        </div>
+
+                        <div className="rounded-2xl bg-slate-50 p-4">
+                          <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
+                            Horaires
+                          </p>
+
+                          <p className="mt-2 font-black text-slate-950">
+                            {formatTimeRange(
+                              intervention.heure_debut,
+                              intervention.heure_fin
+                            )}
+                          </p>
+                        </div>
+
+                        <div className="rounded-2xl bg-emerald-50 p-4">
+                          <p className="text-xs font-bold uppercase tracking-wide text-emerald-600">
+                            Repas
+                          </p>
+
+                          <p className="mt-2 text-2xl font-black text-emerald-700">
+                            {intervention.nombre_repas ?? 0}
+                          </p>
+                        </div>
+
+                        <div className="rounded-2xl bg-orange-50 p-4">
+                          <p className="text-xs font-bold uppercase tracking-wide text-orange-600">
+                            Bénévoles
+                          </p>
+
+                          <p className="mt-2 text-2xl font-black text-orange-700">
+                            {intervention.nombre_benevoles ??
+                              0}
+                          </p>
+                        </div>
+                      </div>
+
+                      {intervention.commentaire &&
+                        intervention.commentaire.trim()
+                          .length > 0 && (
+                          <div className="mt-5 rounded-2xl bg-slate-50 p-4">
+                            <p className="mb-2 text-sm font-bold text-slate-700">
+                              Commentaire
+                            </p>
+
+                            <p className="text-sm leading-relaxed text-slate-600">
+                              {intervention.commentaire}
+                            </p>
+                          </div>
+                        )}
+                    </div>
+
+                    <div className="flex w-full flex-col gap-3 xl:w-auto xl:min-w-[190px]">
+                      {intervention.point_id && (
+                        <Link
+                          to={`/points/${intervention.point_id}`}
+                          className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-slate-300 bg-white px-5 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+                        >
+                          Voir le point
+                        </Link>
                       )}
-                  </div>
 
-                  <div className="flex w-full flex-col gap-3 xl:w-auto xl:min-w-[190px]">
-                    {intervention.point_id && (
                       <Link
-                        to={`/points/${intervention.point_id}`}
-                        className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-slate-300 bg-white px-5 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+                        to="/carte"
+                        className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-[#d94a0b] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#b93607]"
                       >
-                        Voir le point
+                        Voir sur la carte
                       </Link>
-                    )}
-
-                    <Link
-                      to="/carte"
-                      className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-[#d94a0b] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#b93607]"
-                    >
-                      Voir sur la carte
-                    </Link>
+                    </div>
                   </div>
-                </div>
-              </article>
-            ))}
-          </div>
-        )}
+                </article>
+              ))}
+            </div>
+          )}
       </div>
     </div>
   )

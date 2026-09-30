@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { signUp } from '../api/auth'
+
+import { signUp, signInWithProvider } from '../api/auth'
 import {
   publicRegisterRoles,
   type PublicRegisterRole,
@@ -9,7 +10,7 @@ import {
   isValidPassword,
   passwordValidationMessage,
 } from '../utils/passwordValidation'
-import { signInWithProvider } from '@/features/auth/api/auth'
+import PulseLogo from '@/shared/components/PulseLogo'
 
 export default function RegisterPage() {
   const navigate = useNavigate()
@@ -55,18 +56,25 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-100 px-4">
+    <div className="flex min-h-screen items-center justify-center bg-slate-100 px-4">
       <div className="w-full max-w-md rounded-xl bg-white p-6 shadow">
-        <h1 className="text-2xl font-bold mb-2">Inscription</h1>
-        <p className="text-slate-500 mb-6">Crée ton compte.</p>
+        <div className="flex flex-col items-center text-center">
+          <PulseLogo className="h-14 w-auto" />
 
-        <form onSubmit={handleRegister} className="flex flex-col gap-4">
+          <h1 className="mt-6 text-2xl font-bold">Inscription</h1>
+
+          <p className="mt-2 text-slate-500">
+            Crée ton compte.
+          </p>
+        </div>
+
+        <form onSubmit={handleRegister} className="mt-6 flex flex-col gap-4">
           <input
             type="text"
             placeholder="Nom"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="border rounded-lg px-3 py-2"
+            className="rounded-lg border px-3 py-2"
           />
 
           <input
@@ -74,7 +82,7 @@ export default function RegisterPage() {
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="border rounded-lg px-3 py-2"
+            className="rounded-lg border px-3 py-2"
           />
 
           <div>
@@ -101,8 +109,9 @@ export default function RegisterPage() {
               placeholder="Mot de passe"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="border rounded-lg px-3 py-2"
+              className="rounded-lg border px-3 py-2"
             />
+
             <p className="text-xs text-slate-500">
               15 caractères minimum, avec au moins une majuscule, une minuscule
               et un chiffre.
@@ -110,43 +119,48 @@ export default function RegisterPage() {
           </div>
 
           {error && <p className="text-sm text-red-600">{error}</p>}
-<div className="space-y-3">
-  <button
-    type="button"
-    onClick={() => signInWithProvider('google')}
-    className="flex min-h-12 w-full items-center justify-center rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-black text-slate-800 transition hover:bg-slate-50"
-  >
-    S’inscrire avec Google
-  </button>
 
-</div>
+          <div className="space-y-3">
+            <button
+              type="button"
+              onClick={() => signInWithProvider('google')}
+              className="flex min-h-12 w-full items-center justify-center rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-black text-slate-800 transition hover:bg-slate-50"
+            >
+              S’inscrire avec Google
+            </button>
+          </div>
 
-<div className="my-4 flex items-center gap-3">
-  <div className="h-px flex-1 bg-slate-200" />
-  <span className="text-xs font-bold text-slate-400">ou</span>
-  <div className="h-px flex-1 bg-slate-200" />
-</div>
+          <div className="my-4 flex items-center gap-3">
+            <div className="h-px flex-1 bg-slate-200" />
+            <span className="text-xs font-bold text-slate-400">ou</span>
+            <div className="h-px flex-1 bg-slate-200" />
+          </div>
+
           <button
             type="submit"
             disabled={loading}
-            className="bg-green-600 text-white rounded-lg px-4 py-2 disabled:opacity-60"
+            className="rounded-lg bg-green-600 px-4 py-2 text-white disabled:opacity-60"
           >
             {loading ? 'Inscription...' : "S'inscrire"}
           </button>
-          
         </form>
+
         <p className="mt-4 text-sm text-slate-600">
           Déjà un compte ?{' '}
-          <Link to="/login" className="text-indigo-600 font-medium">
+          <Link to="/login" className="font-medium text-indigo-600">
             Se connecter
           </Link>
         </p>
+
         <div className="mt-4 text-center text-sm text-slate-600">
-  Tu représentes une association ?{' '}
-  <Link to="/associations/register" className="font-bold text-[#d94a0b]">
-    Demander un accès association
-  </Link>
-</div>
+          Tu représentes une association ?{' '}
+          <Link
+            to="/associations/register"
+            className="font-bold text-[#d94a0b]"
+          >
+            Demander un accès association
+          </Link>
+        </div>
       </div>
     </div>
   )

@@ -1,16 +1,13 @@
 import { useState, type ChangeEvent, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
+import PulseLogo from '@/shared/components/PulseLogo'
+
 import {
   createAssociationRequest,
   uploadAssociationDocuments,
   type AssociationDocumentType,
 } from '@/features/associations/api/associations'
-import {
-  verifyOfficialAssociation,
-  type OfficialAssociationData,
-} from '@/features/associations/api/officialVerification'
-import { verifyAssociationDossier } from '../services/verificationService'
 
 const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{15,}$/
 
@@ -172,13 +169,11 @@ export default function AssociationRegisterPage() {
     <div className="min-h-screen bg-[#faf8f4] px-4 py-10 sm:px-6 lg:px-8">
       <div className="mx-auto grid w-full max-w-6xl gap-8 lg:grid-cols-[0.9fr_1.1fr]">
         <section className="rounded-[2rem] border border-orange-200 bg-white p-8 shadow-sm">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#d94a0b] text-xl font-black text-white">
-            ♡
-          </div>
+          <PulseLogo className="h-14 w-auto" />
 
-          <p className="mt-8 text-sm font-bold uppercase tracking-[0.2em] text-[#d94a0b]">
-            Association
-          </p>
+<p className="mt-8 text-sm font-bold uppercase tracking-[0.2em] text-[#d94a0b]">
+  Association
+</p>
 
           <h1 className="mt-3 text-4xl font-black leading-tight text-slate-950">
             Demander un accès association

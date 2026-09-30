@@ -3,29 +3,53 @@ import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 
 import BottomNavigation from './BottomNavigation'
+import PulseLogo from './PulseLogo'
+
 import { getCurrentProfile } from '@/features/auth/api/profile'
+import {
+  isAssociationValidated,
+  isVolunteerValidated,
+} from '@/features/auth/utils/permissions'
+
 import { supabase } from '@/lib/supabase'
 
 export default function AppLayout() {
   const location = useLocation()
   const navigate = useNavigate()
-  const isMapPage = location.pathname.startsWith('/carte')
+
   const [menuOpen, setMenuOpen] = useState(false)
+
+  const isMapPage = location.pathname.startsWith('/carte')
 
   const { data: profile } = useQuery({
     queryKey: ['current-profile'],
     queryFn: getCurrentProfile,
+    retry: false,
   })
 
-  const role = profile?.role ?? 'citoyen'
-  const isAssociation = role === 'association'
+  const role = profile?.role
+
+  const isAssociation =
+    role === 'association' && isAssociationValidated(profile)
+
   const isAdmin = role === 'admin'
+
   const isBenevole = role === 'benevole'
-  const isCitoyen = role === 'citoyen'
+
+  const volunteerValidated = isVolunteerValidated(profile)
 
   async function handleLogout() {
-    await supabase.auth.signOut()
-    navigate('/login')
+    try {
+      await supabase.auth.signOut()
+
+      setMenuOpen(false)
+
+      navigate('/login', {
+        replace: true,
+      })
+    } catch (error) {
+      console.error('Erreur lors de la déconnexion :', error)
+    }
   }
 
   return (
@@ -36,27 +60,45 @@ export default function AppLayout() {
           : 'min-h-[100dvh] bg-[#faf8f4]'
       }
     >
+      {/* =====================================================
+          HEADER PULSE
+      ===================================================== */}
+
       <header className="sticky top-0 z-[6000] border-b border-slate-200 bg-white/95 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 lg:px-8">
-          <Link to="/carte" className="text-xl font-black text-slate-950">
-            Solidarity
+        <div className="relative mx-auto flex h-16 max-w-7xl items-center px-4 lg:justify-between lg:px-8">
+
+          {/* LOGO */}
+
+          <Link
+            to="/carte"
+            onClick={() => setMenuOpen(false)}
+            className="absolute left-1/2 flex h-16 -translate-x-1/2 items-center lg:static lg:translate-x-0"
+          >
+            <PulseLogo className="h-12 w-auto" />
           </Link>
 
-          <div className="relative">
+          {/* MENU HAMBURGER */}
+
+          <div className="relative ml-auto">
             <button
               type="button"
               onClick={() => setMenuOpen((value) => !value)}
+              aria-label="Ouvrir le menu"
+              aria-expanded={menuOpen}
               className="flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-xl font-black text-slate-700 shadow-sm transition hover:bg-slate-50"
             >
               ☰
             </button>
 
             {menuOpen && (
-              <div className="absolute right-0 z-[7000] mt-2 w-60 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
+              <div className="absolute right-0 top-full z-[7000] mt-2 w-64 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
+
+                {/* PROFIL */}
+
                 <Link
                   to="/profile"
                   onClick={() => setMenuOpen(false)}
-                  className="block px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                  className="block px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                 >
                   Mon profil
                 </Link>
@@ -64,10 +106,12 @@ export default function AppLayout() {
                 <Link
                   to="/settings"
                   onClick={() => setMenuOpen(false)}
-                  className="block px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                  className="block px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                 >
                   Réglages
                 </Link>
+
+                {/* ASSOCIATION */}
 
                 {isAssociation && (
                   <>
@@ -76,7 +120,7 @@ export default function AppLayout() {
                     <Link
                       to="/association/equipe"
                       onClick={() => setMenuOpen(false)}
-                      className="block px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                      className="block px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                     >
                       Mon équipe
                     </Link>
@@ -84,34 +128,30 @@ export default function AppLayout() {
                     <Link
                       to="/association/demandes"
                       onClick={() => setMenuOpen(false)}
-                      className="block px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                      className="block px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                     >
                       Mes demandes
                     </Link>
                   </>
                 )}
 
-                {(isBenevole || isCitoyen) && (
+                {/* BÉNÉVOLE NON ENCORE RATTACHÉ */}
+
+                {isBenevole && !volunteerValidated && (
                   <>
                     <div className="border-t border-slate-200" />
 
                     <Link
-                      to="/interventions"
-                      onClick={() => setMenuOpen(false)}
-                      className="block px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-                    >
-                      Mes interventions
-                    </Link>
-
-                    <Link
                       to="/associations"
                       onClick={() => setMenuOpen(false)}
-                      className="block px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                      className="block px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                     >
                       Rejoindre une association
                     </Link>
                   </>
                 )}
+
+                {/* ADMIN */}
 
                 {isAdmin && (
                   <>
@@ -120,7 +160,7 @@ export default function AppLayout() {
                     <Link
                       to="/administration"
                       onClick={() => setMenuOpen(false)}
-                      className="block px-5 py-3 text-sm font-bold text-[#d94a0b] hover:bg-orange-50"
+                      className="block px-5 py-3 text-sm font-bold text-[#d94a0b] transition hover:bg-orange-50"
                     >
                       Administration
                     </Link>
@@ -128,19 +168,21 @@ export default function AppLayout() {
                     <Link
                       to="/administration/associations"
                       onClick={() => setMenuOpen(false)}
-                      className="block px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                      className="block px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                     >
                       Gestion associations
                     </Link>
                   </>
                 )}
 
+                {/* DÉCONNEXION */}
+
                 <div className="border-t border-slate-200" />
 
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className="w-full px-5 py-3 text-left text-sm font-semibold text-red-600 hover:bg-red-50"
+                  className="w-full px-5 py-3 text-left text-sm font-semibold text-red-600 transition hover:bg-red-50"
                 >
                   Déconnexion
                 </button>
@@ -150,13 +192,26 @@ export default function AppLayout() {
         </div>
       </header>
 
+      {/* =====================================================
+          NAVIGATION
+
+          MOBILE  -> barre fixe en bas
+          DESKTOP -> barre horizontale en haut
+
+          NE PAS SUPPRIMER
+      ===================================================== */}
+
       <BottomNavigation />
+
+      {/* =====================================================
+          CONTENU DES PAGES
+      ===================================================== */}
 
       <main
         className={
           isMapPage
             ? 'h-[calc(100dvh-64px)] overflow-hidden'
-            : 'min-h-[calc(100dvh-64px)] pb-28 lg:pb-8'
+            : 'min-h-[calc(100dvh-64px)] pb-32 lg:pb-8'
         }
       >
         <Outlet />

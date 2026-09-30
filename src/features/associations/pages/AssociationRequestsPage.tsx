@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+
 import {
   getAssociationJoinRequests,
   respondJoinRequest,
@@ -9,7 +10,9 @@ function formatDate(value: string | null | undefined) {
 
   const date = new Date(value)
 
-  if (Number.isNaN(date.getTime())) return 'Non renseignée'
+  if (Number.isNaN(date.getTime())) {
+    return 'Non renseignée'
+  }
 
   return new Intl.DateTimeFormat('fr-FR', {
     day: '2-digit',
@@ -70,13 +73,25 @@ export default function AssociationRequestsPage() {
       requestId: string
       decision: 'acceptee' | 'refusee'
     }) => respondJoinRequest(requestId, decision),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['association-join-requests'],
-      })
-      queryClient.invalidateQueries({
-        queryKey: ['current-profile'],
-      })
+
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ['association-join-requests'],
+        }),
+
+        queryClient.invalidateQueries({
+          queryKey: ['association-volunteers'],
+        }),
+
+        queryClient.invalidateQueries({
+          queryKey: ['current-profile'],
+        }),
+
+        queryClient.invalidateQueries({
+          queryKey: ['my-association-join-requests'],
+        }),
+      ])
     },
   })
 
@@ -112,6 +127,8 @@ export default function AssociationRequestsPage() {
   return (
     <div className="min-h-[calc(100vh-80px)] bg-[#faf8f4] px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-7xl">
+
+        {/* HEADER */}
         <div className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#d94a0b]">
@@ -128,11 +145,13 @@ export default function AssociationRequestsPage() {
             </p>
           </div>
 
+          {/* STATS */}
           <div className="grid grid-cols-2 gap-3">
             <div className="rounded-3xl border border-orange-200 bg-orange-50 px-5 py-4 shadow-sm">
               <p className="text-xs font-bold uppercase tracking-wide text-orange-600">
                 En attente
               </p>
+
               <p className="mt-1 text-3xl font-black text-orange-700">
                 {pendingRequests.length}
               </p>
@@ -142,6 +161,7 @@ export default function AssociationRequestsPage() {
               <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
                 Total
               </p>
+
               <p className="mt-1 text-3xl font-black text-slate-950">
                 {requests.length}
               </p>
@@ -149,6 +169,7 @@ export default function AssociationRequestsPage() {
           </div>
         </div>
 
+        {/* ERREUR */}
         {respondMutation.isError && (
           <div className="mb-6 rounded-3xl border border-red-200 bg-red-50 p-5 text-sm font-semibold text-red-700">
             {(respondMutation.error as Error)?.message ||
@@ -156,12 +177,14 @@ export default function AssociationRequestsPage() {
           </div>
         )}
 
+        {/* SUCCÈS */}
         {respondMutation.isSuccess && (
           <div className="mb-6 rounded-3xl border border-emerald-200 bg-emerald-50 p-5 text-sm font-semibold text-emerald-700">
             Demande traitée avec succès.
           </div>
         )}
 
+        {/* DEMANDES EN ATTENTE */}
         <section>
           <h2 className="mb-4 text-2xl font-black text-slate-950">
             Demandes en attente
@@ -198,24 +221,29 @@ export default function AssociationRequestsPage() {
                     </span>
                   </div>
 
+                  {/* MESSAGE */}
                   <div className="mt-5 rounded-3xl bg-slate-50 p-4">
                     <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
                       Message
                     </p>
+
                     <p className="mt-2 text-sm leading-relaxed text-slate-600">
                       {request.message || 'Aucun message envoyé.'}
                     </p>
                   </div>
 
+                  {/* DATE */}
                   <div className="mt-5 rounded-3xl bg-slate-50 p-4">
                     <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
                       Date de demande
                     </p>
+
                     <p className="mt-2 text-sm font-black text-slate-950">
                       {formatDate(request.created_at)}
                     </p>
                   </div>
 
+                  {/* ACTIONS */}
                   <div className="mt-5 grid gap-3 sm:grid-cols-2">
                     <button
                       type="button"
@@ -226,9 +254,11 @@ export default function AssociationRequestsPage() {
                           decision: 'acceptee',
                         })
                       }
-                      className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-black text-white transition hover:bg-emerald-700 disabled:opacity-60"
+                      className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-black text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                      Accepter
+                      {respondMutation.isPending
+                        ? 'Traitement...'
+                        : 'Accepter'}
                     </button>
 
                     <button
@@ -240,9 +270,11 @@ export default function AssociationRequestsPage() {
                           decision: 'refusee',
                         })
                       }
-                      className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-red-200 bg-red-50 px-5 py-3 text-sm font-black text-red-600 transition hover:bg-red-100 disabled:opacity-60"
+                      className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-red-200 bg-red-50 px-5 py-3 text-sm font-black text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                      Refuser
+                      {respondMutation.isPending
+                        ? 'Traitement...'
+                        : 'Refuser'}
                     </button>
                   </div>
                 </article>
@@ -251,6 +283,7 @@ export default function AssociationRequestsPage() {
           )}
         </section>
 
+        {/* HISTORIQUE */}
         <section className="mt-10">
           <h2 className="mb-4 text-2xl font-black text-slate-950">
             Historique

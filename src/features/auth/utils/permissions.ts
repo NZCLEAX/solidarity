@@ -5,6 +5,8 @@ export type AppPermission =
   | 'view_map'
   | 'view_points'
   | 'create_point'
+  | 'edit_point'
+  | 'planning'
   | 'manage_interventions'
   | 'moderation'
   | 'administration'
@@ -44,57 +46,163 @@ export function hasPermission(
 
   const role = profile.role
 
+  // =========================================================
+  // PROFIL
+  // =========================================================
+
   if (permission === 'profile') {
     return true
   }
 
+  // =========================================================
+  // CRÉER / SIGNALER UN POINT
+  //
+  // Citoyen : OUI
+  // Bénévole : OUI
+  // Association : OUI si validée
+  // Modérateur : OUI
+  // Admin : OUI
+  // =========================================================
+
   if (permission === 'create_point') {
-    if (role === 'association') return isAssociationValidated(profile)
+    if (role === 'association') {
+      return isAssociationValidated(profile)
+    }
 
-    return ['citoyen', 'benevole', 'moderateur', 'admin'].includes(role)
+    return [
+      'citoyen',
+      'benevole',
+      'moderateur',
+      'admin',
+    ].includes(role)
   }
 
-  // Bénévole non validé ou bénévole sans association :
-  // il doit voir le bouton pour rejoindre une association.
+  // =========================================================
+  // MODIFIER UN POINT
+  //
+  // IMPORTANT :
+  // Le bénévole ne peut JAMAIS modifier un point.
+  // Le citoyen non plus.
+  // =========================================================
+
+  if (permission === 'edit_point') {
+    if (role === 'association') {
+      return isAssociationValidated(profile)
+    }
+
+    return ['moderateur', 'admin'].includes(role)
+  }
+
+  // =========================================================
+  // ASSOCIATIONS
+  // =========================================================
+
   if (permission === 'view_associations') {
-    return role === 'benevole' && !isVolunteerValidated(profile)
+    return (
+      role === 'benevole' &&
+      !isVolunteerValidated(profile)
+    )
   }
+
+  // =========================================================
+  // CARTE
+  // =========================================================
 
   if (permission === 'view_map') {
-    if (role === 'benevole') return isVolunteerValidated(profile)
-    if (role === 'association') return isAssociationValidated(profile)
+    if (role === 'benevole') {
+      return isVolunteerValidated(profile)
+    }
+
+    if (role === 'association') {
+      return isAssociationValidated(profile)
+    }
 
     return ['moderateur', 'admin'].includes(role)
   }
+
+  // =========================================================
+  // CONSULTATION DES POINTS
+  //
+  // Le bénévole validé peut consulter un point,
+  // notamment depuis la carte.
+  //
+  // Mais il ne peut PAS le modifier grâce à edit_point.
+  // =========================================================
 
   if (permission === 'view_points') {
-    if (role === 'benevole') return isVolunteerValidated(profile)
-    if (role === 'association') return isAssociationValidated(profile)
+    if (role === 'benevole') {
+      return isVolunteerValidated(profile)
+    }
+
+    if (role === 'association') {
+      return isAssociationValidated(profile)
+    }
 
     return ['moderateur', 'admin'].includes(role)
   }
+
+  // =========================================================
+  // PLANNING
+  // =========================================================
+
+  if (permission === 'planning') {
+    if (role === 'benevole') {
+      return isVolunteerValidated(profile)
+    }
+
+    if (role === 'association') {
+      return isAssociationValidated(profile)
+    }
+
+    return ['moderateur', 'admin'].includes(role)
+  }
+
+  // =========================================================
+  // INTERVENTIONS
+  //
+  // Le bénévole consulte le planning mais ne crée/modifie
+  // pas les interventions.
+  // =========================================================
 
   if (permission === 'manage_interventions') {
-    if (role === 'benevole') return isVolunteerValidated(profile)
-    if (role === 'association') return isAssociationValidated(profile)
+    if (role === 'association') {
+      return isAssociationValidated(profile)
+    }
 
     return ['moderateur', 'admin'].includes(role)
   }
+
+  // =========================================================
+  // DASHBOARD
+  // =========================================================
 
   if (permission === 'dashboard') {
-    if (role === 'association') return isAssociationValidated(profile)
+    if (role === 'association') {
+      return isAssociationValidated(profile)
+    }
 
     return ['moderateur', 'admin'].includes(role)
   }
 
-  // Demandes + Équipe uniquement pour une association validée
+  // =========================================================
+  // DEMANDES BÉNÉVOLES / ÉQUIPE
+  // =========================================================
+
   if (permission === 'manage_association_requests') {
     return isAssociationValidated(profile)
   }
 
+  // =========================================================
+  // MODÉRATION
+  // =========================================================
+
   if (permission === 'moderation') {
     return ['moderateur', 'admin'].includes(role)
   }
+
+  // =========================================================
+  // ADMINISTRATION
+  // =========================================================
 
   if (permission === 'administration') {
     return role === 'admin'
@@ -106,22 +214,37 @@ export function hasPermission(
 export function getDefaultPathForProfile(
   profile: CurrentProfile | null | undefined
 ) {
-  if (!profile?.role) return '/login'
+  if (!profile?.role) {
+    return '/login'
+  }
 
-  if (profile.role === 'admin') return '/dashboard'
-  if (profile.role === 'moderateur') return '/dashboard'
+  if (profile.role === 'admin') {
+    return '/dashboard'
+  }
+
+  if (profile.role === 'moderateur') {
+    return '/dashboard'
+  }
 
   if (profile.role === 'association') {
-    if (isAssociationValidated(profile)) return '/dashboard'
+    if (isAssociationValidated(profile)) {
+      return '/dashboard'
+    }
+
     return '/profile'
   }
 
   if (profile.role === 'benevole') {
-    if (isVolunteerValidated(profile)) return '/carte'
+    if (isVolunteerValidated(profile)) {
+      return '/carte'
+    }
+
     return '/associations'
   }
 
-  if (profile.role === 'citoyen') return '/points/new'
+  if (profile.role === 'citoyen') {
+    return '/points/new'
+  }
 
   return '/profile'
 }

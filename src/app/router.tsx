@@ -25,6 +25,7 @@ import EditPointPage from '@/features/points/pages/EditPointPage'
 import PointDetailsPage from '@/features/points/pages/PointDetailsPage'
 
 import ProfilePage from '@/features/profile/pages/ProfilePage'
+import SettingsPage from '@/features/settings/pages/SettingsPage'
 
 import AssociationsPage from '@/features/associations/pages/AssociationsPage'
 import AssociationRequestsPage from '@/features/associations/pages/AssociationRequestsPage'
@@ -37,10 +38,18 @@ import NotificationsPage from '@/features/notifications/pages/NotificationsPage'
 import AppLayout from '@/shared/components/AppLayout'
 
 export const router = createBrowserRouter([
+  // =========================================================
+  // RACINE
+  // =========================================================
+
   {
-  path: '/',
-  element: <Navigate to="/carte" replace />,
-},
+    path: '/',
+    element: <Navigate to="/carte" replace />,
+  },
+
+  // =========================================================
+  // AUTHENTIFICATION
+  // =========================================================
 
   {
     element: <AuthLayout />,
@@ -49,10 +58,12 @@ export const router = createBrowserRouter([
         path: '/login',
         element: <LoginPage />,
       },
+
       {
         path: '/register',
         element: <RegisterPage />,
       },
+
       {
         path: '/associations/register',
         element: <AssociationRegisterPage />,
@@ -60,9 +71,26 @@ export const router = createBrowserRouter([
     ],
   },
 
+  // =========================================================
+  // APPLICATION CONNECTÉE
+  //
+  // AppLayout contient :
+  // - Header PULSE
+  // - Menu hamburger
+  // - BottomNavigation
+  // =========================================================
+
   {
     element: <AppLayout />,
     children: [
+      // =====================================================
+      // DASHBOARD
+      //
+      // Association validée
+      // Modérateur
+      // Admin
+      // =====================================================
+
       {
         path: '/dashboard',
         element: (
@@ -71,6 +99,16 @@ export const router = createBrowserRouter([
           </RequireAccess>
         ),
       },
+
+      // =====================================================
+      // CARTE
+      //
+      // Bénévole validé
+      // Association validée
+      // Modérateur
+      // Admin
+      // =====================================================
+
       {
         path: '/carte',
         element: (
@@ -79,6 +117,11 @@ export const router = createBrowserRouter([
           </RequireAccess>
         ),
       },
+
+      // =====================================================
+      // NOTIFICATIONS
+      // =====================================================
+
       {
         path: '/notifications',
         element: (
@@ -87,6 +130,14 @@ export const router = createBrowserRouter([
           </RequireAccess>
         ),
       },
+
+      // =====================================================
+      // LISTE DES POINTS
+      //
+      // Le bénévole validé peut consulter.
+      // Il ne peut PAS modifier.
+      // =====================================================
+
       {
         path: '/points',
         element: (
@@ -95,14 +146,17 @@ export const router = createBrowserRouter([
           </RequireAccess>
         ),
       },
-      {
-        path: '/planning',
-        element: (
-          <RequireAccess permission="manage_interventions">
-            <PlanningPage />
-          </RequireAccess>
-        ),
-      },
+
+      // =====================================================
+      // SIGNALER UN POINT
+      //
+      // Citoyen
+      // Bénévole
+      // Association validée
+      // Modérateur
+      // Admin
+      // =====================================================
+
       {
         path: '/points/new',
         element: (
@@ -111,6 +165,13 @@ export const router = createBrowserRouter([
           </RequireAccess>
         ),
       },
+
+      // =====================================================
+      // DÉTAIL D'UN POINT
+      //
+      // Le bénévole validé peut consulter.
+      // =====================================================
+
       {
         path: '/points/:pointId',
         element: (
@@ -119,14 +180,52 @@ export const router = createBrowserRouter([
           </RequireAccess>
         ),
       },
+
+      // =====================================================
+      // MODIFIER UN POINT
+      //
+      // IMPORTANT :
+      // Le bénévole NE PEUT PAS modifier un point.
+      //
+      // Association validée
+      // Modérateur
+      // Admin
+      // =====================================================
+
       {
         path: '/points/:pointId/edit',
         element: (
-          <RequireAccess permission="view_points">
+          <RequireAccess permission="edit_point">
             <EditPointPage />
           </RequireAccess>
         ),
       },
+
+      // =====================================================
+      // PLANNING
+      //
+      // Bénévole validé : consultation OUI
+      // Association validée
+      // Modérateur
+      // Admin
+      // =====================================================
+
+      {
+        path: '/planning',
+        element: (
+          <RequireAccess permission="planning">
+            <PlanningPage />
+          </RequireAccess>
+        ),
+      },
+
+      // =====================================================
+      // ASSOCIATIONS
+      //
+      // Permet à un bénévole non rattaché de rejoindre
+      // une association.
+      // =====================================================
+
       {
         path: '/associations',
         element: (
@@ -135,6 +234,13 @@ export const router = createBrowserRouter([
           </RequireAccess>
         ),
       },
+
+      // =====================================================
+      // DEMANDES BÉNÉVOLES
+      //
+      // Association validée uniquement
+      // =====================================================
+
       {
         path: '/association/demandes',
         element: (
@@ -143,6 +249,13 @@ export const router = createBrowserRouter([
           </RequireAccess>
         ),
       },
+
+      // =====================================================
+      // ÉQUIPE ASSOCIATION
+      //
+      // Association validée uniquement
+      // =====================================================
+
       {
         path: '/association/equipe',
         element: (
@@ -151,6 +264,19 @@ export const router = createBrowserRouter([
           </RequireAccess>
         ),
       },
+
+      // =====================================================
+      // INTERVENTIONS
+      //
+      // IMPORTANT :
+      // Le bénévole N'A PAS accès à la gestion
+      // des interventions.
+      //
+      // Association validée
+      // Modérateur
+      // Admin
+      // =====================================================
+
       {
         path: '/interventions',
         element: (
@@ -159,6 +285,13 @@ export const router = createBrowserRouter([
           </RequireAccess>
         ),
       },
+
+      // =====================================================
+      // CRÉER UNE INTERVENTION
+      //
+      // Le bénévole NE PEUT PAS créer une intervention.
+      // =====================================================
+
       {
         path: '/interventions/new',
         element: (
@@ -167,6 +300,14 @@ export const router = createBrowserRouter([
           </RequireAccess>
         ),
       },
+
+      // =====================================================
+      // MODÉRATION
+      //
+      // Modérateur
+      // Admin
+      // =====================================================
+
       {
         path: '/moderation',
         element: (
@@ -175,6 +316,14 @@ export const router = createBrowserRouter([
           </RequireAccess>
         ),
       },
+
+      // =====================================================
+      // DOUBLONS
+      //
+      // Modérateur
+      // Admin
+      // =====================================================
+
       {
         path: '/moderation/doublons',
         element: (
@@ -183,6 +332,13 @@ export const router = createBrowserRouter([
           </RequireAccess>
         ),
       },
+
+      // =====================================================
+      // ADMINISTRATION
+      //
+      // Admin uniquement
+      // =====================================================
+
       {
         path: '/administration',
         element: (
@@ -191,6 +347,13 @@ export const router = createBrowserRouter([
           </RequireAccess>
         ),
       },
+
+      // =====================================================
+      // ADMINISTRATION ASSOCIATIONS
+      //
+      // Admin uniquement
+      // =====================================================
+
       {
         path: '/administration/associations',
         element: (
@@ -199,6 +362,13 @@ export const router = createBrowserRouter([
           </RequireAccess>
         ),
       },
+
+      // =====================================================
+      // PROFIL
+      //
+      // Tous les utilisateurs connectés
+      // =====================================================
+
       {
         path: '/profile',
         element: (
@@ -207,19 +377,30 @@ export const router = createBrowserRouter([
           </RequireAccess>
         ),
       },
+
+      // =====================================================
+      // RÉGLAGES
+      //
+      // Tous les utilisateurs connectés
+      // =====================================================
+
       {
-  path: 'settings',
-  element: (
-    <RequireAccess permission="dashboard">
-      <ProfilePage />
-    </RequireAccess>
-  ),
-},
+        path: '/settings',
+        element: (
+          <RequireAccess permission="profile">
+            <SettingsPage />
+          </RequireAccess>
+        ),
+      },
     ],
   },
 
+  // =========================================================
+  // ROUTE INCONNUE
+  // =========================================================
+
   {
-  path: '*',
-  element: <Navigate to="/carte" replace />,
-}
+    path: '*',
+    element: <Navigate to="/carte" replace />,
+  },
 ])
