@@ -1,0 +1,162 @@
+Version : 1.0
+Date de mise à jour : 30 septembre 2026
+
+## Objet des conditions
+
+Le présent document définit les règles d’utilisation de l’application Pulse.
+Pulse est une plateforme destinée à faciliter la coordination, le signalement, le suivi et la gestion d’actions de terrain, notamment concernant les points prioritaires, les besoins identifiés, les interventions et les actions de solidarité.
+
+## Acceptation et modifications
+
+L’utilisation de Pulse implique l’acceptation des présentes conditions d’utilisation.
+En créant un compte, en se connectant ou en utilisant Pulse, l’utilisateur reconnaît avoir pris connaissance des présentes conditions et s’engage à les respecter.
+Si l’utilisateur n’accepte pas ces conditions, il ne doit pas utiliser l’application.
+Les conditions peuvent être modifiées lorsque cela est nécessaire, notamment en cas d’évolution des fonctionnalités de Pulse, de la réglementation ou des mesures de sécurité.
+
+## Accès à la plateforme
+
+L’accès à Pulse nécessite, selon les fonctionnalités utilisées, la création d’un compte utilisateur.
+L’utilisateur est responsable :
+-  des informations renseignées lors de son inscription ;
+-  de la confidentialité de son mot de passe ;
+-  de l’utilisation de son compte ;
+-  des actions réalisées depuis son compte.
+L’utilisateur doit immédiatement signaler toute utilisation suspecte ou non autorisée de son compte.
+Pulse peut limiter ou suspendre temporairement l’accès à certaines fonctionnalités en cas de problème technique, de maintenance ou de nécessité de sécurité.
+
+## Création et gestion du compte
+
+Lors de la création d’un compte, l’utilisateur doit fournir des informations exactes et à jour.
+Il est interdit :
+-  de créer un compte avec de fausses informations ;
+-  d'usurper l'identité d'une autre personne ;
+-  d'utiliser le compte d'une autre personne sans autorisation ;
+-  de créer plusieurs comptes dans le but de contourner les règles de la plateforme ;
+-  de transmettre ses identifiants à un tiers lorsque cela compromet la sécurité du compte.
+L’utilisateur peut modifier les informations personnelles disponibles dans les paramètres de son compte lorsque cette fonctionnalité est proposée.
+
+## Sécurité des identifiants
+
+Le mot de passe doit rester confidentiel.
+L’utilisateur doit choisir un mot de passe suffisamment sécurisé et éviter de l’utiliser sur plusieurs services.
+En cas de perte, de vol ou de suspicion de compromission des identifiants, l’utilisateur doit utiliser les mécanismes de récupération de compte disponibles ou contacter l’administrateur de la plateforme.
+L’équipe de Pulse ne demande jamais à un utilisateur de communiquer son mot de passe par un moyen non sécurisé.
+
+## Règles de bonne utilisation
+
+Pulse doit être utilisé exclusivement dans le respect des lois applicables et des présentes conditions.
+L’utilisateur s’engage notamment à utiliser l’application de manière :
+-  responsable ;
+-  honnête ;
+-  respectueuse des autres utilisateurs ;
+-  conforme à l’objectif de la plateforme.
+Il est interdit d’utiliser Pulse pour :
+-  diffuser volontairement de fausses informations ;
+-  harceler ou menacer une personne ;
+-  publier du contenu discriminatoire ou haineux ;
+-  publier des informations permettant de nuire à une personne ;
+-  usurper l’identité d’une personne ou d’une organisation ;
+-  perturber volontairement le fonctionnement de l’application ;
+-  contourner les mécanismes de sécurité ;
+-  accéder à des données auxquelles l’utilisateur n’est pas autorisé à accéder ;
+-  utiliser la plateforme à des fins frauduleuses.
+
+## Points de terrain et signalements
+
+Pulse permet notamment de créer et de consulter des points de terrain.
+Ces informations peuvent concerner, selon les fonctionnalités disponibles :
+-  des besoins identifiés ;
+-  des situations nécessitant une attention particulière ;
+-  des personnes ou groupes nécessitant une assistance ;
+-  des ressources disponibles ;
+-  des actions à réaliser ;
+-  des informations géographiques ;
+-  des interventions réalisées ou prévues.
+L’utilisateur doit fournir des informations aussi exactes que possible.
+Lorsqu'une information n'est pas vérifiée, l'utilisateur doit éviter de la présenter comme une information certaine.
+Les informations présentes dans l'application peuvent évoluer rapidement et doivent, lorsque cela est nécessaire, être vérifiées directement sur le terrain.
+
+## Informations géographiques
+
+Certaines fonctionnalités de Pulse peuvent utiliser des informations géographiques afin de localiser des points ou des interventions.
+L’utilisateur doit éviter de publier des informations de localisation permettant d’exposer inutilement une personne à un risque.
+Il est notamment recommandé de ne pas publier publiquement :
+-  l’adresse personnelle d’une personne sans nécessité ;
+-  la localisation précise d’une personne vulnérable lorsque cela présente un risque ;
+-  des informations permettant d’identifier ou de suivre une personne sans justification.
+Les informations géographiques doivent être utilisées uniquement dans le cadre de l’objectif pour lequel elles ont été collectées.
+
+## Gestion des interventions
+
+Pulse peut permettre de créer, consulter et suivre des interventions.
+Une intervention peut notamment comporter :
+-  une description ;
+-  une localisation ;
+-  une date ;
+-  un horaire ;
+-  des besoins ;
+-  des personnes mobilisées ;
+-  un état d'avancement.
+Les utilisateurs doivent maintenir ces informations aussi à jour que possible.
+Une intervention terminée ou annulée doit, lorsque cela est prévu par l’application, être mise à jour afin d’éviter que des informations obsolètes soient utilisées.
+
+## Associations et équipes
+
+Certaines fonctionnalités de Pulse peuvent permettre aux utilisateurs de rejoindre ou de gérer des associations et des équipes.
+Les informations fournies lors de l'inscription d'une association doivent être exactes.
+Les utilisateurs disposant de droits de gestion doivent utiliser leurs permissions uniquement dans le cadre de leurs responsabilités.
+Les droits d'administration ou de modération ne doivent pas être utilisés pour :
+-  modifier abusivement les données ;
+-  supprimer des informations sans justification ;
+-  favoriser ou sanctionner arbitrairement un utilisateur ;
+-  accéder à des données qui ne sont pas nécessaires à leurs fonctions.
+
+## Modération
+
+Pulse peut disposer de fonctionnalités de modération permettant de contrôler certains contenus ou signalements.
+La modération peut notamment permettre de :
+-  examiner un signalement ;
+-  identifier des contenus problématiques ;
+-  traiter des doublons ;
+-  corriger certaines informations ;
+-  retirer des contenus qui ne respectent pas les règles.
+Les utilisateurs doivent respecter les décisions de modération applicables à leur compte.
+Toute contestation ou demande de correction peut être adressée à l’administrateur de la plateforme lorsque cette possibilité est disponible.
+
+## Administration de Pulse
+
+Les administrateurs disposent de fonctionnalités supplémentaires nécessaires à la gestion de Pulse.
+Ces fonctionnalités peuvent notamment permettre de gérer :
+-  les utilisateurs ;
+-  les associations ;
+-  les signalements ;
+-  les interventions ;
+-  les points de terrain ;
+-  certains paramètres de la plateforme ;
+-  la modération.
+Les accès administrateur doivent être utilisés uniquement pour les besoins de l'administration de Pulse.
+Les comptes administrateurs doivent bénéficier de mesures de sécurité renforcées.
+
+## Responsabilité des contenus
+
+L’utilisateur reste responsable des contenus qu’il ajoute dans Pulse.
+Avant de publier une information, l’utilisateur doit s’assurer qu’il dispose du droit de la partager.
+Il est interdit de publier :
+-  des contenus illégaux ;
+-  des contenus volontairement trompeurs ;
+-  des données personnelles sans justification ;
+-  des contenus portant atteinte aux droits d’une autre personne ;
+-  des contenus permettant de mettre inutilement une personne en danger.
+Pulse peut retirer ou rendre inaccessible un contenu qui contrevient aux présentes conditions.
+
+## Protection des données personnelles
+
+Les utilisateurs doivent limiter la collecte et la diffusion d'informations personnelles au strict nécessaire.
+Il convient notamment d’éviter de publier publiquement :
+-  des mots de passe ;
+-  des coordonnées bancaires ;
+-  des documents d’identité ;
+-  des informations médicales non nécessaires ;
+-  des informations personnelles sensibles ;
+-  des coordonnées personnelles lorsque leur diffusion n’est pas nécessaire.
+Les données personnelles sont traitées conformément aux documents de confidentialité et aux règles applicables.

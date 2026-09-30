@@ -26,6 +26,8 @@ import PointDetailsPage from '@/features/points/pages/PointDetailsPage'
 
 import ProfilePage from '@/features/profile/pages/ProfilePage'
 import SettingsPage from '@/features/settings/pages/SettingsPage'
+import TermsPage from '@/features/legal/pages/TermsPage'
+import PrivacyPage from '@/features/legal/pages/PrivacyPage'
 
 import AssociationsPage from '@/features/associations/pages/AssociationsPage'
 import AssociationRequestsPage from '@/features/associations/pages/AssociationRequestsPage'
@@ -38,6 +40,14 @@ import NotificationsPage from '@/features/notifications/pages/NotificationsPage'
 import AppLayout from '@/shared/components/AppLayout'
 
 export const router = createBrowserRouter([
+  {
+    path: '/politique-confidentialite',
+    element: <PrivacyPage />,
+  },
+  {
+    path: '/conditions-utilisation',
+    element: <TermsPage />,
+  },
   // =========================================================
   // RACINE
   // =========================================================

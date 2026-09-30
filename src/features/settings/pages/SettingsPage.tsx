@@ -167,11 +167,11 @@ const COPY = {
 
     terms: "Conditions d'utilisation",
     termsDescription:
-      'Les conditions d’utilisation seront disponibles prochainement.',
+      'Consultez les conditions d’utilisation de Pulse (version française).',
 
     privacy: 'Politique de confidentialité',
     privacyDescription:
-      'La politique de confidentialité sera disponible ici.',
+      'Consultez la politique de confidentialité de Pulse (version française).',
 
     support: 'Aide & support',
     supportDescription:
@@ -442,11 +442,11 @@ const COPY = {
 
     terms: 'Terms of use',
     termsDescription:
-      'The terms of use will be available soon.',
+      'Read the Pulse terms of use (French version).',
 
     privacy: 'Privacy policy',
     privacyDescription:
-      'The privacy policy will be available here.',
+      'Read the Pulse privacy policy (French version).',
 
     support: 'Help & support',
     supportDescription:
@@ -716,11 +716,11 @@ const COPY = {
 
     terms: 'Condiciones de uso',
     termsDescription:
-      'Las condiciones de uso estarán disponibles próximamente.',
+      'Consulta las condiciones de uso de Pulse (versión en francés).',
 
     privacy: 'Política de privacidad',
     privacyDescription:
-      'La política de privacidad estará disponible aquí.',
+      'Consulta la política de privacidad de Pulse (versión en francés).',
 
     support: 'Ayuda y soporte',
     supportDescription:
@@ -990,11 +990,11 @@ const COPY = {
 
     terms: 'شروط الاستخدام',
     termsDescription:
-      'ستتوفر شروط الاستخدام قريبًا.',
+      'اطّلع على شروط استخدام Pulse (باللغة الفرنسية).',
 
     privacy: 'سياسة الخصوصية',
     privacyDescription:
-      'ستتوفر سياسة الخصوصية هنا.',
+      'اطّلع على سياسة خصوصية Pulse (باللغة الفرنسية).',
 
     support: 'المساعدة والدعم',
     supportDescription:
@@ -2691,9 +2691,13 @@ export default function SettingsPage() {
                   copy.termsDescription
                 }
                 action={
-                  <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-500 dark:bg-slate-800 dark:text-slate-400">
-                    {copy.soon}
-                  </span>
+                  <Link
+                    to="/conditions-utilisation"
+                    aria-label={copy.terms}
+                    className="rounded-full bg-orange-50 px-4 py-2 font-bold text-orange-700 hover:bg-orange-100 dark:bg-orange-950 dark:text-orange-300"
+                  >
+                    <span aria-hidden="true">→</span>
+                  </Link>
                 }
               />
 
@@ -2704,9 +2708,13 @@ export default function SettingsPage() {
                   copy.privacyDescription
                 }
                 action={
-                  <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-500 dark:bg-slate-800 dark:text-slate-400">
-                    {copy.soon}
-                  </span>
+                  <Link
+                    to="/politique-confidentialite"
+                    aria-label={copy.privacy}
+                    className="rounded-full bg-orange-50 px-4 py-2 font-bold text-orange-700 hover:bg-orange-100 dark:bg-orange-950 dark:text-orange-300"
+                  >
+                    <span aria-hidden="true">→</span>
+                  </Link>
                 }
               />
 

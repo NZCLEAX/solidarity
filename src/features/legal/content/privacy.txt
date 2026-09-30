@@ -1,0 +1,225 @@
+Dernière mise à jour : 30 septembre 2026
+
+## À propos de cette politique
+
+La présente Politique de confidentialité décrit la manière dont Pulse collecte, utilise, conserve et protège les données personnelles des utilisateurs de la plateforme.
+En utilisant Pulse, vous reconnaissez avoir pris connaissance de la présente Politique de confidentialité.
+
+## Responsable du traitement
+
+Le responsable du traitement des données personnelles collectées dans le cadre de l'utilisation de Pulse est :
+[Nom de l'organisation / responsable]
+Adresse : [Adresse]
+E-mail : [Adresse e-mail]
+Pour toute question relative à la protection de vos données personnelles, vous pouvez nous contacter à cette adresse.
+
+## Données collectées
+
+Selon les fonctionnalités utilisées, Pulse peut collecter différentes catégories de données.
+
+### Compte utilisateur
+
+Lors de la création ou de l'utilisation d'un compte, Pulse peut collecter :
+-  nom ou nom d'utilisateur ;
+-  adresse e-mail ;
+-  mot de passe ;
+-  photo de profil, lorsqu'elle est renseignée ;
+-  langue sélectionnée ;
+-  informations nécessaires à la gestion du compte.
+Les mots de passe sont traités de manière sécurisée et ne sont pas stockés en clair.
+
+### Points sur la carte
+
+Lorsque vous créez ou modifiez un point sur la carte, certaines informations peuvent être enregistrées :
+-  titre ;
+-  description ;
+-  catégorie ;
+-  niveau de priorité ;
+-  localisation ;
+-  informations concernant les besoins ;
+-  date de création ou de modification ;
+-  utilisateur à l'origine du signalement.
+
+### Interventions
+
+Lorsque vous créez ou participez à une intervention, Pulse peut traiter :
+-  nom de l'intervention ;
+-  description ;
+-  localisation ;
+-  date et horaires ;
+-  besoins identifiés ;
+-  nombre de personnes concernées lorsqu'il est renseigné ;
+-  actions réalisées ;
+-  informations nécessaires à la coordination.
+
+### Associations et équipes
+
+Dans le cadre des fonctionnalités associatives, Pulse peut traiter les informations nécessaires à :
+-  l'enregistrement d'une association ;
+-  la vérification d'un dossier ;
+-  la gestion des membres ;
+-  la gestion des équipes ;
+-  les demandes d'adhésion ;
+-  la coordination des actions.
+
+### Données techniques
+
+Pour assurer le fonctionnement et la sécurité de Pulse, certaines données techniques peuvent être traitées, notamment :
+-  adresse IP ;
+-  navigateur utilisé ;
+-  système d'exploitation ;
+-  type d'appareil ;
+-  informations techniques liées à la connexion ;
+-  journaux nécessaires à la sécurité et au fonctionnement de la plateforme.
+Ces informations sont utilisées principalement à des fins techniques et de sécurité.
+
+## Utilisation de vos données
+
+Les données collectées peuvent être utilisées afin de :
+-  créer et gérer votre compte ;
+-  vous authentifier ;
+-  vous permettre d'utiliser les fonctionnalités de Pulse ;
+-  afficher et gérer les points présents sur la carte ;
+-  créer et gérer des interventions ;
+-  faciliter la coordination des actions ;
+-  gérer les associations et leurs membres ;
+-  assurer la modération ;
+-  assurer la sécurité de la plateforme ;
+-  détecter et prévenir les utilisations abusives ;
+-  assurer le fonctionnement technique du service ;
+-  répondre aux demandes des utilisateurs ;
+-  respecter les obligations légales applicables.
+Pulse ne collecte pas de données personnelles qui ne seraient pas nécessaires aux fonctionnalités proposées.
+
+## Bases légales des traitements
+
+Les traitements de données personnelles réalisés par Pulse peuvent reposer, selon leur nature, sur différentes bases légales prévues par le RGPD.
+Il peut notamment s'agir :
+-  de l'exécution du service demandé par l'utilisateur ;
+-  du consentement de l'utilisateur ;
+-  de l'intérêt légitime de Pulse lorsque celui-ci est applicable ;
+-  du respect d'une obligation légale.
+La base légale dépend du traitement concerné.
+
+## Données de localisation
+
+Certaines fonctionnalités de Pulse utilisent des données de localisation.
+La localisation peut notamment être utilisée pour :
+-  afficher des points sur la carte ;
+-  localiser des interventions ;
+-  faciliter la coordination des actions de terrain ;
+-  permettre aux utilisateurs autorisés de consulter les informations géographiques associées aux signalements.
+Les utilisateurs doivent éviter de publier des informations de localisation personnelles qui ne seraient pas nécessaires au signalement.
+
+## Accès aux données
+
+Les données peuvent être accessibles, selon les fonctionnalités et les autorisations :
+-  à l'utilisateur concerné ;
+-  aux utilisateurs autorisés de Pulse ;
+-  aux administrateurs ;
+-  aux modérateurs ;
+-  aux membres autorisés d'une association ;
+-  aux prestataires techniques nécessaires au fonctionnement du service.
+L'accès aux informations est limité selon les droits attribués à chaque utilisateur.
+
+## Prestataires et services tiers
+
+Pulse utilise des services techniques nécessaires au fonctionnement de la plateforme.
+Les données peuvent notamment être traitées par Supabase, utilisé pour certaines fonctionnalités liées à l'authentification, à la base de données et au stockage.
+Les services tiers utilisés par Pulse peuvent évoluer afin d'assurer le fonctionnement, la sécurité et l'amélioration de la plateforme.
+Lorsque cela est nécessaire, ces prestataires interviennent dans le respect des obligations applicables en matière de protection des données.
+
+## Durées de conservation
+
+Les données personnelles sont conservées uniquement pendant la durée nécessaire aux finalités pour lesquelles elles sont utilisées, sous réserve des obligations légales pouvant imposer une conservation plus longue.
+En particulier :
+
+### Compte utilisateur
+
+Les données du compte sont conservées tant que le compte est actif.
+
+### Points et interventions
+
+Les informations associées aux points et aux interventions peuvent être conservées afin de maintenir l'historique et le fonctionnement de la plateforme.
+
+### Données techniques
+
+Les données techniques et journaux de sécurité sont conservés pendant une durée limitée nécessaire au fonctionnement et à la sécurité du service.
+
+### Suppression du compte
+
+Lorsqu'un utilisateur supprime son compte, les données personnelles pouvant être supprimées sont supprimées ou anonymisées.
+Certaines données peuvent néanmoins être conservées lorsque cela est nécessaire pour respecter une obligation légale ou pour permettre la constatation, l'exercice ou la défense de droits en justice.
+
+## Suppression de votre compte
+
+Chaque utilisateur peut demander la suppression de son compte.
+Lorsque la fonctionnalité est disponible dans les paramètres de Pulse, la suppression peut être effectuée directement depuis l'application.
+La suppression du compte entraîne la suppression ou l'anonymisation des données personnelles associées lorsque leur conservation n'est plus nécessaire.
+La suppression d'un compte ne signifie pas nécessairement que toutes les informations historiques présentes sur la plateforme disparaissent immédiatement lorsqu'elles doivent être conservées pour des raisons légales, de sécurité ou de fonctionnement.
+
+## Vos droits
+
+Conformément à la réglementation applicable, vous disposez notamment des droits suivants :
+-  droit d'accès à vos données ;
+-  droit de rectification ;
+-  droit à l'effacement ;
+-  droit à la limitation du traitement ;
+-  droit d'opposition lorsque celui-ci est applicable ;
+-  droit à la portabilité de certaines données ;
+-  droit de retirer votre consentement lorsqu'un traitement repose sur celui-ci.
+Pour exercer vos droits, vous pouvez contacter :
+[Adresse e-mail de contact]
+Une vérification de votre identité peut être demandée lorsque cela est nécessaire pour protéger vos données.
+
+## Réclamations
+
+Si vous estimez que vos données personnelles ne sont pas traitées conformément à la réglementation applicable, vous pouvez contacter Pulse afin de rechercher une solution.
+Vous pouvez également introduire une réclamation auprès de l'autorité de protection des données compétente.
+En France, cette autorité est la Commission nationale de l'informatique et des libertés (CNIL).
+
+## Sécurité des données
+
+Pulse met en œuvre des mesures techniques et organisationnelles destinées à protéger les données personnelles contre :
+-  les accès non autorisés ;
+-  la perte ;
+-  la destruction ;
+-  la modification non autorisée ;
+-  la divulgation non autorisée.
+L'accès aux fonctionnalités sensibles de la plateforme est limité aux utilisateurs disposant des autorisations nécessaires.
+Malgré les mesures mises en place, aucun système informatique ou service accessible sur Internet ne peut garantir une sécurité absolue.
+
+## Cookies et stockage local
+
+Pulse peut utiliser des cookies, le stockage local du navigateur ou des technologies similaires lorsque cela est nécessaire au fonctionnement du service.
+Ces technologies peuvent notamment permettre :
+-  de maintenir une session utilisateur ;
+-  de mémoriser certaines préférences ;
+-  d'assurer le fonctionnement de l'application ;
+-  d'améliorer la sécurité.
+Si des technologies nécessitant le consentement de l'utilisateur sont utilisées, celui-ci sera recueilli conformément à la réglementation applicable.
+
+## Données des mineurs
+
+Pulse n'a pas pour objectif de collecter volontairement des données personnelles de mineurs lorsque celles-ci ne sont pas nécessaires au fonctionnement du service.
+Si vous pensez qu'un mineur a transmis des données personnelles de manière inappropriée, vous pouvez nous contacter à l'adresse :
+[Adresse e-mail]
+
+## Modifications de cette politique
+
+Cette Politique de confidentialité peut être modifiée afin de tenir compte :
+-  de l'évolution de Pulse ;
+-  de nouvelles fonctionnalités ;
+-  de changements techniques ;
+-  de changements réglementaires ;
+-  de l'évolution des traitements de données.
+La date de dernière mise à jour est indiquée en haut de cette page.
+En cas de modification importante, les utilisateurs pourront être informés par l'intermédiaire de Pulse ou par tout autre moyen approprié.
+
+## Nous contacter
+
+Pour toute question concernant cette Politique de confidentialité ou le traitement de vos données personnelles :
+Pulse
+Responsable : [Nom / organisation]
+E-mail : [Adresse e-mail]
+Adresse : [Adresse postale]
