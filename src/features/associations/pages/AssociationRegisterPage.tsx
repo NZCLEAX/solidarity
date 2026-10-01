@@ -2,7 +2,14 @@ import { useState, type ChangeEvent, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
 import PulseLogo from '@/shared/components/PulseLogo'
+import {
+  verifyOfficialAssociation,
+  type OfficialAssociationData,
+} from '@/features/associations/api/officialVerification'
 
+import {
+  verifyAssociationDossier,
+} from '../services/verificationService'
 import {
   createAssociationRequest,
   uploadAssociationDocuments,

@@ -22,6 +22,7 @@ export default function LoginPage() {
 
       return profile
     },
+
     onSuccess: (profile) => {
       queryClient.setQueryData(['current-profile'], profile)
 
@@ -69,14 +70,25 @@ export default function LoginPage() {
             className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-[#d94a0b] focus:ring-4 focus:ring-orange-100"
           />
 
-          <input
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            required
-            type="password"
-            placeholder="Mot de passe"
-            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-[#d94a0b] focus:ring-4 focus:ring-orange-100"
-          />
+          <div>
+            <input
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              required
+              type="password"
+              placeholder="Mot de passe"
+              className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-[#d94a0b] focus:ring-4 focus:ring-orange-100"
+            />
+
+            <div className="mt-2 text-right">
+              <Link
+                to="/forgot-password"
+                className="text-sm font-semibold text-[#d94a0b] transition hover:text-[#b93607]"
+              >
+                Mot de passe oublié ?
+              </Link>
+            </div>
+          </div>
 
           <div className="space-y-3">
             <button
@@ -90,7 +102,11 @@ export default function LoginPage() {
 
           <div className="my-4 flex items-center gap-3">
             <div className="h-px flex-1 bg-slate-200" />
-            <span className="text-xs font-bold text-slate-400">ou</span>
+
+            <span className="text-xs font-bold text-slate-400">
+              ou
+            </span>
+
             <div className="h-px flex-1 bg-slate-200" />
           </div>
 
@@ -105,6 +121,7 @@ export default function LoginPage() {
 
         <div className="mt-5 text-center text-sm text-slate-600">
           Pas de compte ?{' '}
+
           <Link to="/register" className="font-bold text-[#d94a0b]">
             S’inscrire
           </Link>

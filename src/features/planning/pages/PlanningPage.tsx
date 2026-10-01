@@ -2534,13 +2534,19 @@ export default function PlanningPage() {
                       )}
 
                       <Link
-                        to="/carte"
-                        className="flex min-h-11 items-center justify-center rounded-xl bg-[#d94a0b] px-3 text-center text-xs font-black text-white"
-                      >
-                        {
-                          t.onMap
-                        }
-                      </Link>
+  to={
+    intervention.point_id
+      ? `/carte?pointId=${encodeURIComponent(
+          String(
+            intervention.point_id
+          )
+        )}`
+      : '/carte'
+  }
+  className="flex min-h-11 items-center justify-center rounded-xl bg-[#d94a0b] px-3 text-center text-xs font-black text-white"
+>
+  {t.onMap}
+</Link>
                     </div>
                   </article>
                 )

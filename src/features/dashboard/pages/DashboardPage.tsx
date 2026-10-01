@@ -7,20 +7,23 @@ import {
   getStatusBadgeClass,
   getUrgencyBadgeClass,
 } from '@/shared/utils/pointStyles'
+import { useTranslation } from 'react-i18next'
+import i18next from 'i18next'
 
 function formatDate(value: string | null) {
-  if (!value) return 'Date non renseignée'
+  if (!value) return i18next.t('dateNonRenseigne', 'Date non renseignée')
 
   return new Intl.DateTimeFormat('fr-FR').format(new Date(value))
 }
 
 function formatTimeRange(start: string | null, end: string | null) {
-  if (!start && !end) return 'Horaire non renseigné'
-  if (start && end) return `${start} à ${end}`
-  return start || end || 'Horaire non renseigné'
+  if (!start && !end) return i18next.t('horaireNonRenseign', 'Horaire non renseigné')
+  if (start && end) return i18next.t('startEnd', '{{start}} à {{end}}', { start, end })
+  return start || end || i18next.t('horaireNonRenseign', 'Horaire non renseigné')
 }
 
 export default function DashboardPage() {
+  const { t } = useTranslation()
   const {
     data: points = [],
     isLoading: isLoadingPoints,
@@ -84,46 +87,46 @@ export default function DashboardPage() {
 
   const stats = [
     {
-      label: 'Points actifs',
+      label: t('pointsActifs', 'Points actifs'),
       value: activePoints.length,
-      helper: `${geolocatedPoints.length} géolocalisé(s)`,
+      helper: t('lengthGolocaliss', '{{length}} géolocalisé(s)', { length: geolocatedPoints.length }),
       tone: 'default',
     },
     {
-      label: 'Points urgents',
+      label: t('pointsUrgents', 'Points urgents'),
       value: urgentPoints.length,
-      helper: `${criticalPoints.length} critique(s)`,
+      helper: t('lengthCritiques', '{{length}} critique(s)', { length: criticalPoints.length }),
       tone: 'red',
     },
     {
-      label: 'Personnes estimées',
+      label: t('personnesEstimes', 'Personnes estimées'),
       value: estimatedPeopleCount,
-      helper: 'Sur les points actifs',
+      helper: t('surLesPointsActifs', 'Sur les points actifs'),
       tone: 'green',
     },
     {
-      label: 'Points non vérifiés',
+      label: t('pointsNonVrifis', 'Points non vérifiés'),
       value: unverifiedPoints.length,
-      helper: 'À confirmer sur le terrain',
+      helper: t('confirmerSurLeTerrain', 'À confirmer sur le terrain'),
       tone: 'orange',
     },
   ]
 
   const interventionStats = [
     {
-      label: 'Interventions déclarées',
+      label: t('interventionsDclares', 'Interventions déclarées'),
       value: interventions.length,
-      helper: 'Actions terrain enregistrées',
+      helper: t('actionsTerrainEnregistres', 'Actions terrain enregistrées'),
     },
     {
-      label: 'Repas distribués',
+      label: t('repasDistribus', 'Repas distribués'),
       value: mealsCount,
       helper: 'Total déclaré',
     },
     {
-      label: 'Bénévoles mobilisés',
+      label: t('bnvolesMobiliss', 'Bénévoles mobilisés'),
       value: volunteersCount,
-      helper: 'Sur les interventions',
+      helper: t('surLesInterventions', 'Sur les interventions'),
     },
   ]
 
@@ -136,34 +139,33 @@ export default function DashboardPage() {
         <div className="mb-8 flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
           <div>
             <p className="mb-2 text-sm font-bold uppercase tracking-[0.2em] text-orange-600">
-              Coordination
+              {t('coordination', 'Coordination')}
             </p>
 
-            <h1 className="dashboard-title">Tableau de bord</h1>
+            <h1 className="dashboard-title">{t('tableauDeBord', 'Tableau de bord')}</h1>
 
             <p className="mt-3 max-w-3xl text-base leading-relaxed text-slate-600 sm:text-lg">
-              Vue métier de coordination des points de précarité, des besoins
-              prioritaires et des interventions terrain.
+              {t('vueMtierDeCoordinationDesPointsDePrcaritDesBesoinsPrioritairesEtDesInterventionsTerrain', 'Vue métier de coordination des points de précarité, des besoins\r\n              prioritaires et des interventions terrain.')}
             </p>
           </div>
 
           <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
             <Link to="/points/new" className="dashboard-button-primary">
-              + Nouveau point
+              {t('nouveauPoint', '+ Nouveau point')}
             </Link>
 
             <Link
               to="/interventions/new"
               className="dashboard-button-secondary"
             >
-              + Intervention
+              {t('intervention', '+ Intervention')}
             </Link>
           </div>
         </div>
 
         {isLoading && (
           <div className="dashboard-card p-8 text-slate-600">
-            Chargement du tableau de bord...
+            {t('chargementDuTableauDeBord', 'Chargement du tableau de bord...')}
           </div>
         )}
 
@@ -171,7 +173,7 @@ export default function DashboardPage() {
           <div className="rounded-3xl border border-red-200 bg-red-50 p-8 text-red-700">
             {(pointsError as Error)?.message ||
               (interventionsError as Error)?.message ||
-              'Erreur lors du chargement du tableau de bord.'}
+              t('erreurLorsDuChargementDuTableauDeBord', 'Erreur lors du chargement du tableau de bord.')}
           </div>
         )}
 
@@ -241,10 +243,10 @@ export default function DashboardPage() {
                 <div className="mb-5 flex items-center justify-between gap-4">
                   <div>
                     <h2 className="dashboard-section-title">
-                      Points prioritaires
+                      {t('pointsPrioritaires', 'Points prioritaires')}
                     </h2>
                     <p className="dashboard-muted mt-1">
-                      Points critiques ou urgents à suivre rapidement.
+                      {t('pointsCritiquesOuUrgentsSuivreRapidement', 'Points critiques ou urgents à suivre rapidement.')}
                     </p>
                   </div>
 
@@ -252,13 +254,13 @@ export default function DashboardPage() {
                     to="/points"
                     className="shrink-0 text-sm font-bold text-indigo-600 hover:text-indigo-700"
                   >
-                    Voir tous
+                    {t('voirTous', 'Voir tous')}
                   </Link>
                 </div>
 
                 {priorityPoints.length === 0 && (
                   <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-slate-500">
-                    Aucun point prioritaire pour le moment.
+                    {t('aucunPointPrioritairePourLeMoment', 'Aucun point prioritaire pour le moment.')}
                   </div>
                 )}
 
@@ -273,13 +275,13 @@ export default function DashboardPage() {
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                           <div>
                             <h3 className="font-bold text-slate-950">
-                              {point.adresse || 'Adresse non renseignée'}
+                              {point.adresse || t('adresseNonRenseigne', 'Adresse non renseignée')}
                             </h3>
 
                             <p className="mt-1 text-sm text-slate-500">
                               {point.nombre_personnes_estime ??
-                                'Non renseigné'}{' '}
-                              personne(s) estimée(s)
+                                t('nonRenseign', 'Non renseigné')}{' '}
+                              {t('personnesEstimes2', 'personne(s) estimée(s)')}
                             </p>
                           </div>
 
@@ -301,10 +303,10 @@ export default function DashboardPage() {
                 <div className="mb-5 flex items-center justify-between gap-4">
                   <div>
                     <h2 className="dashboard-section-title">
-                      Dernières interventions
+                      {t('derniresInterventions', 'Dernières interventions')}
                     </h2>
                     <p className="dashboard-muted mt-1">
-                      Historique récent des actions déclarées.
+                      {t('historiqueRcentDesActionsDclares', 'Historique récent des actions déclarées.')}
                     </p>
                   </div>
 
@@ -312,13 +314,13 @@ export default function DashboardPage() {
                     to="/interventions"
                     className="shrink-0 text-sm font-bold text-indigo-600 hover:text-indigo-700"
                   >
-                    Voir toutes
+                    {t('voirToutes', 'Voir toutes')}
                   </Link>
                 </div>
 
                 {latestInterventions.length === 0 && (
                   <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-slate-500">
-                    Aucune intervention déclarée pour le moment.
+                    {t('aucuneInterventionDclarePourLeMoment', 'Aucune intervention déclarée pour le moment.')}
                   </div>
                 )}
 
@@ -337,7 +339,7 @@ export default function DashboardPage() {
 
                             <p className="mt-1 text-sm text-slate-500">
                               {intervention.points?.adresse ||
-                                'Point non renseigné'}
+                                t('pointNonRenseign', 'Point non renseigné')}
                             </p>
 
                             <p className="mt-2 text-sm font-medium text-slate-600">
@@ -350,7 +352,7 @@ export default function DashboardPage() {
                           </div>
 
                           <span className="w-fit rounded-full bg-indigo-50 px-3 py-1 text-xs font-bold text-indigo-600 ring-1 ring-indigo-100">
-                            {intervention.statut || 'Non renseigné'}
+                            {intervention.statut || t('nonRenseign', 'Non renseigné')}
                           </span>
                         </div>
                       </article>
@@ -364,10 +366,10 @@ export default function DashboardPage() {
               <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <h2 className="dashboard-section-title">
-                    Derniers points signalés
+                    {t('derniersPointsSignals', 'Derniers points signalés')}
                   </h2>
                   <p className="dashboard-muted mt-1">
-                    Les derniers signalements enregistrés dans la plateforme.
+                    {t('lesDerniersSignalementsEnregistrsDansLaPlateforme', 'Les derniers signalements enregistrés dans la plateforme.')}
                   </p>
                 </div>
 
@@ -375,13 +377,13 @@ export default function DashboardPage() {
                   to="/points"
                   className="text-sm font-bold text-indigo-600 hover:text-indigo-700"
                 >
-                  Voir tous
+                  {t('voirTous', 'Voir tous')}
                 </Link>
               </div>
 
               {latestPoints.length === 0 && (
                 <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-slate-500">
-                  Aucun point signalé pour le moment.
+                  {t('aucunPointSignalPourLeMoment', 'Aucun point signalé pour le moment.')}
                 </div>
               )}
 
@@ -394,11 +396,11 @@ export default function DashboardPage() {
                       className="rounded-2xl border border-slate-200 bg-white p-5 transition hover:border-orange-200 hover:bg-orange-50/40"
                     >
                       <h3 className="font-bold text-slate-950">
-                        {point.adresse || 'Adresse non renseignée'}
+                        {point.adresse || t('adresseNonRenseigne', 'Adresse non renseignée')}
                       </h3>
 
                       <p className="mt-2 text-sm text-slate-500">
-                        {point.besoins || 'Besoins non renseignés'}
+                        {point.besoins || t('besoinsNonRenseigns', 'Besoins non renseignés')}
                       </p>
 
                       <div className="mt-4 flex flex-wrap gap-2">

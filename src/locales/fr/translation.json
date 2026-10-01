@@ -1,0 +1,1147 @@
+{
+  "accsRefusCettePageEstRserveAuxAdministrateurs": "Accès refusé. Cette page est réservée aux administrateurs.",
+
+  "actif": "Actif",
+
+  "actionsAffiches": "Action(s) affichée(s)",
+
+  "actionsTerrain": "Actions terrain",
+
+  "actionsTerrainEnregistres": "Actions terrain enregistrées",
+
+  "actuel": "Actuel :",
+
+  "administration": "Administration",
+
+  "administrationDesComptesRlesEtStatutsUtilisateurs": "Administration des comptes, rôles et statuts utilisateurs.",
+
+  "adresseNonRenseigne": "Adresse non renseignée",
+
+  "afficherInfos": "Afficher infos",
+
+  "aideNonRenseigne": "Aide non renseignée",
+
+  "annule": "Annulée",
+
+  "annuler": "Annuler",
+
+  "aperuDeLinterventionAvantValidation": "Aperçu de l’intervention avant validation.",
+
+  "archiv": "Archivé",
+
+  "association": "Association",
+
+  "associations": "Associations",
+
+  "associationSansNom": "Association sans nom",
+
+  "associationsDjPositionnes": "Associations déjà positionnées",
+
+  "associationsMobilises": "Associations mobilisées",
+
+  "associationsPrsentes": "Associations présentes",
+
+  "associationTypeDaideAdresseCommentaire": "Association, type d’aide, adresse, commentaire...",
+
+  "aucunBesoinRenseign": "Aucun besoin renseigné",
+
+  "aucunDocumentEnvoy": "Aucun document envoyé.",
+
+  "aucuneAssociationPositionne": "Aucune association positionnée",
+
+  "aucuneAssociationPositionne2": "Aucune association positionnée.",
+
+  "aucuneAssociationPositionnePourLeMoment": "Aucune association positionnée pour le moment.",
+
+  "aucuneAssociationTrouve": "Aucune association trouvée.",
+
+  "aucuneInterventionDclarePourLeMoment": "Aucune intervention déclarée pour le moment.",
+
+  "aucuneInterventionNeCorrespondAuxFiltresActuellementSlectionns": "Aucune intervention ne correspond aux filtres actuellement sélectionnés.",
+
+  "aucuneInterventionTrouve": "Aucune intervention trouvée",
+
+  "aucuneNote": "Aucune note",
+
+  "aucunPointPrioritairePourLeMoment": "Aucun point prioritaire pour le moment.",
+
+  "aucunPointSignalPourLeMoment": "Aucun point signalé pour le moment.",
+
+  "aucunUtilisateurTrouv": "Aucun utilisateur trouvé.",
+
+  "autresAssociations": "autre(s) association(s)",
+
+  "basse": "Basse",
+
+  "besoin": "Besoin",
+
+  "besoins": "Besoins",
+
+  "besoinsNonRenseigns": "Besoins non renseignés",
+
+  "besoinTotal": "Besoin total",
+
+  "bgblue50Textblue700Ringblue200": "bg-blue-50 text-blue-700 ring-blue-200",
+
+  "bgemerald50Textemerald700Borderemerald200": "bg-emerald-50 text-emerald-700 border-emerald-200",
+
+  "bgemerald50Textemerald700Ringemerald200": "bg-emerald-50 text-emerald-700 ring-emerald-200",
+
+  "bgorange50Textorange700Borderorange200": "bg-orange-50 text-orange-700 border-orange-200",
+
+  "bgorange50Textorange700Ringorange200": "bg-orange-50 text-orange-700 ring-orange-200",
+
+  "bgred50Textred700Borderred200": "bg-red-50 text-red-700 border-red-200",
+
+  "bgred50Textred700Ringred200": "bg-red-50 text-red-700 ring-red-200",
+
+  "bgslate100Textslate600Borderslate200": "bg-slate-100 text-slate-600 border-slate-200",
+
+  "bgslate50Textslate700Ringslate200": "bg-slate-50 text-slate-700 ring-slate-200",
+
+  "bnvoles": "Bénévoles",
+
+  "bnvolesMobiliss": "Bénévoles mobilisés",
+
+  "carteTerrain": "Carte terrain",
+
+  "ceChampEstDsactivCarTuNasPasSlectionnRepas": "Ce champ est désactivé car tu n’as pas sélectionné Repas.",
+
+  "chargementDeLaCarte": "Chargement de la carte...",
+
+  "chargementDesAssociations": "Chargement des associations...",
+
+  "chargementDesDocuments": "Chargement des documents...",
+
+  "chargementDesInterventions": "Chargement des interventions...",
+
+  "chargementDesPoints": "Chargement des points...",
+
+  "chargementDesUtilisateurs": "Chargement des utilisateurs...",
+
+  "chargementDuTableauDeBord": "Chargement du tableau de bord...",
+
+  "commentaire": "Commentaire",
+
+  "compteConnect": "Compte connecté",
+
+  "confirm": "Confirmé",
+
+  "confirmer": "À confirmer",
+
+  "confirmerSurLeTerrain": "À confirmer sur le terrain",
+
+  "conseil": "Conseil",
+
+  "coordination": "Coordination",
+
+  "couvert": "Couvert",
+
+  "couverts": "Couverts",
+
+  "couvertureRepas": "Couverture repas",
+
+  "critique": "Critique",
+
+  "critiqueCourt": "Crit.",
+
+  "crLe": "Créé le",
+
+  "date": "Date *",
+
+  "date2": "Date",
+
+  "dateNonRenseigne": "Date non renseignée",
+
+  "dclarationEnCours": "Déclaration en cours...",
+
+  "dclarerUneIntervention": "Déclarer une intervention",
+
+  "derniersPointsSignals": "Derniers points signalés",
+
+  "derniresInterventions": "Dernières interventions",
+
+  "distributionDeRepas": "Distribution de repas",
+
+  "djCouverts": "Déjà couverts",
+
+  "documents": "Documents :",
+
+  "documents2": "Documents",
+
+  "dossiersAssociations": "Dossiers associations",
+
+  "email": "Email",
+
+  "email2": "Email :",
+
+  "emailNonRenseign": "Email non renseigné",
+
+  "enCours": "En cours",
+
+  "erreurLorsDeLaMiseJourDeLutilisateur": "Erreur lors de la mise à jour de l’utilisateur.",
+
+  "erreurLorsDuChargementDeLaCarte": "Erreur lors du chargement de la carte.",
+
+  "erreurLorsDuChargementDesInterventions": "Erreur lors du chargement des interventions.",
+
+  "erreurLorsDuChargementDesUtilisateurs": "Erreur lors du chargement des utilisateurs.",
+
+  "erreurLorsDuChargementDuTableauDeBord": "Erreur lors du chargement du tableau de bord.",
+
+  "ex6": "Ex : 6",
+
+  "fermer": "Fermer",
+
+  "filtres": "Filtres",
+
+  "fonction": "Fonction :",
+
+  "formattedstartFormattedend": "{{formattedStart}} - {{formattedEnd}}",
+
+  "gestionDesAssociations": "Gestion des associations",
+
+  "gestionDesUtilisateurs": "Gestion des utilisateurs",
+
+  "haute": "Haute",
+
+  "heureDeDbut": "Heure de début *",
+
+  "heureDeFin": "Heure de fin *",
+
+  "historiqueRcentDesActionsDclares": "Historique récent des actions déclarées.",
+
+  "horaireNonRenseign": "Horaire non renseigné",
+
+  "horaires": "Horaires",
+
+  "impossibleDeChargerLesAssociations": "Impossible de charger les associations.",
+
+  "impossibleDeChargerLesDocuments": "Impossible de charger les documents.",
+
+  "impossibleDeChargerLesPoints": "Impossible de charger les points.",
+
+  "impossibleDeModifierLeStatut": "Impossible de modifier le statut.",
+
+  "impossibleDeRecalculerLeScore": "Impossible de recalculer le score.",
+
+  "impossibleDeVrifierTonProfil": "Impossible de vérifier ton profil.",
+
+  "inactif": "Inactif",
+
+  "indiqueLaDateLesHorairesEtLesTypesDaideApports": "Indique la date, les horaires et les types d’aide apportés.",
+
+  "informationsComplmentaires": "Informations complémentaires...",
+
+  "informationsDeLintervention": "Informations de l’intervention",
+
+  "intervenir": "Intervenir",
+
+  "intervention": "+ Intervention",
+
+  "interventions": "Interventions",
+
+  "interventionsDclares": "Interventions déclarées",
+
+  "interventionsPrvues": "Interventions prévues",
+
+  "interventionTerrain": "Intervention terrain",
+
+  "key": "📅",
+
+  "lengthAssociationsPositionnes": "{{length}} association(s) positionnée(s)",
+
+  "lengthCritiques": "{{length}} critique(s)",
+
+  "lengthGolocaliss": "{{length}} géolocalisé(s)",
+
+  "lengthInterventionsAffiches": "{{length}} intervention(s) affichée(s)",
+
+  "lengthUtilisateursAffichsSurLength2": "{{length}} utilisateur(s) affiché(s) sur {{length2}}",
+
+  "lesDerniersSignalementsEnregistrsDansLaPlateforme": "Les derniers signalements enregistrés dans la plateforme.",
+
+  "masquer": "Masquer",
+
+  "mobiliss": "Mobilisé(s)",
+
+  "moyenne": "Moyenne",
+
+  "moyenneCourt": "Moy.",
+
+  "moyensMobiliss": "Moyens mobilisés",
+
+  "nombre_benevolesBnvoles": "{{nombre_benevoles}} bénévoles",
+
+  "nombre_repasRepas": "{{nombre_repas}} repas",
+
+  "nombre_repasRepasPrvus": "{{nombre_repas}} repas prévus",
+
+  "nombreDeBnvoles": "Nombre de bénévoles *",
+
+  "nombreDeRepas": "Nombre de repas",
+
+  "nomEmailRleStatut": "Nom, email, rôle, statut...",
+
+  "nomNonRenseign": "Nom non renseigné",
+
+  "nomOfficiel": "Nom officiel :",
+
+  "nonRenseign": "Non renseigné",
+
+  "nonRenseigne": "Non renseignée",
+
+  "nonRenseigns": "Non renseignés",
+
+  "nonSlectionn": "Non sélectionné",
+
+  "nonVrifi": "Non vérifié",
+
+  "nonVrifie": "Non vérifiée",
+
+  "notes": "Notes :",
+
+  "nouveauPoint": "+ Nouveau point",
+
+  "nouvelleIntervention": "+ Nouvelle intervention",
+
+  "organiser": "À organiser",
+
+  "ouvrirLePdf": "Ouvrir le PDF",
+
+  "personnes": "Personnes",
+
+  "personnesEstimes": "Personnes estimées",
+
+  "personnesEstimes2": "personne(s) estimée(s)",
+
+  "point": "Point",
+
+  "pointConcern": "Point concerné",
+
+  "pointConcern2": "Point concerné *",
+
+  "pointConcern3": "Point concerné :",
+
+  "pointNonRenseign": "Point non renseigné",
+
+  "points": "Points",
+
+  "pointsActifs": "Points actifs",
+
+  "pointscouvertsPointsCouverts": "{{pointsCouverts}} point(s) couvert(s)",
+
+  "pointsCritiquesOuUrgentsSuivreRapidement": "Points critiques ou urgents à suivre rapidement.",
+
+  "pointSignal": "Point signalé",
+
+  "pointSlectionn": "Point sélectionné",
+
+  "pointsNonVrifis": "Points non vérifiés",
+
+  "pointsPrioritaires": "Points prioritaires",
+
+  "pointsUrgents": "Points urgents",
+
+  "pointTerrain": "Point terrain",
+
+  "pourLesRepasLeChampSeRemplitAvecLeNombreRestantCouvrirPourLesSoinsVtementsEauOuMaraudeLeNombreDeRepasReste0": "Pour les repas, le champ se remplit avec le nombre restant à couvrir. Pour les soins, vêtements, eau ou maraude, le nombre de repas reste à 0.",
+
+  "prvoisEnvironRepasrestantsRepaseauxPourComplterLeBesoinRestant": "Prévois environ {{repasRestants}} repas/eaux pour compléter le besoin restant.",
+
+  "prvue": "Prévue",
+
+  "prvues": "Prévues",
+
+  "recalculerScore": "Recalculer score",
+
+  "rechercher": "Rechercher...",
+
+  "rechercherParNomEmailSiretSiren": "Rechercher par nom, email, SIRET, SIREN...",
+
+  "rechercherUneIntervention": "Rechercher une intervention",
+
+  "rechercherUnUtilisateur": "Rechercher un utilisateur",
+
+  "refuser": "Refuser",
+
+  "rejet": "Rejeté",
+
+  "renseigneLesInformationsDeLinterventionRaliseSurUnPointAfinDassurerUnSuiviClairDesActionsDeTerrain": "Renseigne les informations de l’intervention réalisée sur un point afin d’assurer un suivi clair des actions de terrain.",
+
+  "renseigneLesQuantitsMobilisesPendantLintervention": "Renseigne les quantités mobilisées pendant l’intervention.",
+
+  "repas": "Repas",
+
+  "repasDclars": "Repas déclarés",
+
+  "repasDistribus": "Repas distribués",
+
+  "repasNonSlectionn": "Repas non sélectionné",
+
+  "repasPrvus": "repas prévus",
+
+  "reprsentant": "Représentant :",
+
+  "restant": "Restant",
+
+  "restants": "Restants",
+
+  "restantsRepasrestants": "Restants : {{repasRestants}}",
+
+  "retourAuxInterventions": "Retour aux interventions",
+
+  "rinitialiser": "Réinitialiser",
+
+  "rinitialiserLesFiltres": "Réinitialiser les filtres",
+
+  "rle": "Rôle",
+
+  "rsum": "Résumé",
+
+  "score": "Score",
+
+  "score100": "{{score}}/100",
+
+  "signal": "Signalé",
+
+  "signaler": "+ Signaler",
+
+  "siren": "SIREN :",
+
+  "sirenOfficiel": "SIREN officiel :",
+
+  "siret": "SIRET :",
+
+  "slectionneLePointSurLequelLinterventionATRalise": "Sélectionne le point sur lequel l’intervention a été réalisée.",
+
+  "slectionnerUnPoint": "Sélectionner un point",
+
+  "startEnd": "{{start}} à {{end}}",
+
+  "statut": "Statut",
+
+  "statut2": "Statut :",
+
+  "suiviDesInterventionsDclaresParLesAssociationsDistributionsBnvolesMobilissEtRepasDistribus": "Suivi des interventions déclarées par les associations : distributions, bénévoles mobilisés et repas distribués.",
+
+  "surLesInterventions": "Sur les interventions",
+
+  "surLesPointsActifs": "Sur les points actifs",
+
+  "suspendre": "Suspendre",
+
+  "tableauDeBord": "Tableau de bord",
+
+  "termine": "Terminée",
+
+  "tlphone": "Téléphone :",
+
+  "totalAssociations": "Total associations :",
+
+  "totalDclar": "Total déclaré",
+
+  "tous": "Tous",
+
+  "tousLesStatuts": "Tous les statuts",
+
+  "toutes": "Toutes",
+
+  "typeDaidePlusieursChoixPossibles": "Type d’aide * — plusieurs choix possibles",
+
+  "typesDaide": "Types d’aide",
+
+  "typologieNonRenseigne": "Typologie non renseignée",
+
+  "uneErreurEstSurvenue": "Une erreur est survenue.",
+
+  "uneErreurEstSurvenueLorsDeLaDclaration": "Une erreur est survenue lors de la déclaration.",
+
+  "urgence": "Urgence",
+
+  "urgents": "Urgents",
+
+  "utilisateur": "Utilisateur",
+
+  "valider": "Valider",
+
+  "valMo": "{{val}} Mo",
+
+  "ville": "Ville :",
+
+  "villeOfficielle": "Ville officielle :",
+
+  "voirDocuments": "Voir documents",
+
+  "voirDtail": "Voir détail",
+
+  "voirLeDtail": "Voir le détail",
+
+  "voirLePoint": "Voir le point",
+
+  "voirSurLaCarte": "Voir sur la carte",
+
+  "voirTous": "Voir tous",
+
+  "voirToutes": "Voir toutes",
+
+  "vrificationDesDroitsAdministrateur": "Vérification des droits administrateur...",
+
+  "vrifieLesAssociationsLeursInformationsOfficiellesLeurScoreEtLeursDocumentsJustificatifs": "Vérifie les associations, leurs informations officielles, leur score et leurs documents justificatifs.",
+
+  "vrifier": "À vérifier :",
+
+  "vueMtierDeCoordinationDesPointsDePrcaritDesBesoinsPrioritairesEtDesInterventionsTerrain": "Vue métier de coordination des points de précarité, des besoins prioritaires et des interventions terrain.",
+
+  "vueTempsRel": "Vue temps réel",
+
+  "map.nonRenseigneFeminin": "Non renseignée",
+
+  "map.chargementDeLaCarte": "Chargement de la carte...",
+
+  "map.erreurLorsDuChargementDeLaCarte": "Erreur lors du chargement de la carte.",
+
+  "map.pointSignal": "Point signalé",
+
+  "map.adresseNonRenseigne": "Adresse non renseignée",
+
+  "map.personnes": "Personnes",
+
+  "map.urgence": "Urgence",
+
+  "map.besoins": "Besoins",
+
+  "map.aucunBesoinRenseign": "Aucun besoin renseigné",
+
+  "map.associationsPrsentes": "Associations présentes",
+
+  "map.aucuneAssociationPositionne": "Aucune association positionnée",
+
+  "map.association": "Association",
+
+  "map.aideNonRenseigne": "Aide non renseignée",
+
+  "map.repas": "repas",
+
+  "map.bnvoles": "bénévoles",
+
+  "map.autresAssociations": "autre(s) association(s)",
+
+  "map.couvertureRepas": "Couverture repas",
+
+  "map.besoin": "Besoin",
+
+  "map.couverts": "Couverts",
+
+  "map.restants": "Restants",
+
+  "map.voirLeDtail": "Voir le détail",
+
+  "map.pointTerrain": "Point terrain",
+
+  "map.typologieNonRenseigne": "Typologie non renseignée",
+
+  "map.interventionsPrvues": "Interventions prévues",
+
+  "map.associationsMobilises": "Associations mobilisées",
+
+  "map.lengthAssociationsPositionnes": "{{length}} association(s) positionnée(s)",
+
+  "map.nombre_repasRepasPrvus": "{{nombre_repas}} repas prévus",
+
+  "map.voirDtail": "Voir détail",
+
+  "map.intervenir": "Intervenir",
+
+  "map.carteTerrain": "Carte terrain",
+
+  "map.vueTempsRel": "Vue temps réel",
+
+  "map.masquer": "Masquer",
+
+  "map.points": "Points",
+
+  "map.urgents": "Urgents",
+
+  "map.interventions": "Interventions",
+
+  "map.rechercher": "Rechercher...",
+
+  "map.filtres": "Filtres",
+
+  "map.toutes": "Toutes",
+
+  "map.critique": "Critique",
+
+  "map.haute": "Haute",
+
+  "map.moyenne": "Moyenne",
+
+  "map.basse": "Basse",
+
+  "map.statut": "Statut",
+
+  "map.tous": "Tous",
+
+  "map.signal": "Signalé",
+
+  "map.confirmer": "À confirmer",
+
+  "map.confirm": "Confirmé",
+
+  "map.actif": "Actif",
+
+  "map.inactif": "Inactif",
+
+  "map.archiv": "Archivé",
+
+  "map.rejet": "Rejeté",
+
+  "map.rinitialiser": "Réinitialiser",
+
+  "map.afficherInfos": "Afficher infos",
+
+  "map.critAbrege": "Crit.",
+
+  "map.moyAbrege": "Moy.",
+
+  "map.signaler": "+ Signaler",
+
+  "map.distributionRepas": "Distribution de repas",
+
+  "map.distributionEau": "Distribution d'eau",
+
+  "map.hygiene": "Hygiène",
+
+  "map.vetements": "Vêtements",
+
+  "map.couvertures": "Couvertures",
+
+  "map.autre": "Autre",
+
+  "createPoint.back": "Retour",
+
+  "createPoint.newReport": "Nouveau signalement",
+
+  "createPoint.title": "Signaler un point",
+
+  "createPoint.description": "Choisis une adresse proposée automatiquement. La latitude et la longitude seront remplies sans saisie manuelle.",
+
+  "createPoint.success": "Votre signalement a bien été pris en compte.",
+
+  "createPoint.createError": "Erreur lors de la création du point.",
+
+  "createPoint.addressSearchError": "Impossible de rechercher les adresses pour le moment.",
+
+  "createPoint.geolocationUnavailable": "La géolocalisation n’est pas disponible sur ce navigateur.",
+
+  "createPoint.geolocationError": "Impossible de récupérer ta position. Vérifie les autorisations du navigateur.",
+
+  "createPoint.selectAddressError": "Sélectionne une adresse proposée dans la liste ou utilise « Ma position ».",
+
+  "createPoint.selectNeedError": "Sélectionne au moins un besoin observé.",
+
+  "createPoint.address": "Adresse ou lieu",
+
+  "createPoint.addressPlaceholder": "Ex : Gare du Nord, Paris 10e",
+
+  "createPoint.searchAddress": "Rechercher une adresse",
+
+  "createPoint.searchingAddresses": "Recherche des adresses...",
+
+  "createPoint.noAddressFound": "Aucune adresse trouvée.",
+
+  "createPoint.myPosition": "Ma position",
+
+  "createPoint.map": "Carte",
+
+  "createPoint.coordinatesRetrieved": "Coordonnées récupérées automatiquement.",
+
+  "createPoint.latitude": "Latitude",
+
+  "createPoint.longitude": "Longitude",
+
+  "createPoint.estimatedPeople": "Nombre de personnes estimé",
+
+  "createPoint.peoplePlaceholder": "Ex : 20",
+
+  "createPoint.urgencyLevel": "Niveau d’urgence",
+
+  "createPoint.urgencyLow": "Basse",
+
+  "createPoint.urgencyMedium": "Moyenne",
+
+  "createPoint.urgencyHigh": "Haute",
+
+  "createPoint.urgencyCritical": "Critique",
+
+  "createPoint.urgencyLowDescription": "Situation stable",
+
+  "createPoint.urgencyMediumDescription": "Besoin à suivre",
+
+  "createPoint.urgencyHighDescription": "Intervention recommandée",
+
+  "createPoint.urgencyCriticalDescription": "Priorité immédiate",
+
+  "createPoint.observedNeeds": "Besoins observés",
+
+  "createPoint.needRepas": "Repas",
+
+  "createPoint.needEau": "Eau",
+
+  "createPoint.needHygiene": "Hygiène",
+
+  "createPoint.needVetements": "Vêtements",
+
+  "createPoint.needCouvertures": "Couvertures",
+
+  "createPoint.needSoins": "Soins",
+
+  "createPoint.needAutre": "Autre",
+
+  "createPoint.typology": "Typologie",
+
+  "createPoint.typologyPlaceholder": "Ex : familles, hommes seuls, migrants...",
+
+  "createPoint.comment": "Commentaire",
+
+  "createPoint.commentPlaceholder": "Observations complémentaires...",
+
+  "createPoint.cancel": "Annuler",
+
+  "createPoint.sending": "Envoi en cours...",
+
+  "createPoint.submit": "Envoyer le signalement",
+
+  "createPoint.preview": "Aperçu",
+
+  "createPoint.pointAddress": "Adresse du point",
+
+  "createPoint.people": "Personnes",
+
+  "createPoint.urgency": "Urgence",
+
+  "createPoint.coordinates": "Coordonnées",
+
+  "createPoint.coordinatesHelp": "Choisis une adresse proposée ou utilise « Ma position ».",
+
+  "createPoint.selectedNeeds": "Besoins sélectionnés",
+
+  "createPoint.noSelectedNeeds": "Aucun besoin sélectionné pour le moment.",
+
+  "createPoint.fieldTips": "Conseils terrain",
+
+  "createPoint.tipAddress": "Choisis une adresse proposée dans la liste.",
+
+  "createPoint.tipCoordinates": "Les coordonnées seront remplies automatiquement.",
+
+  "createPoint.tipPosition": "Utilise « Ma position » si tu es sur place.",
+
+  "createPoint.tipComment": "Ajoute un commentaire si la situation est urgente.",
+
+  "interventions.fieldActions": "Actions terrain",
+
+  "interventions.title": "Interventions",
+
+  "interventions.description": "Suivi des interventions déclarées par les associations : distributions, bénévoles mobilisés et repas distribués.",
+
+  "interventions.newIntervention": "+ Nouvelle intervention",
+
+  "interventions.actionsDisplayed": "Action(s) affichée(s)",
+
+  "interventions.planned": "Prévues",
+
+  "interventions.toOrganize": "À organiser",
+
+  "interventions.mealsDistributed": "Repas distribués",
+
+  "interventions.totalDeclared": "Total déclaré",
+
+  "interventions.volunteers": "Bénévoles",
+
+  "interventions.mobilized": "Mobilisé(s)",
+
+  "interventions.searchLabel": "Rechercher une intervention",
+
+  "interventions.searchPlaceholder": "Type d’aide, point concerné, commentaire...",
+
+  "interventions.status": "Statut",
+
+  "interventions.allStatuses": "Tous les statuts",
+
+  "interventions.statusPlanned": "Prévue",
+
+  "interventions.statusDeclared": "Déclarée",
+
+  "interventions.statusCompleted": "Réalisée",
+
+  "interventions.statusCancelled": "Annulée",
+
+  "interventions.notProvided": "Non renseigné",
+
+  "interventions.reset": "Réinitialiser",
+
+  "interventions.interventionsDisplayed": "{{count}} intervention(s) affichée(s)",
+
+  "interventions.pointsCovered": "{{count}} point(s) couvert(s)",
+
+  "interventions.loading": "Chargement des interventions...",
+
+  "interventions.loadingError": "Erreur lors du chargement des interventions.",
+
+  "interventions.noneFound": "Aucune intervention trouvée",
+
+  "interventions.noneFoundDescription": "Essaie de modifier ta recherche ou de créer une nouvelle intervention.",
+
+  "interventions.resetFilters": "Réinitialiser les filtres",
+
+  "interventions.intervention": "Intervention",
+
+  "interventions.concernedPoint": "Point concerné :",
+
+  "interventions.pointNotProvided": "Point non renseigné",
+
+  "interventions.date": "Date",
+
+  "interventions.dateNotProvided": "Date non renseignée",
+
+  "interventions.schedule": "Horaires",
+
+  "interventions.timeNotProvided": "Horaire non renseigné",
+
+  "interventions.meals": "Repas",
+
+  "interventions.comment": "Commentaire",
+
+  "interventions.viewPoint": "Voir le point",
+
+  "interventions.viewOnMap": "Voir sur la carte",
+
+  "interventions.aidMeals": "Distribution de repas",
+
+  "interventions.aidWater": "Distribution d'eau",
+
+  "interventions.aidClothing": "Distribution de vêtements",
+
+  "interventions.aidOutreach": "Maraude",
+
+  "interventions.aidCare": "Soins",
+
+  "interventions.aidSocialSupport": "Accompagnement social",
+
+  "interventions.aidOther": "Autre",
+
+  "createIntervention.back": "Retour aux interventions",
+
+  "createIntervention.fieldIntervention": "Intervention terrain",
+
+  "createIntervention.title": "Déclarer une intervention",
+
+  "createIntervention.description": "Renseigne les informations de l’intervention réalisée sur un point afin d’assurer un suivi clair des actions de terrain.",
+
+  "createIntervention.concernedPoint": "Point concerné",
+
+  "createIntervention.concernedPointDescription": "Sélectionne le point sur lequel l’intervention a été réalisée.",
+
+  "createIntervention.loadingPoints": "Chargement des points...",
+
+  "createIntervention.pointsError": "Impossible de charger les points.",
+
+  "createIntervention.selectPoint": "Sélectionner un point",
+
+  "createIntervention.selectedPoint": "Point sélectionné",
+
+  "createIntervention.addressNotProvided": "Adresse non renseignée",
+
+  "createIntervention.estimatedPeople": "Personnes estimées",
+
+  "createIntervention.urgency": "Urgence",
+
+  "createIntervention.urgencyLow": "Basse",
+
+  "createIntervention.urgencyMedium": "Moyenne",
+
+  "createIntervention.urgencyHigh": "Haute",
+
+  "createIntervention.urgencyCritical": "Critique",
+
+  "createIntervention.needs": "Besoins",
+
+  "createIntervention.needMeals": "Repas",
+
+  "createIntervention.needWater": "Eau",
+
+  "createIntervention.needHygiene": "Hygiène",
+
+  "createIntervention.needClothing": "Vêtements",
+
+  "createIntervention.needBlankets": "Couvertures",
+
+  "createIntervention.needCare": "Soins",
+
+  "createIntervention.needOther": "Autre",
+
+  "createIntervention.mealCoverage": "Couverture repas",
+
+  "createIntervention.totalNeed": "Besoin total",
+
+  "createIntervention.alreadyCovered": "Déjà couverts",
+
+  "createIntervention.remaining": "Restants",
+
+  "createIntervention.remainingSingular": "Restant",
+
+  "createIntervention.mealsSuggestion": "Prévois environ {{count}} repas/eaux pour compléter le besoin restant.",
+
+  "createIntervention.associationsPositioned": "Associations déjà positionnées",
+
+  "createIntervention.loadingInterventions": "Chargement des interventions...",
+
+  "createIntervention.noAssociation": "Aucune association positionnée pour le moment.",
+
+  "createIntervention.association": "Association",
+
+  "createIntervention.aidNotProvided": "Aide non renseignée",
+
+  "createIntervention.plannedMeals": "{{count}} repas prévus",
+
+  "createIntervention.information": "Informations de l’intervention",
+
+  "createIntervention.informationDescription": "Indique la date, les horaires et les types d’aide apportés.",
+
+  "createIntervention.date": "Date",
+
+  "createIntervention.startTime": "Heure de début",
+
+  "createIntervention.endTime": "Heure de fin",
+
+  "createIntervention.aidTypes": "Type d’aide * — plusieurs choix possibles",
+
+  "createIntervention.aidMeals": "Repas",
+
+  "createIntervention.aidWater": "Eau",
+
+  "createIntervention.aidClothing": "Vêtements",
+
+  "createIntervention.aidOutreach": "Maraude",
+
+  "createIntervention.aidCare": "Soins",
+
+  "createIntervention.aidSupport": "Accompagnement",
+
+  "createIntervention.aidOther": "Autre",
+
+  "createIntervention.resources": "Moyens mobilisés",
+
+  "createIntervention.resourcesDescription": "Renseigne les quantités mobilisées pendant l’intervention.",
+
+  "createIntervention.numberOfMeals": "Nombre de repas",
+
+  "createIntervention.remainingPlaceholder": "Restants : {{count}}",
+
+  "createIntervention.mealsNotSelected": "Repas non sélectionné",
+
+  "createIntervention.mealsDisabled": "Ce champ est désactivé car tu n’as pas sélectionné Repas.",
+
+  "createIntervention.numberOfVolunteers": "Nombre de bénévoles",
+
+  "createIntervention.volunteersPlaceholder": "Ex : 6",
+
+  "createIntervention.comment": "Commentaire",
+
+  "createIntervention.commentPlaceholder": "Informations complémentaires...",
+
+  "createIntervention.errorPoint": "Veuillez sélectionner un point concerné.",
+
+  "createIntervention.errorDate": "Veuillez renseigner la date de l'intervention.",
+
+  "createIntervention.errorStartTime": "Veuillez renseigner l'heure de début.",
+
+  "createIntervention.errorEndTime": "Veuillez renseigner l'heure de fin.",
+
+  "createIntervention.errorTimeOrder": "L'heure de fin doit être après l'heure de début.",
+
+  "createIntervention.errorAidType": "Veuillez sélectionner au moins un type d'aide.",
+
+  "createIntervention.errorMeals": "Veuillez renseigner un nombre de repas valide.",
+
+  "createIntervention.errorVolunteers": "Veuillez renseigner un nombre de bénévoles valide.",
+
+  "createIntervention.declarationError": "Une erreur est survenue lors de la déclaration.",
+
+  "createIntervention.genericError": "Une erreur est survenue.",
+
+  "createIntervention.submitting": "Déclaration en cours...",
+
+  "createIntervention.submit": "Déclarer l'intervention",
+
+  "createIntervention.cancel": "Annuler",
+
+  "createIntervention.summary": "Résumé",
+
+  "createIntervention.summaryDescription": "Aperçu de l’intervention avant validation.",
+
+  "createIntervention.point": "Point",
+
+  "createIntervention.notSelected": "Non sélectionné",
+
+  "createIntervention.notProvided": "Non renseigné",
+
+  "createIntervention.notProvidedFeminine": "Non renseignée",
+
+  "createIntervention.notProvidedPlural": "Non renseignés",
+
+  "createIntervention.need": "Besoin",
+
+  "createIntervention.covered": "Couvert",
+
+  "createIntervention.schedule": "Horaires",
+
+  "createIntervention.aidTypesSummary": "Types d’aide",
+
+  "createIntervention.declaredMeals": "Repas déclarés",
+
+  "createIntervention.volunteers": "Bénévoles",
+
+  "createIntervention.tip": "Conseil",
+
+  "createIntervention.tipDescription": "Pour les repas, le champ se remplit avec le nombre restant à couvrir. Pour les soins, vêtements, eau ou maraude, le nombre de repas reste à 0.",
+
+  "admin.roleCitizen": "Citoyen",
+
+  "admin.roleVolunteer": "Bénévole",
+
+  "admin.roleAssociation": "Association",
+
+  "admin.roleModerator": "Modérateur",
+
+  "admin.roleAdmin": "Administrateur",
+
+  "admin.statusPending": "En attente",
+
+  "admin.statusActive": "Actif",
+
+  "admin.statusSuspended": "Suspendu",
+
+  "admin.statusInactive": "Inactif",
+
+  "admin.notProvided": "Non renseigné",
+
+  "admin.notProvidedFeminine": "Non renseignée",
+
+  "adminAssociations.administration": "Administration",
+
+  "adminAssociations.title": "Dossiers associations",
+
+  "adminAssociations.description": "Vérifie les associations, leurs informations officielles, leur score et leurs documents justificatifs.",
+
+  "adminAssociations.totalAssociations": "Total associations :",
+
+  "adminAssociations.toVerify": "À vérifier :",
+
+  "adminAssociations.loadError": "Impossible de charger les associations.",
+
+  "adminAssociations.statusUpdateError": "Impossible de modifier le statut.",
+
+  "adminAssociations.scoreError": "Impossible de recalculer le score.",
+
+  "adminAssociations.searchPlaceholder": "Rechercher par nom, email, SIRET, SIREN...",
+
+  "adminAssociations.loading": "Chargement des associations...",
+
+  "adminAssociations.noneFound": "Aucune association trouvée.",
+
+  "adminAssociations.unnamedAssociation": "Association sans nom",
+
+  "adminAssociations.score": "Score",
+
+  "adminAssociations.email": "Email :",
+
+  "adminAssociations.phone": "Téléphone :",
+
+  "adminAssociations.city": "Ville :",
+
+  "adminAssociations.siret": "SIRET :",
+
+  "adminAssociations.siren": "SIREN :",
+
+  "adminAssociations.representative": "Représentant :",
+
+  "adminAssociations.position": "Fonction :",
+
+  "adminAssociations.documents": "Documents :",
+
+  "adminAssociations.officialName": "Nom officiel :",
+
+  "adminAssociations.officialCity": "Ville officielle :",
+
+  "adminAssociations.officialSiren": "SIREN officiel :",
+
+  "adminAssociations.notes": "Notes :",
+
+  "adminAssociations.notProvided": "Non renseigné",
+
+  "adminAssociations.notProvidedFeminine": "Non renseignée",
+
+  "adminAssociations.notVerified": "Non vérifié",
+
+  "adminAssociations.notVerifiedFeminine": "Non vérifiée",
+
+  "adminAssociations.noNotes": "Aucune note",
+
+  "adminAssociations.viewDocuments": "Voir documents",
+
+  "adminAssociations.recomputeScore": "Recalculer score",
+
+  "adminAssociations.validate": "Valider",
+
+  "adminAssociations.reject": "Refuser",
+
+  "adminAssociations.suspend": "Suspendre",
+
+  "adminAssociations.documentsTitle": "Documents",
+
+  "adminAssociations.association": "Association",
+
+  "adminAssociations.close": "Fermer",
+
+  "adminAssociations.loadingDocuments": "Chargement des documents...",
+
+  "adminAssociations.documentsError": "Impossible de charger les documents.",
+
+  "adminAssociations.noDocuments": "Aucun document envoyé.",
+
+  "adminAssociations.status": "Statut :",
+
+  "adminAssociations.opening": "Ouverture...",
+
+  "adminAssociations.openPdf": "Ouvrir le PDF",
+
+  "adminAssociations.statusPending": "En attente",
+
+  "adminAssociations.statusValidated": "Validée",
+
+  "adminAssociations.statusRejected": "Refusée",
+
+  "adminAssociations.statusSuspended": "Suspendue",
+
+  "adminAssociations.statusWaitingDocuments": "Documents attendus",
+
+  "adminAssociations.statusUnderVerification": "En vérification",
+
+  "adminAssociations.statusPreVerified": "Pré-vérifiée",
+
+  "adminAssociations.statusManualVerification": "Vérification manuelle",
+
+  "adminAssociations.documentStatutes": "Statuts",
+
+  "adminAssociations.documentReceipt": "Récépissé",
+
+  "adminAssociations.documentMinutes": "PV bureau",
+
+  "adminAssociations.documentOther": "Autre",
+
+  "adminAssociations.unknownSize": "Taille inconnue",
+
+  "adminAssociations.fileSizeMb": "{{size}} Mo"
+}

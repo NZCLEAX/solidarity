@@ -1,276 +1,500 @@
-import { type FormEvent, useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import {
+  type FormEvent,
+  useEffect,
+  useState,
+} from 'react'
 
-import { createPoint } from '@/features/points/api/points'
-import { getCurrentProfile } from '@/features/auth/api/profile'
+import { Link } from 'react-router-dom'
+
+import {
+  useMutation,
+  useQuery,
+} from '@tanstack/react-query'
+
+import { useTranslation } from 'react-i18next'
+
+import {
+  Utensils,
+  Droplets,
+  Sparkles,
+  Shirt,
+  BedDouble,
+  HeartPulse,
+  MoreHorizontal,
+} from 'lucide-react'
+
+import {
+  createPoint,
+} from '@/features/points/api/points'
+
+import {
+  getCurrentProfile,
+} from '@/features/auth/api/profile'
+
 import {
   searchAddresses,
   type AddressSuggestion,
 } from '@/features/points/api/addressSearch'
 
-// =========================================================
-// BESOINS OBSERVÉS
-// =========================================================
-
 const needsOptions = [
   {
-    label: 'Repas',
     value: 'Repas',
-    icon: '🍽️',
+    icon: Utensils,
   },
   {
-    label: 'Eau',
     value: 'Eau',
-    icon: '💧',
+    icon: Droplets,
   },
   {
-    label: 'Hygiène',
     value: 'Hygiène',
-    icon: '🧼',
+    icon: Sparkles,
   },
   {
-    label: 'Vêtements',
     value: 'Vêtements',
-    icon: '👕',
+    icon: Shirt,
   },
   {
-    label: 'Couvertures',
     value: 'Couvertures',
-    icon: '🛏️',
+    icon: BedDouble,
   },
   {
-    label: 'Soins',
     value: 'Soins',
-    icon: '🩺',
+    icon: HeartPulse,
   },
   {
-    label: 'Autre',
     value: 'Autre',
-    icon: '📦',
-  },
-]
-
-// =========================================================
-// NIVEAUX D'URGENCE
-// =========================================================
-
-const urgencyOptions = [
-  {
-    label: 'Basse',
-    value: 'basse',
-    description: 'Situation stable',
-  },
-  {
-    label: 'Moyenne',
-    value: 'moyenne',
-    description: 'Besoin à suivre',
-  },
-  {
-    label: 'Haute',
-    value: 'haute',
-    description: 'Intervention recommandée',
-  },
-  {
-    label: 'Critique',
-    value: 'critique',
-    description: 'Priorité immédiate',
+    icon: MoreHorizontal,
   },
 ] as const
 
-type UrgencyValue = (typeof urgencyOptions)[number]['value']
+const urgencyOptions = [
+  {
+    value: 'basse',
+  },
+  {
+    value: 'moyenne',
+  },
+  {
+    value: 'haute',
+  },
+  {
+    value: 'critique',
+  },
+] as const
+
+type UrgencyValue =
+  (typeof urgencyOptions)[number]['value']
 
 export default function CreatePointPage() {
-  // =========================================================
-  // PROFIL
-  // =========================================================
+  const {
+    t,
+    i18n,
+  } = useTranslation()
 
-  const { data: profile } = useQuery({
-    queryKey: ['current-profile'],
-    queryFn: getCurrentProfile,
+  const {
+    data: profile,
+  } = useQuery({
+    queryKey: [
+      'current-profile',
+    ],
+    queryFn:
+      getCurrentProfile,
   })
 
-  // =========================================================
-  // FORMULAIRE
-  // =========================================================
+  const [
+    adresse,
+    setAdresse,
+  ] = useState('')
 
-  const [adresse, setAdresse] = useState('')
-  const [latitude, setLatitude] = useState('')
-  const [longitude, setLongitude] = useState('')
-  const [nombrePersonnesEstime, setNombrePersonnesEstime] = useState('')
-  const [niveauUrgence, setNiveauUrgence] =
-    useState<UrgencyValue>('moyenne')
-  const [besoins, setBesoins] = useState<string[]>([])
-  const [typologie, setTypologie] = useState('')
-  const [commentaire, setCommentaire] = useState('')
+  const [
+    latitude,
+    setLatitude,
+  ] = useState('')
 
-  // =========================================================
-  // ÉTATS UI
-  // =========================================================
+  const [
+    longitude,
+    setLongitude,
+  ] = useState('')
 
-  const [successMessage, setSuccessMessage] = useState('')
+  const [
+    nombrePersonnesEstime,
+    setNombrePersonnesEstime,
+  ] = useState('')
 
-  const [addressSuggestions, setAddressSuggestions] = useState<
-    AddressSuggestion[]
-  >([])
+  const [
+    niveauUrgence,
+    setNiveauUrgence,
+  ] =
+    useState<UrgencyValue>(
+      'moyenne'
+    )
 
-  const [isSearchingAddress, setIsSearchingAddress] = useState(false)
-
-  const [showAddressSuggestions, setShowAddressSuggestions] =
-    useState(false)
-
-  const [addressError, setAddressError] = useState('')
-  const [positionError, setPositionError] = useState('')
-
-  // =========================================================
-  // DONNÉES CALCULÉES
-  // =========================================================
-
-  const hasCoordinates =
-    latitude.trim() !== '' &&
-    longitude.trim() !== ''
-
-  const selectedUrgency = urgencyOptions.find(
-    (option) => option.value === niveauUrgence
+  const [
+    besoins,
+    setBesoins,
+  ] = useState<string[]>(
+    []
   )
 
-  // =========================================================
-  // CRÉATION DU POINT
-  // =========================================================
+  const [
+    typologie,
+    setTypologie,
+  ] = useState('')
 
-  const createPointMutation = useMutation({
-    mutationFn: createPoint,
+  const [
+    commentaire,
+    setCommentaire,
+  ] = useState('')
 
-    onSuccess: () => {
-      setSuccessMessage(
-        'Votre signalement a bien été pris en compte.'
-      )
+  const [
+    successMessage,
+    setSuccessMessage,
+  ] = useState('')
 
-      setAdresse('')
-      setLatitude('')
-      setLongitude('')
-      setNombrePersonnesEstime('')
-      setNiveauUrgence('moyenne')
-      setBesoins([])
-      setTypologie('')
-      setCommentaire('')
+  const [
+    addressSuggestions,
+    setAddressSuggestions,
+  ] =
+    useState<
+      AddressSuggestion[]
+    >([])
 
-      setAddressSuggestions([])
-      setShowAddressSuggestions(false)
-      setAddressError('')
-      setPositionError('')
+  const [
+    isSearchingAddress,
+    setIsSearchingAddress,
+  ] =
+    useState(false)
 
-      window.scrollTo({
-        top: 0,
-        behavior: 'smooth',
-      })
-    },
-  })
+  const [
+    showAddressSuggestions,
+    setShowAddressSuggestions,
+  ] =
+    useState(false)
 
-  // =========================================================
-  // RECHERCHE AUTOMATIQUE D'ADRESSE
-  // =========================================================
+  const [
+    addressError,
+    setAddressError,
+  ] = useState('')
+
+  const [
+    positionError,
+    setPositionError,
+  ] = useState('')
+
+  const hasCoordinates =
+    latitude.trim() !==
+      '' &&
+    longitude.trim() !==
+      ''
+
+  function getNeedLabel(
+    value: string
+  ) {
+    switch (value) {
+      case 'Repas':
+        return t(
+          'createPoint.needRepas',
+          'Repas'
+        )
+
+      case 'Eau':
+        return t(
+          'createPoint.needEau',
+          'Eau'
+        )
+
+      case 'Hygiène':
+        return t(
+          'createPoint.needHygiene',
+          'Hygiène'
+        )
+
+      case 'Vêtements':
+        return t(
+          'createPoint.needVetements',
+          'Vêtements'
+        )
+
+      case 'Couvertures':
+        return t(
+          'createPoint.needCouvertures',
+          'Couvertures'
+        )
+
+      case 'Soins':
+        return t(
+          'createPoint.needSoins',
+          'Soins'
+        )
+
+      case 'Autre':
+        return t(
+          'createPoint.needAutre',
+          'Autre'
+        )
+
+      default:
+        return value
+    }
+  }
+
+  function getUrgencyLabel(
+    value:
+      UrgencyValue
+  ) {
+    switch (value) {
+      case 'basse':
+        return t(
+          'createPoint.urgencyLow',
+          'Basse'
+        )
+
+      case 'moyenne':
+        return t(
+          'createPoint.urgencyMedium',
+          'Moyenne'
+        )
+
+      case 'haute':
+        return t(
+          'createPoint.urgencyHigh',
+          'Haute'
+        )
+
+      case 'critique':
+        return t(
+          'createPoint.urgencyCritical',
+          'Critique'
+        )
+    }
+  }
+
+  function getUrgencyDescription(
+    value:
+      UrgencyValue
+  ) {
+    switch (value) {
+      case 'basse':
+        return t(
+          'createPoint.urgencyLowDescription',
+          'Situation stable'
+        )
+
+      case 'moyenne':
+        return t(
+          'createPoint.urgencyMediumDescription',
+          'Besoin à suivre'
+        )
+
+      case 'haute':
+        return t(
+          'createPoint.urgencyHighDescription',
+          'Intervention recommandée'
+        )
+
+      case 'critique':
+        return t(
+          'createPoint.urgencyCriticalDescription',
+          'Priorité immédiate'
+        )
+    }
+  }
+
+  const selectedUrgency =
+    urgencyOptions.find(
+      (option) =>
+        option.value ===
+        niveauUrgence
+    )
+
+  const createPointMutation =
+    useMutation({
+      mutationFn:
+        createPoint,
+
+      onSuccess: () => {
+        setSuccessMessage(
+          t(
+            'createPoint.success',
+            'Votre signalement a bien été pris en compte.'
+          )
+        )
+
+        setAdresse('')
+        setLatitude('')
+        setLongitude('')
+        setNombrePersonnesEstime(
+          ''
+        )
+        setNiveauUrgence(
+          'moyenne'
+        )
+        setBesoins([])
+        setTypologie('')
+        setCommentaire('')
+        setAddressSuggestions(
+          []
+        )
+        setShowAddressSuggestions(
+          false
+        )
+        setAddressError('')
+        setPositionError('')
+
+        window.scrollTo({
+          top: 0,
+          behavior:
+            'smooth',
+        })
+      },
+    })
 
   useEffect(() => {
-    const cleanAddress = adresse.trim()
+    const cleanAddress =
+      adresse.trim()
 
     if (
-      cleanAddress.length < 3 ||
+      cleanAddress.length <
+        3 ||
       !showAddressSuggestions
     ) {
-      setAddressSuggestions([])
+      setAddressSuggestions(
+        []
+      )
+
       return
     }
 
-    const timeoutId = window.setTimeout(async () => {
-      setIsSearchingAddress(true)
-      setAddressError('')
+    const timeoutId =
+      window.setTimeout(
+        async () => {
+          setIsSearchingAddress(
+            true
+          )
 
-      try {
-        const results =
-          await searchAddresses(cleanAddress)
+          setAddressError(
+            ''
+          )
 
-        setAddressSuggestions(results)
-      } catch {
-        setAddressSuggestions([])
+          try {
+            const results =
+              await searchAddresses(
+                cleanAddress
+              )
 
-        setAddressError(
-          'Impossible de rechercher les adresses pour le moment.'
-        )
-      } finally {
-        setIsSearchingAddress(false)
-      }
-    }, 350)
+            setAddressSuggestions(
+              results
+            )
+          } catch {
+            setAddressSuggestions(
+              []
+            )
 
-    return () => window.clearTimeout(timeoutId)
-  }, [adresse, showAddressSuggestions])
+            setAddressError(
+              t(
+                'createPoint.addressSearchError',
+                'Impossible de rechercher les adresses pour le moment.'
+              )
+            )
+          } finally {
+            setIsSearchingAddress(
+              false
+            )
+          }
+        },
+        350
+      )
 
-  // =========================================================
-  // MODIFICATION DE L'ADRESSE
-  // =========================================================
+    return () =>
+      window.clearTimeout(
+        timeoutId
+      )
+  }, [
+    adresse,
+    showAddressSuggestions,
+    t,
+  ])
 
-  function handleAddressChange(value: string) {
+  function handleAddressChange(
+    value: string
+  ) {
     setAdresse(value)
-
-    // Si l'utilisateur modifie l'adresse,
-    // on supprime les anciennes coordonnées.
     setLatitude('')
     setLongitude('')
-
     setAddressError('')
     setSuccessMessage('')
-    setShowAddressSuggestions(true)
+    setShowAddressSuggestions(
+      true
+    )
   }
 
-  // =========================================================
-  // SÉLECTION D'UNE ADRESSE
-  // =========================================================
-
   function selectAddressSuggestion(
-    suggestion: AddressSuggestion
+    suggestion:
+      AddressSuggestion
   ) {
-    setAdresse(suggestion.label)
+    setAdresse(
+      suggestion.label
+    )
 
     setLatitude(
-      String(suggestion.latitude)
+      String(
+        suggestion.latitude
+      )
     )
 
     setLongitude(
-      String(suggestion.longitude)
+      String(
+        suggestion.longitude
+      )
     )
 
-    setAddressSuggestions([])
-    setShowAddressSuggestions(false)
+    setAddressSuggestions(
+      []
+    )
+
+    setShowAddressSuggestions(
+      false
+    )
+
     setAddressError('')
   }
 
-  // =========================================================
-  // SÉLECTION DES BESOINS
-  // =========================================================
-
-  function toggleBesoin(value: string) {
+  function toggleBesoin(
+    value: string
+  ) {
     setSuccessMessage('')
 
-    setBesoins((currentBesoins) =>
-      currentBesoins.includes(value)
-        ? currentBesoins.filter(
-            (besoin) => besoin !== value
-          )
-        : [...currentBesoins, value]
+    setBesoins(
+      (
+        currentBesoins
+      ) =>
+        currentBesoins.includes(
+          value
+        )
+          ? currentBesoins.filter(
+              (
+                besoin
+              ) =>
+                besoin !==
+                value
+            )
+          : [
+              ...currentBesoins,
+              value,
+            ]
     )
   }
 
-  // =========================================================
-  // RETOUR
-  // =========================================================
-
   function getSafeBackPath() {
     const role =
-      profile?.role ?? 'citoyen'
+      profile?.role ??
+      'citoyen'
 
     if (
-      role === 'admin' ||
-      role === 'association'
+      role ===
+        'admin' ||
+      role ===
+        'association'
     ) {
       return '/carte'
     }
@@ -278,262 +502,307 @@ export default function CreatePointPage() {
     return '/profile'
   }
 
-  // =========================================================
-  // ACCÈS CARTE
-  // =========================================================
-
   function canAccessMap() {
     return (
-      profile?.role === 'admin' ||
-      profile?.role === 'association'
+      profile?.role ===
+        'admin' ||
+      profile?.role ===
+        'association'
     )
   }
-
-  // =========================================================
-  // POSITION ACTUELLE
-  // =========================================================
 
   function useCurrentPosition() {
     setPositionError('')
     setAddressError('')
     setSuccessMessage('')
 
-    if (!navigator.geolocation) {
+    if (
+      !navigator.geolocation
+    ) {
       setPositionError(
-        'La géolocalisation n’est pas disponible sur ce navigateur.'
+        t(
+          'createPoint.geolocationUnavailable',
+          'La géolocalisation n’est pas disponible sur ce navigateur.'
+        )
       )
 
       return
     }
 
     navigator.geolocation.getCurrentPosition(
-      (position) => {
+      (
+        position
+      ) => {
         setLatitude(
-          position.coords.latitude.toFixed(6)
+          position.coords.latitude.toFixed(
+            6
+          )
         )
 
         setLongitude(
-          position.coords.longitude.toFixed(6)
+          position.coords.longitude.toFixed(
+            6
+          )
         )
 
-        if (!adresse.trim()) {
-          setAdresse('Position actuelle')
+        if (
+          !adresse.trim()
+        ) {
+          setAdresse(
+            'Position actuelle'
+          )
         }
 
-        setAddressSuggestions([])
-        setShowAddressSuggestions(false)
+        setAddressSuggestions(
+          []
+        )
+
+        setShowAddressSuggestions(
+          false
+        )
       },
 
       () => {
         setPositionError(
-          'Impossible de récupérer ta position. Vérifie les autorisations du navigateur.'
+          t(
+            'createPoint.geolocationError',
+            'Impossible de récupérer ta position. Vérifie les autorisations du navigateur.'
+          )
         )
       }
     )
   }
 
-  // =========================================================
-  // ENVOI DU FORMULAIRE
-  // =========================================================
-
   function handleSubmit(
-    event: FormEvent<HTMLFormElement>
+    event:
+      FormEvent<HTMLFormElement>
   ) {
     event.preventDefault()
 
     setSuccessMessage('')
 
-    // -------------------------------------------------------
-    // Vérification coordonnées
-    // -------------------------------------------------------
-
-    if (!hasCoordinates) {
+    if (
+      !hasCoordinates
+    ) {
       setAddressError(
-        'Sélectionne une adresse proposée dans la liste ou utilise “Ma position”.'
+        t(
+          'createPoint.selectAddressError',
+          'Sélectionne une adresse proposée dans la liste ou utilise “Ma position”.'
+        )
       )
 
       return
     }
 
-    // -------------------------------------------------------
-    // Vérification besoins
-    // -------------------------------------------------------
-
-    if (besoins.length === 0) {
+    if (
+      besoins.length ===
+      0
+    ) {
       setAddressError(
-        'Sélectionne au moins un besoin observé.'
+        t(
+          'createPoint.selectNeedError',
+          'Sélectionne au moins un besoin observé.'
+        )
       )
 
       return
     }
 
-    // -------------------------------------------------------
-    // Création Supabase
-    // -------------------------------------------------------
+    createPointMutation.mutate(
+      {
+        adresse,
 
-    createPointMutation.mutate({
-      adresse,
+        latitude:
+          Number(
+            latitude
+          ),
 
-      latitude:
-        Number(latitude),
+        longitude:
+          Number(
+            longitude
+          ),
 
-      longitude:
-        Number(longitude),
+        nombrePersonnesEstime:
+          Number(
+            nombrePersonnesEstime
+          ),
 
-      nombrePersonnesEstime:
-        Number(nombrePersonnesEstime),
+        typologie,
 
-      typologie,
+        besoins,
 
-      besoins,
+        niveauUrgence,
 
-      niveauUrgence,
-
-      commentaire,
-    })
+        commentaire,
+      }
+    )
   }
 
-  // =========================================================
-  // PAGE
-  // =========================================================
-
   return (
-    <div className="min-h-[calc(100vh-80px)] bg-[#faf8f4] px-4 py-6 sm:px-6 lg:px-8 xl:px-10">
+    <div
+      dir={i18n.dir()}
+      className="min-h-[calc(100vh-80px)] bg-[#faf8f4] px-4 py-6 sm:px-6 lg:px-8 xl:px-10"
+    >
       <div className="mx-auto w-full max-w-[1500px]">
 
-        {/* ===================================================
-            RETOUR
-        =================================================== */}
-
         <Link
-          to={getSafeBackPath()}
+          to={
+            getSafeBackPath()
+          }
           className="inline-flex items-center gap-2 rounded-2xl px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-orange-50 hover:text-[#d94a0b]"
         >
-          <span>←</span>
-          <span>Retour</span>
+          <span
+            aria-hidden="true"
+          >
+            {i18n.dir() ===
+            'rtl'
+              ? '→'
+              : '←'}
+          </span>
+
+          <span>
+            {t(
+              'createPoint.back',
+              'Retour'
+            )}
+          </span>
         </Link>
 
         <div className="mt-5 grid gap-8 xl:grid-cols-[1.15fr_0.85fr] xl:items-start">
 
-          {/* =================================================
-              FORMULAIRE
-          ================================================= */}
-
           <section>
             <div className="mb-7">
               <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#d94a0b]">
-                Nouveau signalement
+                {t(
+                  'createPoint.newReport',
+                  'Nouveau signalement'
+                )}
               </p>
 
               <h1 className="mt-3 text-4xl font-black leading-tight tracking-tight text-slate-950 sm:text-5xl">
-                Signaler un point
+                {t(
+                  'createPoint.title',
+                  'Signaler un point'
+                )}
               </h1>
 
               <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-600 sm:text-lg">
-                Choisis une adresse proposée automatiquement.
-                La latitude et la longitude seront remplies
-                sans saisie manuelle.
+                {t(
+                  'createPoint.description',
+                  'Choisis une adresse proposée automatiquement. La latitude et la longitude seront remplies sans saisie manuelle.'
+                )}
               </p>
             </div>
 
             <form
-              onSubmit={handleSubmit}
+              onSubmit={
+                handleSubmit
+              }
               className="rounded-[2rem] border border-[#eadfd6] bg-white p-5 shadow-sm sm:p-7 lg:p-8"
             >
-
-              {/* =============================================
-                  MESSAGE SUCCÈS
-              ============================================= */}
-
               {successMessage && (
                 <div className="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-bold text-emerald-700">
-                  {successMessage}
+                  {
+                    successMessage
+                  }
                 </div>
               )}
-
-              {/* =============================================
-                  ERREUR CRÉATION
-              ============================================= */}
 
               {createPointMutation.isError && (
                 <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700">
                   {(createPointMutation.error as Error)
                     ?.message ||
-                    'Erreur lors de la création du point.'}
+                    t(
+                      'createPoint.createError',
+                      'Erreur lors de la création du point.'
+                    )}
                 </div>
               )}
-
-              {/* =============================================
-                  ERREUR ADRESSE
-              ============================================= */}
 
               {addressError && (
                 <div className="mb-6 rounded-2xl border border-orange-200 bg-orange-50 p-4 text-sm font-medium text-orange-700">
-                  {addressError}
+                  {
+                    addressError
+                  }
                 </div>
               )}
 
-              {/* =============================================
-                  ERREUR POSITION
-              ============================================= */}
-
               {positionError && (
                 <div className="mb-6 rounded-2xl border border-orange-200 bg-orange-50 p-4 text-sm font-medium text-orange-700">
-                  {positionError}
+                  {
+                    positionError
+                  }
                 </div>
               )}
 
               <div className="grid gap-6">
 
-                {/* ===========================================
-                    ADRESSE
-                =========================================== */}
-
                 <div>
                   <label className="mb-2 block text-sm font-bold text-slate-800">
-                    Adresse ou lieu
+                    {t(
+                      'createPoint.address',
+                      'Adresse ou lieu'
+                    )}
                   </label>
 
                   <div className="relative">
                     <div className="flex gap-3">
                       <input
-                        value={adresse}
-                        onChange={(event) =>
+                        value={
+                          adresse
+                        }
+                        onChange={(
+                          event
+                        ) =>
                           handleAddressChange(
-                            event.target.value
+                            event
+                              .target
+                              .value
                           )
                         }
                         onFocus={() =>
-                          setShowAddressSuggestions(true)
+                          setShowAddressSuggestions(
+                            true
+                          )
                         }
                         required
-                        placeholder="Ex : Gare du Nord, Paris 10e"
+                        placeholder={t(
+                          'createPoint.addressPlaceholder',
+                          'Ex : Gare du Nord, Paris 10e'
+                        )}
                         className="min-h-14 flex-1 rounded-2xl border border-slate-300 bg-white px-4 text-base text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#d94a0b] focus:ring-4 focus:ring-orange-100"
                       />
 
                       <button
                         type="button"
                         onClick={() =>
-                          setShowAddressSuggestions(true)
+                          setShowAddressSuggestions(
+                            true
+                          )
                         }
                         className="hidden h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-slate-300 bg-white text-sm font-black text-slate-500 transition hover:bg-orange-50 hover:text-[#d94a0b] sm:flex"
-                        title="Rechercher une adresse"
+                        title={t(
+                          'createPoint.searchAddress',
+                          'Rechercher une adresse'
+                        )}
                       >
                         OK
                       </button>
                     </div>
 
-                    {/* =======================================
-                        SUGGESTIONS ADRESSE
-                    ======================================= */}
-
                     {showAddressSuggestions &&
-                      adresse.trim().length >= 3 && (
+                      adresse
+                        .trim()
+                        .length >=
+                        3 && (
                         <div className="absolute left-0 right-0 top-16 z-50 max-h-80 overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-slate-900/10">
 
                           {isSearchingAddress && (
                             <div className="px-4 py-3 text-sm text-slate-500">
-                              Recherche des adresses...
+                              {t(
+                                'createPoint.searchingAddresses',
+                                'Recherche des adresses...'
+                              )}
                             </div>
                           )}
 
@@ -541,13 +810,18 @@ export default function CreatePointPage() {
                             addressSuggestions.length ===
                               0 && (
                               <div className="px-4 py-3 text-sm text-slate-500">
-                                Aucune adresse trouvée.
+                                {t(
+                                  'createPoint.noAddressFound',
+                                  'Aucune adresse trouvée.'
+                                )}
                               </div>
                             )}
 
                           {!isSearchingAddress &&
                             addressSuggestions.map(
-                              (suggestion) => (
+                              (
+                                suggestion
+                              ) => (
                                 <button
                                   key={`${suggestion.label}-${suggestion.latitude}-${suggestion.longitude}`}
                                   type="button"
@@ -584,17 +858,19 @@ export default function CreatePointPage() {
                       )}
                   </div>
 
-                  {/* =========================================
-                      ACTIONS ADRESSE
-                  ========================================= */}
-
                   <div className="mt-3 flex flex-wrap gap-3">
+
                     <button
                       type="button"
-                      onClick={useCurrentPosition}
+                      onClick={
+                        useCurrentPosition
+                      }
                       className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-50"
                     >
-                      Ma position
+                      {t(
+                        'createPoint.myPosition',
+                        'Ma position'
+                      )}
                     </button>
 
                     {canAccessMap() && (
@@ -602,231 +878,299 @@ export default function CreatePointPage() {
                         to="/carte"
                         className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-50"
                       >
-                        Carte
+                        {t(
+                          'createPoint.map',
+                          'Carte'
+                        )}
                       </Link>
                     )}
                   </div>
 
-                  {/* =========================================
-                      COORDONNÉES
-                  ========================================= */}
-
                   {hasCoordinates && (
                     <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
-                      Coordonnées récupérées
-                      automatiquement.
+                      {t(
+                        'createPoint.coordinatesRetrieved',
+                        'Coordonnées récupérées automatiquement.'
+                      )}
+
                       <br />
 
                       <span className="font-semibold">
-                        Latitude : {latitude}
+                        {t(
+                          'createPoint.latitude',
+                          'Latitude'
+                        )}{' '}
+                        :{' '}
+                        {
+                          latitude
+                        }
                       </span>
 
                       {' · '}
 
                       <span className="font-semibold">
-                        Longitude : {longitude}
+                        {t(
+                          'createPoint.longitude',
+                          'Longitude'
+                        )}{' '}
+                        :{' '}
+                        {
+                          longitude
+                        }
                       </span>
                     </div>
                   )}
                 </div>
 
-                {/* ===========================================
-                    NOMBRE DE PERSONNES
-                =========================================== */}
-
                 <div>
                   <label className="mb-2 block text-sm font-bold text-slate-800">
-                    Nombre de personnes estimé
+                    {t(
+                      'createPoint.estimatedPeople',
+                      'Nombre de personnes estimé'
+                    )}
                   </label>
 
                   <input
-                    value={nombrePersonnesEstime}
-                    onChange={(event) =>
+                    value={
+                      nombrePersonnesEstime
+                    }
+                    onChange={(
+                      event
+                    ) =>
                       setNombrePersonnesEstime(
-                        event.target.value
+                        event
+                          .target
+                          .value
                       )
                     }
                     required
                     type="number"
                     min="1"
-                    placeholder="Ex : 20"
+                    placeholder={t(
+                      'createPoint.peoplePlaceholder',
+                      'Ex : 20'
+                    )}
                     className="min-h-14 w-full rounded-2xl border border-slate-300 bg-white px-4 text-base text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#d94a0b] focus:ring-4 focus:ring-orange-100"
                   />
                 </div>
 
-                {/* ===========================================
-                    URGENCE
-                =========================================== */}
-
                 <div>
                   <label className="mb-3 block text-sm font-bold text-slate-800">
-                    Niveau d’urgence
+                    {t(
+                      'createPoint.urgencyLevel',
+                      'Niveau d’urgence'
+                    )}
                   </label>
 
                   <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                    {urgencyOptions.map((option) => {
-                      const isSelected =
-                        niveauUrgence ===
-                        option.value
+                    {urgencyOptions.map(
+                      (
+                        option
+                      ) => {
+                        const isSelected =
+                          niveauUrgence ===
+                          option.value
 
-                      return (
-                        <button
-                          key={option.value}
-                          type="button"
-                          onClick={() => {
-                            setNiveauUrgence(
+                        return (
+                          <button
+                            key={
                               option.value
-                            )
+                            }
+                            type="button"
+                            onClick={() => {
+                              setNiveauUrgence(
+                                option.value
+                              )
 
-                            setSuccessMessage('')
-                          }}
-                          className={[
-                            'rounded-2xl border p-4 text-left transition',
+                              setSuccessMessage(
+                                ''
+                              )
+                            }}
+                            className={[
+                              'rounded-2xl border p-4 text-left transition',
 
-                            isSelected
-                              ? 'border-[#d94a0b] bg-orange-50 ring-4 ring-orange-100'
-                              : 'border-slate-200 bg-white hover:border-orange-200 hover:bg-orange-50/50',
-                          ].join(' ')}
-                        >
-                          <div className="text-base font-black text-slate-950">
-                            {option.label}
-                          </div>
+                              isSelected
+                                ? 'border-[#d94a0b] bg-orange-50 ring-4 ring-orange-100'
+                                : 'border-slate-200 bg-white hover:border-orange-200 hover:bg-orange-50/50',
+                            ].join(
+                              ' '
+                            )}
+                          >
+                            <div className="text-base font-black text-slate-950">
+                              {getUrgencyLabel(
+                                option.value
+                              )}
+                            </div>
 
-                          <p className="mt-1 text-sm text-slate-500">
-                            {option.description}
-                          </p>
-                        </button>
-                      )
-                    })}
+                            <p className="mt-1 text-sm text-slate-500">
+                              {getUrgencyDescription(
+                                option.value
+                              )}
+                            </p>
+                          </button>
+                        )
+                      }
+                    )}
                   </div>
                 </div>
 
-                {/* ===========================================
-                    BESOINS OBSERVÉS
-                =========================================== */}
+                {/* ================================
+                    BESOINS AVEC ICONES LUCIDE
+                ================================= */}
 
                 <div>
                   <label className="mb-3 block text-sm font-bold text-slate-800">
-                    Besoins observés
+                    {t(
+                      'createPoint.observedNeeds',
+                      'Besoins observés'
+                    )}
                   </label>
 
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-7">
-                    {needsOptions.map((option) => {
-                      const isSelected =
-                        besoins.includes(
-                          option.value
-                        )
+                    {needsOptions.map(
+                      (
+                        option
+                      ) => {
+                        const isSelected =
+                          besoins.includes(
+                            option.value
+                          )
 
-                      return (
-                        <button
-                          key={option.value}
-                          type="button"
-                          onClick={() =>
-                            toggleBesoin(
+                        const Icon =
+                          option.icon
+
+                        return (
+                          <button
+                            key={
                               option.value
-                            )
-                          }
-                          className={[
-                            'relative flex min-h-[110px] flex-col items-center justify-center rounded-2xl border p-3 text-center transition',
-
-                            isSelected
-                              ? 'border-[#d94a0b] bg-orange-50 ring-4 ring-orange-100'
-                              : 'border-slate-200 bg-white hover:border-orange-200 hover:bg-orange-50/50',
-                          ].join(' ')}
-                        >
-
-                          {/* =================================
-                              CHECK SI SÉLECTIONNÉ
-                          ================================= */}
-
-                          {isSelected && (
-                            <span className="absolute right-3 top-3 flex h-6 w-6 items-center justify-center rounded-full bg-[#d94a0b] text-xs font-black text-white">
-                              ✓
-                            </span>
-                          )}
-
-                          {/* =================================
-                              ICÔNE
-                          ================================= */}
-
-                          <span className="text-3xl leading-none">
-                            {option.icon}
-                          </span>
-
-                          {/* =================================
-                              NOM DU BESOIN
-                          ================================= */}
-
-                          <div
+                            }
+                            type="button"
+                            onClick={() =>
+                              toggleBesoin(
+                                option.value
+                              )
+                            }
+                            aria-pressed={
+                              isSelected
+                            }
                             className={[
-                              'mt-3 text-sm font-bold',
+                              'group flex min-h-[112px] flex-col items-center justify-center gap-3 rounded-2xl border p-3 text-center transition',
 
                               isSelected
-                                ? 'text-[#d94a0b]'
-                                : 'text-slate-800',
-                            ].join(' ')}
+                                ? 'border-[#d94a0b] bg-orange-50 ring-4 ring-orange-100'
+                                : 'border-slate-200 bg-white hover:border-orange-200 hover:bg-orange-50/50',
+                            ].join(
+                              ' '
+                            )}
                           >
-                            {option.label}
-                          </div>
-                        </button>
-                      )
-                    })}
+                            <Icon
+                              size={
+                                28
+                              }
+                              strokeWidth={
+                                1.8
+                              }
+                              aria-hidden="true"
+                              className={
+                                isSelected
+                                  ? 'text-[#d94a0b]'
+                                  : 'text-slate-500 transition group-hover:text-[#d94a0b]'
+                              }
+                            />
+
+                            <span
+                              className={[
+                                'text-sm font-black',
+
+                                isSelected
+                                  ? 'text-[#d94a0b]'
+                                  : 'text-slate-800',
+                              ].join(
+                                ' '
+                              )}
+                            >
+                              {getNeedLabel(
+                                option.value
+                              )}
+                            </span>
+                          </button>
+                        )
+                      }
+                    )}
                   </div>
                 </div>
 
-                {/* ===========================================
-                    TYPOLOGIE
-                =========================================== */}
-
                 <div>
                   <label className="mb-2 block text-sm font-bold text-slate-800">
-                    Typologie
+                    {t(
+                      'createPoint.typology',
+                      'Typologie'
+                    )}
                   </label>
 
                   <input
-                    value={typologie}
-                    onChange={(event) =>
+                    value={
+                      typologie
+                    }
+                    onChange={(
+                      event
+                    ) =>
                       setTypologie(
-                        event.target.value
+                        event
+                          .target
+                          .value
                       )
                     }
-                    placeholder="Ex : familles, hommes seuls, migrants..."
+                    placeholder={t(
+                      'createPoint.typologyPlaceholder',
+                      'Ex : familles, hommes seuls, migrants...'
+                    )}
                     className="min-h-14 w-full rounded-2xl border border-slate-300 bg-white px-4 text-base text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#d94a0b] focus:ring-4 focus:ring-orange-100"
                   />
                 </div>
 
-                {/* ===========================================
-                    COMMENTAIRE
-                =========================================== */}
-
                 <div>
                   <label className="mb-2 block text-sm font-bold text-slate-800">
-                    Commentaire
+                    {t(
+                      'createPoint.comment',
+                      'Commentaire'
+                    )}
                   </label>
 
                   <textarea
-                    value={commentaire}
-                    onChange={(event) =>
+                    value={
+                      commentaire
+                    }
+                    onChange={(
+                      event
+                    ) =>
                       setCommentaire(
-                        event.target.value
+                        event
+                          .target
+                          .value
                       )
                     }
                     rows={5}
-                    placeholder="Observations complémentaires..."
+                    placeholder={t(
+                      'createPoint.commentPlaceholder',
+                      'Observations complémentaires...'
+                    )}
                     className="w-full resize-none rounded-2xl border border-slate-300 bg-white px-4 py-4 text-base text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#d94a0b] focus:ring-4 focus:ring-orange-100"
                   />
                 </div>
 
-                {/* ===========================================
-                    ACTIONS
-                =========================================== */}
-
                 <div className="flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:items-center sm:justify-between">
+
                   <Link
-                    to={getSafeBackPath()}
+                    to={
+                      getSafeBackPath()
+                    }
                     className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-slate-300 bg-white px-5 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
                   >
-                    Annuler
+                    {t(
+                      'createPoint.cancel',
+                      'Annuler'
+                    )}
                   </Link>
 
                   <button
@@ -837,43 +1181,52 @@ export default function CreatePointPage() {
                     className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#d94a0b] px-7 py-3 text-sm font-black text-white shadow-sm transition hover:bg-[#bf3f08] disabled:opacity-60 sm:min-w-56"
                   >
                     {createPointMutation.isPending
-                      ? 'Envoi en cours...'
-                      : 'Envoyer le signalement'}
+                      ? t(
+                          'createPoint.sending',
+                          'Envoi en cours...'
+                        )
+                      : t(
+                          'createPoint.submit',
+                          'Envoyer le signalement'
+                        )}
                   </button>
                 </div>
               </div>
             </form>
           </section>
 
-          {/* =================================================
+          {/* =====================================
               APERÇU DESKTOP
-          ================================================= */}
+          ====================================== */}
 
           <aside className="hidden xl:block">
             <div className="sticky top-28 space-y-5">
 
-              {/* =============================================
-                  APERÇU
-              ============================================= */}
-
               <div className="rounded-[2rem] border border-[#eadfd6] bg-white p-6 shadow-sm">
+
                 <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#d94a0b]">
-                  Aperçu
+                  {t(
+                    'createPoint.preview',
+                    'Aperçu'
+                  )}
                 </p>
 
                 <h2 className="mt-3 text-2xl font-black text-slate-950">
                   {adresse ||
-                    'Adresse du point'}
+                    t(
+                      'createPoint.pointAddress',
+                      'Adresse du point'
+                    )}
                 </h2>
 
-                {/* ===========================================
-                    STATISTIQUES
-                =========================================== */}
-
                 <div className="mt-5 grid grid-cols-2 gap-3">
+
                   <div className="rounded-2xl bg-slate-50 p-4">
                     <p className="text-xs font-bold uppercase text-slate-500">
-                      Personnes
+                      {t(
+                        'createPoint.people',
+                        'Personnes'
+                      )}
                     </p>
 
                     <p className="mt-2 text-3xl font-black text-slate-950">
@@ -884,124 +1237,150 @@ export default function CreatePointPage() {
 
                   <div className="rounded-2xl bg-orange-50 p-4">
                     <p className="text-xs font-bold uppercase text-orange-600">
-                      Urgence
+                      {t(
+                        'createPoint.urgency',
+                        'Urgence'
+                      )}
                     </p>
 
                     <p className="mt-2 text-lg font-black text-orange-700">
-                      {selectedUrgency?.label}
+                      {selectedUrgency
+                        ? getUrgencyLabel(
+                            selectedUrgency.value
+                          )
+                        : '—'}
                     </p>
                   </div>
                 </div>
 
-                {/* ===========================================
-                    COORDONNÉES
-                =========================================== */}
-
                 <div className="mt-5">
                   <p className="text-sm font-bold text-slate-800">
-                    Coordonnées
+                    {t(
+                      'createPoint.coordinates',
+                      'Coordonnées'
+                    )}
                   </p>
 
                   {hasCoordinates ? (
                     <p className="mt-2 text-sm leading-relaxed text-emerald-700">
-                      Coordonnées récupérées
-                      automatiquement.
+                      {t(
+                        'createPoint.coordinatesRetrieved',
+                        'Coordonnées récupérées automatiquement.'
+                      )}
+
                       <br />
 
-                      Latitude :{' '}
+                      {t(
+                        'createPoint.latitude',
+                        'Latitude'
+                      )}{' '}
+                      :{' '}
+
                       <span className="font-bold">
-                        {latitude}
+                        {
+                          latitude
+                        }
                       </span>
 
                       <br />
 
-                      Longitude :{' '}
+                      {t(
+                        'createPoint.longitude',
+                        'Longitude'
+                      )}{' '}
+                      :{' '}
+
                       <span className="font-bold">
-                        {longitude}
+                        {
+                          longitude
+                        }
                       </span>
                     </p>
                   ) : (
                     <p className="mt-2 text-sm leading-relaxed text-slate-500">
-                      Choisis une adresse proposée
-                      ou utilise “Ma position”.
+                      {t(
+                        'createPoint.coordinatesHelp',
+                        'Choisis une adresse proposée ou utilise “Ma position”.'
+                      )}
                     </p>
                   )}
                 </div>
 
-                {/* ===========================================
-                    BESOINS SÉLECTIONNÉS
-                =========================================== */}
-
                 <div className="mt-5">
                   <p className="text-sm font-bold text-slate-800">
-                    Besoins sélectionnés
+                    {t(
+                      'createPoint.selectedNeeds',
+                      'Besoins sélectionnés'
+                    )}
                   </p>
 
-                  {besoins.length === 0 ? (
+                  {besoins.length ===
+                  0 ? (
                     <p className="mt-2 text-sm text-slate-500">
-                      Aucun besoin sélectionné
-                      pour le moment.
+                      {t(
+                        'createPoint.noSelectedNeeds',
+                        'Aucun besoin sélectionné pour le moment.'
+                      )}
                     </p>
                   ) : (
                     <div className="mt-3 flex flex-wrap gap-2">
                       {besoins.map(
-                        (besoin) => {
-                          const need =
-                            needsOptions.find(
-                              (option) =>
-                                option.value ===
-                                besoin
-                            )
-
-                          return (
-                            <span
-                              key={besoin}
-                              className="inline-flex items-center gap-1.5 rounded-full bg-orange-50 px-3 py-1.5 text-xs font-bold text-[#d94a0b] ring-1 ring-orange-200"
-                            >
-                              <span>
-                                {need?.icon}
-                              </span>
-
-                              <span>
-                                {besoin}
-                              </span>
-                            </span>
-                          )
-                        }
+                        (
+                          besoin
+                        ) => (
+                          <span
+                            key={
+                              besoin
+                            }
+                            className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700 ring-1 ring-emerald-200"
+                          >
+                            {getNeedLabel(
+                              besoin
+                            )}
+                          </span>
+                        )
                       )}
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* =============================================
-                  CONSEILS
-              ============================================= */}
-
               <div className="rounded-[2rem] border border-emerald-200 bg-emerald-50 p-6">
                 <h3 className="text-lg font-black text-emerald-900">
-                  Conseils terrain
+                  {t(
+                    'createPoint.fieldTips',
+                    'Conseils terrain'
+                  )}
                 </h3>
 
                 <ul className="mt-4 space-y-3 text-sm leading-relaxed text-emerald-800">
+
                   <li>
-                    Choisis une adresse proposée
-                    dans la liste.
+                    {t(
+                      'createPoint.tipAddress',
+                      'Choisis une adresse proposée dans la liste.'
+                    )}
                   </li>
 
                   <li>
-                    Les coordonnées seront
-                    remplies automatiquement.
+                    {t(
+                      'createPoint.tipCoordinates',
+                      'Les coordonnées seront remplies automatiquement.'
+                    )}
                   </li>
 
                   <li>
-                    Utilise “Ma position” si tu
-                    es sur place.
+                    {t(
+                      'createPoint.tipPosition',
+                      'Utilise “Ma position” si tu es sur place.'
+                    )}
                   </li>
 
                   <li>
-                    Ajoute un commentaire si la
-                    situation est urgente.
+                    {t(
+                      'createPoint.tipComment',
+                      'Ajoute un commentaire si la situation est urgente.'
+                    )}
                   </li>
                 </ul>
               </div>

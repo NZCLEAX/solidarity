@@ -1,57 +1,21 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 
 import { getInterventions } from '@/features/interventions/api/interventions'
 
-function formatDate(value: string | null) {
-  if (!value) return 'Date non renseignée'
-
-  const date = new Date(`${value}T00:00:00`)
-
-  if (Number.isNaN(date.getTime())) {
-    return value
-  }
-
-  return new Intl.DateTimeFormat('fr-FR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  }).format(date)
+const LOCALES: Record<string, string> = {
+  fr: 'fr-FR',
+  en: 'en-GB',
+  es: 'es-ES',
+  ar: 'ar',
 }
 
-function formatTime(value: string | null) {
-  if (!value) return null
-
-  return value.slice(0, 5)
-}
-
-function formatTimeRange(start: string | null, end: string | null) {
-  const formattedStart = formatTime(start)
-  const formattedEnd = formatTime(end)
-
-  if (!formattedStart && !formattedEnd) {
-    return 'Horaire non renseigné'
-  }
-
-  if (formattedStart && formattedEnd) {
-    return `${formattedStart} - ${formattedEnd}`
-  }
-
-  return formattedStart || formattedEnd || 'Horaire non renseigné'
-}
-
-function formatStatus(value: string | null) {
-  if (!value) return 'Non renseigné'
-
-  const labels: Record<string, string> = {
-    prevue: 'Prévue',
-    en_cours: 'En cours',
-    terminee: 'Terminée',
-    annulee: 'Annulée',
-  }
-
-  return labels[value] || value
+function normalizeText(
+  value: string | null | undefined
+) {
+  return value?.toLowerCase().trim() || ''
 }
 
 function getStatusClass(value: string | null) {
@@ -59,10 +23,10 @@ function getStatusClass(value: string | null) {
     case 'prevue':
       return 'bg-blue-50 text-blue-700 ring-blue-200'
 
-    case 'en_cours':
-      return 'bg-orange-50 text-orange-700 ring-orange-200'
+    case 'declaree':
+      return 'bg-indigo-50 text-indigo-700 ring-indigo-200'
 
-    case 'terminee':
+    case 'realisee':
       return 'bg-emerald-50 text-emerald-700 ring-emerald-200'
 
     case 'annulee':
@@ -73,94 +37,276 @@ function getStatusClass(value: string | null) {
   }
 }
 
-function getTypeIcon(type: string | null) {
-  const value = type?.toLowerCase() ?? ''
-
-  if (value.includes('repas')) return '🍽️'
-  if (value.includes('eau')) return '💧'
-  if (value.includes('vêtement') || value.includes('vetement')) return '👕'
-  if (value.includes('maraude')) return '🚶'
-  if (value.includes('soin')) return '🏥'
-  if (value.includes('accompagnement')) return '🤝'
-
-  return '📦'
-}
-
-function normalizeText(value: string | null | undefined) {
-  return value?.toLowerCase().trim() || ''
-}
-
 export default function InterventionsPage() {
-  const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState('all')
+  const { t, i18n } = useTranslation()
+
+  const language = (
+    i18n.resolvedLanguage ??
+    i18n.language ??
+    'fr'
+  )
+    .toLowerCase()
+    .split('-')[0]
+
+  const locale =
+    LOCALES[language] ?? 'fr-FR'
+
+  const [searchTerm, setSearchTerm] =
+    useState('')
+
+  const [statusFilter, setStatusFilter] =
+    useState('all')
 
   const {
     data: interventions = [],
     isLoading,
     isError,
     error,
-    refetch,
-    isFetching,
   } = useQuery({
     queryKey: ['interventions'],
     queryFn: getInterventions,
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
   })
 
-  const filteredInterventions = useMemo(() => {
-    const search = normalizeText(searchTerm)
+  function formatDate(
+    value: string | null
+  ) {
+    if (!value) {
+      return t(
+        'interventions.dateNotProvided',
+        'Date non renseignée'
+      )
+    }
 
-    return interventions.filter((intervention) => {
-      const pointAddress = intervention.points?.adresse || ''
+    const date = new Date(value)
 
-      const content = [
-        intervention.type_aide,
-        intervention.association_nom,
-        pointAddress,
-        intervention.commentaire,
-        intervention.statut,
-        intervention.date_intervention,
-      ]
-        .filter(Boolean)
-        .join(' ')
-        .toLowerCase()
+    if (Number.isNaN(date.getTime())) {
+      return value
+    }
 
-      const matchesSearch =
-        search.length === 0 || content.includes(search)
+    return new Intl.DateTimeFormat(
+      locale,
+      {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      }
+    ).format(date)
+  }
 
-      const normalizedStatus =
-        intervention.statut || 'non_renseigne'
+  function formatTimeRange(
+    start: string | null,
+    end: string | null
+  ) {
+    if (!start && !end) {
+      return t(
+        'interventions.timeNotProvided',
+        'Horaire non renseigné'
+      )
+    }
 
-      const matchesStatus =
-        statusFilter === 'all' ||
-        normalizedStatus === statusFilter
+    if (start && end) {
+      return `${start} - ${end}`
+    }
 
-      return matchesSearch && matchesStatus
-    })
-  }, [interventions, searchTerm, statusFilter])
+    return (
+      start ||
+      end ||
+      t(
+        'interventions.timeNotProvided',
+        'Horaire non renseigné'
+      )
+    )
+  }
 
-  const totalRepas = filteredInterventions.reduce(
-    (total, intervention) =>
-      total + (intervention.nombre_repas ?? 0),
-    0
-  )
+  function formatStatus(
+    value: string | null
+  ) {
+    switch (value) {
+      case 'prevue':
+        return t(
+          'interventions.statusPlanned',
+          'Prévue'
+        )
 
-  const totalBenevoles = filteredInterventions.reduce(
-    (total, intervention) =>
-      total + (intervention.nombre_benevoles ?? 0),
-    0
-  )
+      case 'declaree':
+        return t(
+          'interventions.statusDeclared',
+          'Déclarée'
+        )
+
+      case 'realisee':
+        return t(
+          'interventions.statusCompleted',
+          'Réalisée'
+        )
+
+      case 'annulee':
+        return t(
+          'interventions.statusCancelled',
+          'Annulée'
+        )
+
+      default:
+        return (
+          value ||
+          t(
+            'interventions.notProvided',
+            'Non renseigné'
+          )
+        )
+    }
+  }
+
+  function formatAidType(
+    value: string | null | undefined
+  ) {
+    switch (value) {
+      case 'Distribution de repas':
+        return t(
+          'interventions.aidMeals',
+          'Distribution de repas'
+        )
+
+      case "Distribution d'eau":
+        return t(
+          'interventions.aidWater',
+          "Distribution d'eau"
+        )
+
+      case 'Distribution de vêtements':
+        return t(
+          'interventions.aidClothing',
+          'Distribution de vêtements'
+        )
+
+      case 'Maraude':
+        return t(
+          'interventions.aidOutreach',
+          'Maraude'
+        )
+
+      case 'Soins':
+        return t(
+          'interventions.aidCare',
+          'Soins'
+        )
+
+      case 'Accompagnement social':
+        return t(
+          'interventions.aidSocialSupport',
+          'Accompagnement social'
+        )
+
+      case 'Autre':
+        return t(
+          'interventions.aidOther',
+          'Autre'
+        )
+
+      default:
+        return (
+          value ||
+          t(
+            'interventions.intervention',
+            'Intervention'
+          )
+        )
+    }
+  }
+
+  const filteredInterventions =
+    useMemo(() => {
+      const search =
+        normalizeText(searchTerm)
+
+      return interventions.filter(
+        (intervention) => {
+          const pointAddress =
+            intervention.points?.adresse ||
+            ''
+
+          const translatedAid =
+            formatAidType(
+              intervention.type_aide
+            )
+
+          const translatedStatus =
+            formatStatus(
+              intervention.statut
+            )
+
+          const content = [
+            intervention.type_aide,
+            translatedAid,
+            pointAddress,
+            intervention.commentaire,
+            intervention.statut,
+            translatedStatus,
+            intervention.date_intervention,
+          ]
+            .filter(Boolean)
+            .join(' ')
+            .toLowerCase()
+
+          const matchesSearch =
+            search.length === 0 ||
+            content.includes(search)
+
+          const normalizedStatus =
+            intervention.statut ||
+            'non_renseigne'
+
+          const matchesStatus =
+            statusFilter === 'all' ||
+            normalizedStatus ===
+              statusFilter
+
+          return (
+            matchesSearch &&
+            matchesStatus
+          )
+        }
+      )
+    }, [
+      interventions,
+      searchTerm,
+      statusFilter,
+      i18n.resolvedLanguage,
+      i18n.language,
+    ])
+
+  const totalRepas =
+    filteredInterventions.reduce(
+      (total, intervention) =>
+        total +
+        (intervention.nombre_repas ??
+          0),
+      0
+    )
+
+  const totalBenevoles =
+    filteredInterventions.reduce(
+      (total, intervention) =>
+        total +
+        (intervention.nombre_benevoles ??
+          0),
+      0
+    )
 
   const pointsCouverts = new Set(
     filteredInterventions
-      .map((intervention) => intervention.point_id)
+      .map(
+        (intervention) =>
+          intervention.point_id
+      )
       .filter(Boolean)
   ).size
 
-  const upcomingCount = filteredInterventions.filter(
-    (intervention) => intervention.statut === 'prevue'
-  ).length
+  const upcomingCount =
+    filteredInterventions.filter(
+      (intervention) =>
+        intervention.statut === 'prevue'
+    ).length
 
   function resetFilters() {
     setSearchTerm('')
@@ -168,39 +314,44 @@ export default function InterventionsPage() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-80px)] bg-[#faf8f4] px-4 py-6 sm:px-6 lg:px-8 xl:px-10">
+    <div
+      dir={i18n.dir()}
+      className="min-h-[calc(100vh-80px)] bg-[#faf8f4] px-4 py-6 sm:px-6 lg:px-8 xl:px-10"
+    >
       <div className="mx-auto w-full max-w-[1600px]">
         <div className="mb-8 flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
           <div>
             <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#d94a0b]">
-              Actions terrain
+              {t(
+                'interventions.fieldActions',
+                'Actions terrain'
+              )}
             </p>
 
             <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl xl:text-5xl">
-              Interventions
+              {t(
+                'interventions.title',
+                'Interventions'
+              )}
             </h1>
 
             <p className="mt-3 max-w-3xl text-base leading-relaxed text-slate-600 sm:text-lg">
-              Suivi des interventions déclarées par les associations :
-              distributions, bénévoles mobilisés et repas distribués.
+              {t(
+                'interventions.description',
+                'Suivi des interventions déclarées par les associations : distributions, bénévoles mobilisés et repas distribués.'
+              )}
             </p>
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row">
-            <button
-              type="button"
-              onClick={() => refetch()}
-              disabled={isFetching}
-              className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-slate-300 bg-white px-5 py-3 text-sm font-black text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
-            >
-              {isFetching ? 'Actualisation...' : 'Actualiser'}
-            </button>
-
             <Link
               to="/interventions/new"
-              className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#d94a0b] px-6 py-3 text-sm font-black text-white shadow-sm transition hover:bg-[#b93607]"
+              className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-indigo-600 px-6 py-3 text-sm font-black text-white shadow-sm transition hover:bg-indigo-700"
             >
-              + Nouvelle intervention
+              {t(
+                'interventions.newIntervention',
+                '+ Nouvelle intervention'
+              )}
             </Link>
           </div>
         </div>
@@ -208,7 +359,10 @@ export default function InterventionsPage() {
         <section className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <article className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm">
             <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
-              Interventions
+              {t(
+                'interventions.title',
+                'Interventions'
+              )}
             </p>
 
             <p className="mt-3 text-4xl font-black text-slate-950">
@@ -216,13 +370,19 @@ export default function InterventionsPage() {
             </p>
 
             <p className="mt-2 text-sm font-medium text-slate-500">
-              Action(s) affichée(s)
+              {t(
+                'interventions.actionsDisplayed',
+                'Action(s) affichée(s)'
+              )}
             </p>
           </article>
 
           <article className="rounded-[1.5rem] border border-blue-200 bg-blue-50 p-5 shadow-sm">
             <p className="text-xs font-bold uppercase tracking-wide text-blue-600">
-              Prévues
+              {t(
+                'interventions.planned',
+                'Prévues'
+              )}
             </p>
 
             <p className="mt-3 text-4xl font-black text-blue-700">
@@ -230,13 +390,19 @@ export default function InterventionsPage() {
             </p>
 
             <p className="mt-2 text-sm font-medium text-blue-600">
-              À organiser
+              {t(
+                'interventions.toOrganize',
+                'À organiser'
+              )}
             </p>
           </article>
 
           <article className="rounded-[1.5rem] border border-emerald-200 bg-emerald-50 p-5 shadow-sm">
             <p className="text-xs font-bold uppercase tracking-wide text-emerald-600">
-              Repas
+              {t(
+                'interventions.mealsDistributed',
+                'Repas distribués'
+              )}
             </p>
 
             <p className="mt-3 text-4xl font-black text-emerald-700">
@@ -244,13 +410,19 @@ export default function InterventionsPage() {
             </p>
 
             <p className="mt-2 text-sm font-medium text-emerald-600">
-              Total déclaré
+              {t(
+                'interventions.totalDeclared',
+                'Total déclaré'
+              )}
             </p>
           </article>
 
           <article className="rounded-[1.5rem] border border-orange-200 bg-orange-50 p-5 shadow-sm">
             <p className="text-xs font-bold uppercase tracking-wide text-orange-600">
-              Bénévoles
+              {t(
+                'interventions.volunteers',
+                'Bénévoles'
+              )}
             </p>
 
             <p className="mt-3 text-4xl font-black text-orange-700">
@@ -258,7 +430,10 @@ export default function InterventionsPage() {
             </p>
 
             <p className="mt-2 text-sm font-medium text-orange-600">
-              Mobilisé(s)
+              {t(
+                'interventions.mobilized',
+                'Mobilisé(s)'
+              )}
             </p>
           </article>
         </section>
@@ -267,54 +442,85 @@ export default function InterventionsPage() {
           <div className="grid gap-4 xl:grid-cols-[1fr_260px_auto] xl:items-end">
             <div>
               <label className="mb-2 block text-sm font-bold text-slate-700">
-                Rechercher une intervention
+                {t(
+                  'interventions.searchLabel',
+                  'Rechercher une intervention'
+                )}
               </label>
 
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(event) =>
-                  setSearchTerm(event.target.value)
+                  setSearchTerm(
+                    event.target.value
+                  )
                 }
-                placeholder="Association, type d’aide, adresse, commentaire..."
+                placeholder={t(
+                  'interventions.searchPlaceholder',
+                  'Type d’aide, point concerné, commentaire...'
+                )}
                 className="min-h-12 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#d94a0b] focus:ring-4 focus:ring-orange-100"
               />
             </div>
 
             <div>
               <label className="mb-2 block text-sm font-bold text-slate-700">
-                Statut
+                {t(
+                  'interventions.status',
+                  'Statut'
+                )}
               </label>
 
               <select
                 value={statusFilter}
                 onChange={(event) =>
-                  setStatusFilter(event.target.value)
+                  setStatusFilter(
+                    event.target.value
+                  )
                 }
                 className="min-h-12 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-[#d94a0b] focus:ring-4 focus:ring-orange-100"
               >
                 <option value="all">
-                  Tous les statuts
+                  {t(
+                    'interventions.allStatuses',
+                    'Tous les statuts'
+                  )}
                 </option>
 
                 <option value="prevue">
-                  Prévue
+                  {t(
+                    'interventions.statusPlanned',
+                    'Prévue'
+                  )}
                 </option>
 
-                <option value="en_cours">
-                  En cours
+                <option value="declaree">
+                  {t(
+                    'interventions.statusDeclared',
+                    'Déclarée'
+                  )}
                 </option>
 
-                <option value="terminee">
-                  Terminée
+                <option value="realisee">
+                  {t(
+                    'interventions.statusCompleted',
+                    'Réalisée'
+                  )}
                 </option>
 
                 <option value="annulee">
-                  Annulée
+                  {t(
+                    'interventions.statusCancelled',
+                    'Annulée'
+                  )}
                 </option>
 
                 <option value="non_renseigne">
-                  Non renseigné
+                  {t(
+                    'interventions.notProvided',
+                    'Non renseigné'
+                  )}
                 </option>
               </select>
             </div>
@@ -324,61 +530,89 @@ export default function InterventionsPage() {
               onClick={resetFilters}
               className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-slate-300 bg-slate-50 px-5 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-100"
             >
-              Réinitialiser
+              {t(
+                'interventions.reset',
+                'Réinitialiser'
+              )}
             </button>
           </div>
 
           <div className="mt-4 flex flex-wrap gap-2 text-sm text-slate-500">
             <span>
-              {filteredInterventions.length} intervention(s)
-              affichée(s)
+              {t(
+                'interventions.interventionsDisplayed',
+                '{{count}} intervention(s) affichée(s)',
+                {
+                  count:
+                    filteredInterventions.length,
+                }
+              )}
             </span>
 
             <span>•</span>
 
             <span>
-              {pointsCouverts} point(s) couvert(s)
+              {t(
+                'interventions.pointsCovered',
+                '{{count}} point(s) couvert(s)',
+                {
+                  count: pointsCouverts,
+                }
+              )}
             </span>
           </div>
         </section>
 
         {isLoading && (
           <div className="rounded-[2rem] border border-slate-200 bg-white p-8 text-slate-600 shadow-sm">
-            Chargement des interventions...
+            {t(
+              'interventions.loading',
+              'Chargement des interventions...'
+            )}
           </div>
         )}
 
         {isError && (
           <div className="rounded-[2rem] border border-red-200 bg-red-50 p-8 text-red-700 shadow-sm">
             {(error as Error)?.message ||
-              'Erreur lors du chargement des interventions.'}
+              t(
+                'interventions.loadingError',
+                'Erreur lors du chargement des interventions.'
+              )}
           </div>
         )}
 
         {!isLoading &&
           !isError &&
-          filteredInterventions.length === 0 && (
+          filteredInterventions.length ===
+            0 && (
             <div className="rounded-[2rem] border border-dashed border-slate-300 bg-white p-10 text-center shadow-sm">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-100 text-2xl">
-                📅
-              </div>
-
-              <h2 className="mt-4 text-xl font-black text-slate-950">
-                Aucune intervention trouvée
+              <h2 className="text-xl font-black text-slate-950">
+                {t(
+                  'interventions.noneFound',
+                  'Aucune intervention trouvée'
+                )}
               </h2>
 
               <p className="mt-2 text-sm text-slate-500">
-                Aucune intervention ne correspond aux filtres
-                actuellement sélectionnés.
+                {t(
+                  'interventions.noneFoundDescription',
+                  'Essaie de modifier ta recherche ou de créer une nouvelle intervention.'
+                )}
               </p>
 
-              {(searchTerm || statusFilter !== 'all') && (
+              {(searchTerm ||
+                statusFilter !==
+                  'all') && (
                 <button
                   type="button"
                   onClick={resetFilters}
                   className="mt-5 inline-flex min-h-11 items-center justify-center rounded-xl bg-[#d94a0b] px-5 text-sm font-black text-white"
                 >
-                  Réinitialiser les filtres
+                  {t(
+                    'interventions.resetFilters',
+                    'Réinitialiser les filtres'
+                  )}
                 </button>
               )}
             </div>
@@ -386,143 +620,165 @@ export default function InterventionsPage() {
 
         {!isLoading &&
           !isError &&
-          filteredInterventions.length > 0 && (
+          filteredInterventions.length >
+            0 && (
             <div className="grid gap-5">
-              {filteredInterventions.map((intervention) => (
-                <article
-                  key={intervention.id}
-                  className="rounded-[2rem] border border-[#eadfd6] bg-white p-5 shadow-sm transition hover:shadow-md sm:p-6"
-                >
-                  <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                        <div>
-                          <div className="flex flex-wrap items-center gap-3">
-                            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-orange-50 text-xl">
-                              {getTypeIcon(
-                                intervention.type_aide
-                              )}
-                            </div>
-
-                            <div>
+              {filteredInterventions.map(
+                (intervention) => (
+                  <article
+                    key={intervention.id}
+                    className="rounded-[2rem] border border-[#eadfd6] bg-white p-5 shadow-sm transition hover:shadow-md sm:p-6"
+                  >
+                    <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                          <div>
+                            <div className="flex flex-wrap items-center gap-3">
                               <h2 className="text-xl font-black text-slate-950 sm:text-2xl">
-                                {intervention.type_aide ||
-                                  'Intervention'}
+                                {formatAidType(
+                                  intervention.type_aide
+                                )}
                               </h2>
 
-                              {intervention.association_nom && (
-                                <p className="mt-0.5 text-sm font-bold text-[#d94a0b]">
-                                  {
-                                    intervention.association_nom
-                                  }
-                                </p>
-                              )}
+                              <span
+                                className={`rounded-full px-3 py-1 text-xs font-bold ring-1 ${getStatusClass(
+                                  intervention.statut
+                                )}`}
+                              >
+                                {formatStatus(
+                                  intervention.statut
+                                )}
+                              </span>
                             </div>
 
-                            <span
-                              className={`rounded-full px-3 py-1 text-xs font-bold ring-1 ${getStatusClass(
-                                intervention.statut
-                              )}`}
-                            >
-                              {formatStatus(
-                                intervention.statut
+                            <p className="mt-2 text-sm font-medium text-slate-500">
+                              {t(
+                                'interventions.concernedPoint',
+                                'Point concerné :'
+                              )}{' '}
+
+                              <span className="font-bold text-slate-700">
+                                {intervention
+                                  .points
+                                  ?.adresse ||
+                                  t(
+                                    'interventions.pointNotProvided',
+                                    'Point non renseigné'
+                                  )}
+                              </span>
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                          <div className="rounded-2xl bg-slate-50 p-4">
+                            <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
+                              {t(
+                                'interventions.date',
+                                'Date'
                               )}
-                            </span>
-                          </div>
-
-                          <p className="mt-3 text-sm font-medium text-slate-500">
-                            Point concerné :{' '}
-                            <span className="font-bold text-slate-700">
-                              {intervention.points?.adresse ||
-                                'Point non renseigné'}
-                            </span>
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                        <div className="rounded-2xl bg-slate-50 p-4">
-                          <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
-                            Date
-                          </p>
-
-                          <p className="mt-2 font-black text-slate-950">
-                            {formatDate(
-                              intervention.date_intervention
-                            )}
-                          </p>
-                        </div>
-
-                        <div className="rounded-2xl bg-slate-50 p-4">
-                          <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
-                            Horaires
-                          </p>
-
-                          <p className="mt-2 font-black text-slate-950">
-                            {formatTimeRange(
-                              intervention.heure_debut,
-                              intervention.heure_fin
-                            )}
-                          </p>
-                        </div>
-
-                        <div className="rounded-2xl bg-emerald-50 p-4">
-                          <p className="text-xs font-bold uppercase tracking-wide text-emerald-600">
-                            Repas
-                          </p>
-
-                          <p className="mt-2 text-2xl font-black text-emerald-700">
-                            {intervention.nombre_repas ?? 0}
-                          </p>
-                        </div>
-
-                        <div className="rounded-2xl bg-orange-50 p-4">
-                          <p className="text-xs font-bold uppercase tracking-wide text-orange-600">
-                            Bénévoles
-                          </p>
-
-                          <p className="mt-2 text-2xl font-black text-orange-700">
-                            {intervention.nombre_benevoles ??
-                              0}
-                          </p>
-                        </div>
-                      </div>
-
-                      {intervention.commentaire &&
-                        intervention.commentaire.trim()
-                          .length > 0 && (
-                          <div className="mt-5 rounded-2xl bg-slate-50 p-4">
-                            <p className="mb-2 text-sm font-bold text-slate-700">
-                              Commentaire
                             </p>
 
-                            <p className="text-sm leading-relaxed text-slate-600">
-                              {intervention.commentaire}
+                            <p className="mt-2 font-black text-slate-950">
+                              {formatDate(
+                                intervention.date_intervention
+                              )}
                             </p>
                           </div>
+
+                          <div className="rounded-2xl bg-slate-50 p-4">
+                            <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
+                              {t(
+                                'interventions.schedule',
+                                'Horaires'
+                              )}
+                            </p>
+
+                            <p className="mt-2 font-black text-slate-950">
+                              {formatTimeRange(
+                                intervention.heure_debut,
+                                intervention.heure_fin
+                              )}
+                            </p>
+                          </div>
+
+                          <div className="rounded-2xl bg-emerald-50 p-4">
+                            <p className="text-xs font-bold uppercase tracking-wide text-emerald-600">
+                              {t(
+                                'interventions.meals',
+                                'Repas'
+                              )}
+                            </p>
+
+                            <p className="mt-2 text-2xl font-black text-emerald-700">
+                              {intervention.nombre_repas ??
+                                0}
+                            </p>
+                          </div>
+
+                          <div className="rounded-2xl bg-orange-50 p-4">
+                            <p className="text-xs font-bold uppercase tracking-wide text-orange-600">
+                              {t(
+                                'interventions.volunteers',
+                                'Bénévoles'
+                              )}
+                            </p>
+
+                            <p className="mt-2 text-2xl font-black text-orange-700">
+                              {intervention.nombre_benevoles ??
+                                0}
+                            </p>
+                          </div>
+                        </div>
+
+                        {intervention.commentaire &&
+                          intervention.commentaire.trim()
+                            .length >
+                            0 && (
+                            <div className="mt-5 rounded-2xl bg-slate-50 p-4">
+                              <p className="mb-2 text-sm font-bold text-slate-700">
+                                {t(
+                                  'interventions.comment',
+                                  'Commentaire'
+                                )}
+                              </p>
+
+                              <p className="text-sm leading-relaxed text-slate-600">
+                                {
+                                  intervention.commentaire
+                                }
+                              </p>
+                            </div>
+                          )}
+                      </div>
+
+                      <div className="flex w-full flex-col gap-3 xl:w-auto xl:min-w-[190px]">
+                        {intervention.point_id && (
+                          <Link
+                            to={`/points/${intervention.point_id}`}
+                            className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-slate-300 bg-white px-5 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+                          >
+                            {t(
+                              'interventions.viewPoint',
+                              'Voir le point'
+                            )}
+                          </Link>
                         )}
-                    </div>
 
-                    <div className="flex w-full flex-col gap-3 xl:w-auto xl:min-w-[190px]">
-                      {intervention.point_id && (
                         <Link
-                          to={`/points/${intervention.point_id}`}
-                          className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-slate-300 bg-white px-5 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+                          to="/carte"
+                          className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-[#d94a0b] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#b93607]"
                         >
-                          Voir le point
+                          {t(
+                            'interventions.viewOnMap',
+                            'Voir sur la carte'
+                          )}
                         </Link>
-                      )}
-
-                      <Link
-                        to="/carte"
-                        className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-[#d94a0b] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#b93607]"
-                      >
-                        Voir sur la carte
-                      </Link>
+                      </div>
                     </div>
-                  </div>
-                </article>
-              ))}
+                  </article>
+                )
+              )}
             </div>
           )}
       </div>

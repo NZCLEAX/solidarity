@@ -1,9 +1,14 @@
-import { createBrowserRouter, Navigate } from 'react-router-dom'
+import {
+  createBrowserRouter,
+  Navigate,
+} from 'react-router-dom'
 
 import { AuthLayout } from './layouts/AuthLayout'
 
 import LoginPage from '@/features/auth/pages/LoginPage'
 import RegisterPage from '@/features/auth/pages/RegisterPage'
+import ForgotPasswordPage from '@/features/auth/pages/ForgotPasswordPage'
+import ResetPasswordPage from '@/features/auth/pages/ResetPasswordPage'
 import RequireAccess from '@/features/auth/components/RequireAccess'
 
 import AdminPage from '@/features/admin/pages/AdminPage'
@@ -26,8 +31,10 @@ import PointDetailsPage from '@/features/points/pages/PointDetailsPage'
 
 import ProfilePage from '@/features/profile/pages/ProfilePage'
 import SettingsPage from '@/features/settings/pages/SettingsPage'
+
 import TermsPage from '@/features/legal/pages/TermsPage'
 import PrivacyPage from '@/features/legal/pages/PrivacyPage'
+import LegalNoticePage from '@/features/legal/pages/LegalNoticePage'
 
 import AssociationsPage from '@/features/associations/pages/AssociationsPage'
 import AssociationRequestsPage from '@/features/associations/pages/AssociationRequestsPage'
@@ -40,14 +47,35 @@ import NotificationsPage from '@/features/notifications/pages/NotificationsPage'
 import AppLayout from '@/shared/components/AppLayout'
 
 export const router = createBrowserRouter([
+  // =========================================================
+  // PAGES LÉGALES PUBLIQUES
+  // =========================================================
+
   {
-    path: '/politique-confidentialite',
-    element: <PrivacyPage />,
+    path: '/terms',
+    element: <TermsPage />,
   },
+
   {
     path: '/conditions-utilisation',
     element: <TermsPage />,
   },
+
+  {
+    path: '/privacy',
+    element: <PrivacyPage />,
+  },
+
+  {
+    path: '/politique-confidentialite',
+    element: <PrivacyPage />,
+  },
+
+  {
+    path: '/mentions-legales',
+    element: <LegalNoticePage />,
+  },
+
   // =========================================================
   // RACINE
   // =========================================================
@@ -75,6 +103,16 @@ export const router = createBrowserRouter([
       },
 
       {
+        path: '/forgot-password',
+        element: <ForgotPasswordPage />,
+      },
+
+      {
+        path: '/reset-password',
+        element: <ResetPasswordPage />,
+      },
+
+      {
         path: '/associations/register',
         element: <AssociationRegisterPage />,
       },
@@ -95,10 +133,6 @@ export const router = createBrowserRouter([
     children: [
       // =====================================================
       // DASHBOARD
-      //
-      // Association validée
-      // Modérateur
-      // Admin
       // =====================================================
 
       {
@@ -112,11 +146,6 @@ export const router = createBrowserRouter([
 
       // =====================================================
       // CARTE
-      //
-      // Bénévole validé
-      // Association validée
-      // Modérateur
-      // Admin
       // =====================================================
 
       {
@@ -143,9 +172,6 @@ export const router = createBrowserRouter([
 
       // =====================================================
       // LISTE DES POINTS
-      //
-      // Le bénévole validé peut consulter.
-      // Il ne peut PAS modifier.
       // =====================================================
 
       {
@@ -159,12 +185,6 @@ export const router = createBrowserRouter([
 
       // =====================================================
       // SIGNALER UN POINT
-      //
-      // Citoyen
-      // Bénévole
-      // Association validée
-      // Modérateur
-      // Admin
       // =====================================================
 
       {
@@ -178,8 +198,6 @@ export const router = createBrowserRouter([
 
       // =====================================================
       // DÉTAIL D'UN POINT
-      //
-      // Le bénévole validé peut consulter.
       // =====================================================
 
       {
@@ -193,13 +211,6 @@ export const router = createBrowserRouter([
 
       // =====================================================
       // MODIFIER UN POINT
-      //
-      // IMPORTANT :
-      // Le bénévole NE PEUT PAS modifier un point.
-      //
-      // Association validée
-      // Modérateur
-      // Admin
       // =====================================================
 
       {
@@ -213,11 +224,6 @@ export const router = createBrowserRouter([
 
       // =====================================================
       // PLANNING
-      //
-      // Bénévole validé : consultation OUI
-      // Association validée
-      // Modérateur
-      // Admin
       // =====================================================
 
       {
@@ -231,9 +237,6 @@ export const router = createBrowserRouter([
 
       // =====================================================
       // ASSOCIATIONS
-      //
-      // Permet à un bénévole non rattaché de rejoindre
-      // une association.
       // =====================================================
 
       {
@@ -247,8 +250,6 @@ export const router = createBrowserRouter([
 
       // =====================================================
       // DEMANDES BÉNÉVOLES
-      //
-      // Association validée uniquement
       // =====================================================
 
       {
@@ -262,8 +263,6 @@ export const router = createBrowserRouter([
 
       // =====================================================
       // ÉQUIPE ASSOCIATION
-      //
-      // Association validée uniquement
       // =====================================================
 
       {
@@ -277,14 +276,6 @@ export const router = createBrowserRouter([
 
       // =====================================================
       // INTERVENTIONS
-      //
-      // IMPORTANT :
-      // Le bénévole N'A PAS accès à la gestion
-      // des interventions.
-      //
-      // Association validée
-      // Modérateur
-      // Admin
       // =====================================================
 
       {
@@ -298,8 +289,6 @@ export const router = createBrowserRouter([
 
       // =====================================================
       // CRÉER UNE INTERVENTION
-      //
-      // Le bénévole NE PEUT PAS créer une intervention.
       // =====================================================
 
       {
@@ -313,9 +302,6 @@ export const router = createBrowserRouter([
 
       // =====================================================
       // MODÉRATION
-      //
-      // Modérateur
-      // Admin
       // =====================================================
 
       {
@@ -329,9 +315,6 @@ export const router = createBrowserRouter([
 
       // =====================================================
       // DOUBLONS
-      //
-      // Modérateur
-      // Admin
       // =====================================================
 
       {
@@ -345,8 +328,6 @@ export const router = createBrowserRouter([
 
       // =====================================================
       // ADMINISTRATION
-      //
-      // Admin uniquement
       // =====================================================
 
       {
@@ -360,8 +341,6 @@ export const router = createBrowserRouter([
 
       // =====================================================
       // ADMINISTRATION ASSOCIATIONS
-      //
-      // Admin uniquement
       // =====================================================
 
       {
@@ -375,8 +354,6 @@ export const router = createBrowserRouter([
 
       // =====================================================
       // PROFIL
-      //
-      // Tous les utilisateurs connectés
       // =====================================================
 
       {
@@ -390,8 +367,6 @@ export const router = createBrowserRouter([
 
       // =====================================================
       // RÉGLAGES
-      //
-      // Tous les utilisateurs connectés
       // =====================================================
 
       {

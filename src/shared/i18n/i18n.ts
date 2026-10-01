@@ -1,7 +1,12 @@
+import i18n from 'i18next'
 import {
-  useEffect,
-  useState,
-} from 'react'
+  initReactI18next,
+  useTranslation as useReactI18next,
+} from 'react-i18next'
+import frExtracted from '@/locales/fr/translation.json'
+import enExtracted from '@/locales/en/translation.json'
+import esExtracted from '@/locales/es/translation.json'
+import arExtracted from '@/locales/ar/translation.json'
 
 export type AppLanguage =
   | 'fr'
@@ -9,8 +14,7 @@ export type AppLanguage =
   | 'es'
   | 'ar'
 
-const LANGUAGE_STORAGE_KEY =
-  'pulse-language'
+const LANGUAGE_STORAGE_KEY = 'pulse-language'
 
 export const LANGUAGE_OPTIONS: {
   value: AppLanguage
@@ -41,12 +45,13 @@ export const LANGUAGE_OPTIONS: {
 
 const translations = {
   fr: {
-
+    // Rôles
     'role.citoyen': 'Citoyen',
-'role.benevole': 'Bénévole',
-'role.association': 'Association',
-'role.moderateur': 'Modérateur',
-'role.admin': 'Administrateur',
+    'role.benevole': 'Bénévole',
+    'role.association': 'Association',
+    'role.moderateur': 'Modérateur',
+    'role.admin': 'Administrateur',
+
     // Navigation
     'nav.home': 'Accueil',
     'nav.planning': 'Planning',
@@ -129,7 +134,8 @@ const translations = {
       'Confidentialité & sécurité',
     'settings.securityDescription':
       'Contrôle la sécurité de ton compte.',
-    'settings.password': 'Mot de passe',
+    'settings.password':
+      'Mot de passe',
     'settings.passwordDescription':
       'Modifie ton mot de passe de connexion.',
 
@@ -198,12 +204,13 @@ const translations = {
   },
 
   en: {
-
+    // Roles
     'role.citoyen': 'Citizen',
-'role.benevole': 'Volunteer',
-'role.association': 'Organization',
-'role.moderateur': 'Moderator',
-'role.admin': 'Administrator',
+    'role.benevole': 'Volunteer',
+    'role.association': 'Organization',
+    'role.moderateur': 'Moderator',
+    'role.admin': 'Administrator',
+
     // Navigation
     'nav.home': 'Home',
     'nav.planning': 'Planning',
@@ -257,11 +264,13 @@ const translations = {
       'Volunteer requests',
     'settings.volunteerRequestsDescription':
       'New requests to join your organization.',
-    'settings.pulseNews': 'PULSE news',
+    'settings.pulseNews':
+      'PULSE news',
     'settings.pulseNewsDescription':
       'New features and important information.',
 
-    'settings.appearance': 'Appearance',
+    'settings.appearance':
+      'Appearance',
     'settings.appearanceDescription':
       'Customize how PULSE looks.',
     'settings.light': 'Light',
@@ -285,14 +294,16 @@ const translations = {
       'Privacy & security',
     'settings.securityDescription':
       'Manage your account security.',
-    'settings.password': 'Password',
+    'settings.password':
+      'Password',
     'settings.passwordDescription':
       'Change your login password.',
 
     'settings.data': 'Data',
     'settings.dataDescription':
       'Manage data associated with your account.',
-    'settings.export': 'Export my data',
+    'settings.export':
+      'Export my data',
     'settings.exportDescription':
       'Download a copy of the data linked to your account.',
 
@@ -353,11 +364,13 @@ const translations = {
   },
 
   es: {
+    // Roles
     'role.citoyen': 'Ciudadano',
-'role.benevole': 'Voluntario',
-'role.association': 'Asociación',
-'role.moderateur': 'Moderador',
-'role.admin': 'Administrador',
+    'role.benevole': 'Voluntario',
+    'role.association': 'Asociación',
+    'role.moderateur': 'Moderador',
+    'role.admin': 'Administrador',
+
     // Navegación
     'nav.home': 'Inicio',
     'nav.planning': 'Planificación',
@@ -417,7 +430,8 @@ const translations = {
     'settings.pulseNewsDescription':
       'Nuevas funciones e información importante.',
 
-    'settings.appearance': 'Apariencia',
+    'settings.appearance':
+      'Apariencia',
     'settings.appearanceDescription':
       'Personaliza la apariencia de PULSE.',
     'settings.light': 'Claro',
@@ -441,7 +455,8 @@ const translations = {
       'Privacidad y seguridad',
     'settings.securityDescription':
       'Controla la seguridad de tu cuenta.',
-    'settings.password': 'Contraseña',
+    'settings.password':
+      'Contraseña',
     'settings.passwordDescription':
       'Cambia tu contraseña de acceso.',
 
@@ -453,7 +468,8 @@ const translations = {
     'settings.exportDescription':
       'Descarga una copia de los datos vinculados a tu cuenta.',
 
-    'settings.about': 'Acerca de',
+    'settings.about':
+      'Acerca de',
     'settings.terms':
       'Condiciones de uso',
     'settings.privacy':
@@ -461,7 +477,8 @@ const translations = {
     'settings.support':
       'Ayuda y soporte',
 
-    'settings.session': 'Sesión',
+    'settings.session':
+      'Sesión',
     'settings.sessionDescription':
       'Gestiona tu sesión de PULSE.',
 
@@ -473,14 +490,16 @@ const translations = {
       'Eliminar mi cuenta',
 
     // Planificación
-    'planning.title': 'Planificación',
+    'planning.title':
+      'Planificación',
     'planning.subtitle':
       'Visualiza las acciones previstas y organiza las intervenciones sobre el terreno.',
     'planning.create':
       'Crear una intervención',
     'planning.actions': 'Acciones',
     'planning.meals': 'Comidas',
-    'planning.volunteers': 'Voluntarios',
+    'planning.volunteers':
+      'Voluntarios',
     'planning.today': 'Hoy',
     'planning.week': 'Semana',
     'planning.month': 'Mes',
@@ -511,12 +530,13 @@ const translations = {
   },
 
   ar: {
-
+    // الأدوار
     'role.citoyen': 'مواطن',
-'role.benevole': 'متطوع',
-'role.association': 'جمعية',
-'role.moderateur': 'مشرف',
-'role.admin': 'مدير',
+    'role.benevole': 'متطوع',
+    'role.association': 'جمعية',
+    'role.moderateur': 'مشرف',
+    'role.admin': 'مدير',
+
     // التنقل
     'nav.home': 'الرئيسية',
     'nav.planning': 'التخطيط',
@@ -535,21 +555,24 @@ const translations = {
     'common.close': 'إغلاق',
     'common.loading': 'جارٍ التحميل...',
     'common.logout': 'تسجيل الخروج',
-    'common.soon': 'قريباً',
+    'common.soon': 'قريبًا',
     'common.yes': 'نعم',
     'common.no': 'لا',
 
     // الإعدادات
-    'settings.title': 'الإعدادات',
+    'settings.title':
+      'الإعدادات',
     'settings.subtitle':
       'إدارة حسابك ومعلوماتك وأمانك وتفضيلاتك.',
 
-    'settings.account': 'الحساب',
+    'settings.account':
+      'الحساب',
     'settings.accountDescription':
       'المعلومات المرتبطة بحساب PULSE الخاص بك.',
     'settings.accountInfo':
       'معلومات الحساب',
-    'settings.role': 'الدور',
+    'settings.role':
+      'الدور',
     'settings.viewProfile':
       'عرض ملفي الشخصي',
     'settings.viewProfileDescription':
@@ -559,7 +582,8 @@ const translations = {
       'الإشعارات',
     'settings.notificationsDescription':
       'اختر المعلومات التي ترغب في تلقيها.',
-    'settings.planning': 'التخطيط',
+    'settings.planning':
+      'التخطيط',
     'settings.planningDescription':
       'التغييرات والإجراءات الجديدة المخطط لها.',
     'settings.interventions':
@@ -575,12 +599,16 @@ const translations = {
     'settings.pulseNewsDescription':
       'ميزات جديدة ومعلومات مهمة.',
 
-    'settings.appearance': 'المظهر',
+    'settings.appearance':
+      'المظهر',
     'settings.appearanceDescription':
       'خصص مظهر PULSE.',
-    'settings.light': 'فاتح',
-    'settings.dark': 'داكن',
-    'settings.system': 'النظام',
+    'settings.light':
+      'فاتح',
+    'settings.dark':
+      'داكن',
+    'settings.system':
+      'النظام',
 
     'settings.compact':
       'العرض المضغوط',
@@ -591,7 +619,8 @@ const translations = {
       'التفضيلات',
     'settings.preferencesDescription':
       'قم بإعداد تجربة PULSE الخاصة بك.',
-    'settings.language': 'اللغة',
+    'settings.language':
+      'اللغة',
     'settings.languageDescription':
       'اللغة المستخدمة في التطبيق.',
 
@@ -604,7 +633,8 @@ const translations = {
     'settings.passwordDescription':
       'تغيير كلمة مرور تسجيل الدخول.',
 
-    'settings.data': 'البيانات',
+    'settings.data':
+      'البيانات',
     'settings.dataDescription':
       'إدارة البيانات المرتبطة بحسابك.',
     'settings.export':
@@ -612,7 +642,8 @@ const translations = {
     'settings.exportDescription':
       'تنزيل نسخة من البيانات المرتبطة بحسابك.',
 
-    'settings.about': 'حول',
+    'settings.about':
+      'حول',
     'settings.terms':
       'شروط الاستخدام',
     'settings.privacy':
@@ -620,7 +651,8 @@ const translations = {
     'settings.support':
       'المساعدة والدعم',
 
-    'settings.session': 'الجلسة',
+    'settings.session':
+      'الجلسة',
     'settings.sessionDescription':
       'إدارة جلسة PULSE الخاصة بك.',
 
@@ -632,152 +664,244 @@ const translations = {
       'حذف حسابي',
 
     // التخطيط
-    'planning.title': 'التخطيط',
+    'planning.title':
+      'التخطيط',
     'planning.subtitle':
       'عرض الإجراءات المخطط لها وتنظيم التدخلات الميدانية.',
-    'planning.create': 'إنشاء تدخل',
-    'planning.actions': 'الإجراءات',
-    'planning.meals': 'الوجبات',
+    'planning.create':
+      'إنشاء تدخل',
+    'planning.actions':
+      'الإجراءات',
+    'planning.meals':
+      'الوجبات',
     'planning.volunteers':
       'المتطوعون',
-    'planning.today': 'اليوم',
-    'planning.week': 'الأسبوع',
-    'planning.month': 'الشهر',
-    'planning.filters': 'الفلاتر',
+    'planning.today':
+      'اليوم',
+    'planning.week':
+      'الأسبوع',
+    'planning.month':
+      'الشهر',
+    'planning.filters':
+      'الفلاتر',
     'planning.fieldActions':
       'الإجراءات الميدانية',
     'planning.todayInterventions':
       'تدخلات اليوم',
 
     // الخريطة
-    'map.title': 'الخريطة الميدانية',
+    'map.title':
+      'الخريطة الميدانية',
     'map.realtime':
       'عرض في الوقت الفعلي',
-    'map.points': 'النقاط',
-    'map.urgent': 'عاجل',
-    'map.interventions': 'التدخلات',
-    'map.hide': 'إخفاء',
-    'map.show': 'إظهار',
-    'map.search': 'بحث...',
-    'map.filters': 'الفلاتر',
-    'map.report': 'إبلاغ',
-    'map.emergency': 'الأولوية',
-    'map.critical': 'حرج',
-    'map.high': 'عالية',
-    'map.medium': 'متوسطة',
-    'map.low': 'منخفضة',
+    'map.points':
+      'النقاط',
+    'map.urgent':
+      'عاجل',
+    'map.interventions':
+      'التدخلات',
+    'map.hide':
+      'إخفاء',
+    'map.show':
+      'إظهار',
+    'map.search':
+      'بحث...',
+    'map.filters':
+      'الفلاتر',
+    'map.report':
+      'إبلاغ',
+    'map.emergency':
+      'الأولوية',
+    'map.critical':
+      'حرج',
+    'map.high':
+      'عالية',
+    'map.medium':
+      'متوسطة',
+    'map.low':
+      'منخفضة',
   },
 } as const
 
 export type TranslationKey =
   keyof typeof translations.fr
 
-export function getLanguage(): AppLanguage {
-  const savedLanguage =
-    localStorage.getItem(
-      LANGUAGE_STORAGE_KEY
-    )
+function normalizeLanguage(
+  language: string | null | undefined
+): AppLanguage {
+  const normalized =
+    language?.toLowerCase().split('-')[0]
 
   if (
-    savedLanguage === 'fr' ||
-    savedLanguage === 'en' ||
-    savedLanguage === 'es' ||
-    savedLanguage === 'ar'
+    normalized === 'fr' ||
+    normalized === 'en' ||
+    normalized === 'es' ||
+    normalized === 'ar'
   ) {
-    return savedLanguage
+    return normalized
   }
 
   return 'fr'
 }
 
+export function getLanguage(): AppLanguage {
+  if (typeof window === 'undefined') {
+    return 'fr'
+  }
+
+  return normalizeLanguage(
+    localStorage.getItem(LANGUAGE_STORAGE_KEY)
+  )
+}
+
 export function applyLanguage(
   language: AppLanguage
 ) {
-  document.documentElement.lang = language
+  if (typeof document === 'undefined') {
+    return
+  }
 
+  document.documentElement.lang = language
   document.documentElement.dir =
-    language === 'ar'
-      ? 'rtl'
-      : 'ltr'
+    language === 'ar' ? 'rtl' : 'ltr'
 }
+
+const initialLanguage = getLanguage()
+
+i18n
+  .use(initReactI18next)
+  .init({
+    resources: {
+  fr: {
+    translation: {
+      ...translations.fr,
+      ...frExtracted,
+    },
+  },
+
+  en: {
+    translation: {
+      ...translations.en,
+      ...enExtracted,
+    },
+  },
+
+  es: {
+    translation: {
+      ...translations.es,
+      ...esExtracted,
+    },
+  },
+
+  ar: {
+    translation: {
+      ...translations.ar,
+      ...arExtracted,
+    },
+  },
+},
+
+    lng: initialLanguage,
+    fallbackLng: 'fr',
+
+    supportedLngs: [
+      'fr',
+      'en',
+      'es',
+      'ar',
+    ],
+
+    defaultNS: 'translation',
+
+    // Nos clés actuelles sont volontairement plates :
+    // "settings.title", "nav.home", etc.
+    keySeparator: false,
+
+    interpolation: {
+      escapeValue: false,
+    },
+
+    react: {
+      useSuspense: false,
+    },
+
+    // Les traductions sont déjà embarquées dans le bundle.
+    // L'initialisation peut donc être immédiate.
+    initAsync: false,
+  })
+
+applyLanguage(initialLanguage)
+
+i18n.on(
+  'languageChanged',
+  (language) => {
+    const nextLanguage =
+      normalizeLanguage(language)
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(
+        LANGUAGE_STORAGE_KEY,
+        nextLanguage
+      )
+    }
+
+    applyLanguage(nextLanguage)
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent(
+          'pulse-language-change',
+          {
+            detail: nextLanguage,
+          }
+        )
+      )
+    }
+  }
+)
 
 export function setAppLanguage(
   language: AppLanguage
 ) {
-  localStorage.setItem(
-    LANGUAGE_STORAGE_KEY,
-    language
-  )
-
-  applyLanguage(language)
-
-  window.dispatchEvent(
-    new CustomEvent(
-      'pulse-language-change',
-      {
-        detail: language,
-      }
-    )
-  )
+  void i18n.changeLanguage(language)
 }
 
 export function initLanguage() {
-  applyLanguage(getLanguage())
+  const language = getLanguage()
+
+  applyLanguage(language)
+
+  if (
+    normalizeLanguage(i18n.language) !==
+    language
+  ) {
+    void i18n.changeLanguage(language)
+  }
 }
 
 export function translate(
   key: TranslationKey,
   language: AppLanguage = getLanguage()
 ): string {
-  const dictionary =
-    translations[language] as Record<
-      TranslationKey,
-      string
-    >
-
-  return (
-    dictionary[key] ??
-    translations.fr[key] ??
-    key
-  )
+  return i18n.getFixedT(language)(key)
 }
 
 export function useTranslation() {
-  const [language, setLanguage] =
-    useState<AppLanguage>(
-      () => getLanguage()
+  const {
+    t: reactT,
+    i18n: reactI18n,
+  } = useReactI18next()
+
+  const language =
+    normalizeLanguage(
+      reactI18n.resolvedLanguage ??
+        reactI18n.language
     )
-
-  useEffect(() => {
-    const handleLanguageChange = (
-      event: Event
-    ) => {
-      const customEvent =
-        event as CustomEvent<AppLanguage>
-
-      setLanguage(
-        customEvent.detail ??
-          getLanguage()
-      )
-    }
-
-    window.addEventListener(
-      'pulse-language-change',
-      handleLanguageChange
-    )
-
-    return () => {
-      window.removeEventListener(
-        'pulse-language-change',
-        handleLanguageChange
-      )
-    }
-  }, [])
 
   function t(
     key: TranslationKey
   ): string {
-    return translate(key, language)
+    return reactT(key)
   }
 
   return {
@@ -785,5 +909,8 @@ export function useTranslation() {
     setLanguage: setAppLanguage,
     t,
     isRTL: language === 'ar',
+    i18n: reactI18n,
   }
 }
+
+export default i18n
