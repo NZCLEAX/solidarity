@@ -31,6 +31,7 @@ import PointDetailsPage from '@/features/points/pages/PointDetailsPage'
 
 import ProfilePage from '@/features/profile/pages/ProfilePage'
 import SettingsPage from '@/features/settings/pages/SettingsPage'
+import SupportPage from '@/features/support/pages/SupportPage'
 
 import TermsPage from '@/features/legal/pages/TermsPage'
 import PrivacyPage from '@/features/legal/pages/PrivacyPage'
@@ -47,6 +48,10 @@ import NotificationsPage from '@/features/notifications/pages/NotificationsPage'
 import AppLayout from '@/shared/components/AppLayout'
 
 export const router = createBrowserRouter([
+  {
+    path: '/aide-support',
+    element: <SupportPage />,
+  },
   // =========================================================
   // PAGES LÉGALES PUBLIQUES
   // =========================================================

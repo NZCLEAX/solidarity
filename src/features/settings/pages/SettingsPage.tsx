@@ -59,11 +59,6 @@ type AssociationSettings = {
   type_aide_principale: string | null
 }
 
-type EnabledLanguage =
-  | 'fr'
-  | 'en'
-  | 'es'
-
 /* =========================================================
    VALEURS PAR DÉFAUT
 ========================================================= */
@@ -263,7 +258,7 @@ const FR = {
     'Aide & support',
 
   supportDescription:
-    'Un espace d’assistance sera disponible ici.',
+    'Consulte les réponses aux questions courantes et contacte le support.',
 
   session:
     'Session',
@@ -667,7 +662,7 @@ const EN = {
     'Help & support',
 
   supportDescription:
-    'A support area will be available here.',
+    'Find answers and contact support (French help page).',
 
   session:
     'Session',
@@ -1071,7 +1066,7 @@ const ES = {
     'Ayuda y soporte',
 
   supportDescription:
-    'Aquí estará disponible un espacio de asistencia.',
+    'Consulta las respuestas y contacta con soporte (ayuda en francés).',
 
   session:
     'Sesión',
@@ -1290,12 +1285,6 @@ const ES = {
 /* =========================================================
    LANGUES
 ========================================================= */
-
-const COPY = {
-  fr: FR,
-  en: EN,
-  es: ES,
-}
 
 function getCopy(
   language: AppLanguage
@@ -3332,9 +3321,13 @@ export default function SettingsPage() {
                   copy.supportDescription
                 }
                 action={
-                  <span className="text-xs font-black text-slate-400 dark:text-slate-500">
-                    {copy.soon}
-                  </span>
+                  <Link
+                    to="/aide-support"
+                    aria-label={copy.support}
+                    className="inline-flex min-h-11 min-w-11 items-center justify-center text-lg font-black text-[#d94a0b] transition hover:text-[#b93607] dark:text-orange-400"
+                  >
+                    <span aria-hidden="true">→</span>
+                  </Link>
                 }
               />
             </SettingsSection>
