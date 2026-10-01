@@ -59,10 +59,6 @@ type AssociationSettings = {
   type_aide_principale: string | null
 }
 
-type EnabledLanguage =
-  | 'fr'
-  | 'en'
-  | 'es'
 
 /* =========================================================
    VALEURS PAR DÉFAUT
@@ -1290,12 +1286,6 @@ const ES = {
 /* =========================================================
    LANGUES
 ========================================================= */
-
-const COPY = {
-  fr: FR,
-  en: EN,
-  es: ES,
-}
 
 function getCopy(
   language: AppLanguage

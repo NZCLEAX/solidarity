@@ -1,7 +1,10 @@
-import { ReactNode } from 'react'
-import { Link } from 'react-router-dom'
+import type { ReactNode } from 'react'
+import { Link, Navigate, useLocation } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
+
+import { getCurrentUser } from '@/features/auth/api/auth'
 import { getCurrentProfile } from '@/features/auth/api/profile'
+
 import {
   hasPermission,
   type AppPermission,
@@ -16,20 +19,46 @@ export default function RequireAccess({
   permission,
   children,
 }: RequireAccessProps) {
+  const location = useLocation()
+
+  /* =========================================================
+     1. VÉRIFICATION DE LA SESSION SUPABASE
+  ========================================================= */
+
+  const {
+    data: user,
+    isLoading: userLoading,
+    isError: userError,
+  } = useQuery({
+    queryKey: ['current-user'],
+    queryFn: getCurrentUser,
+    retry: false,
+  })
+
+  /* =========================================================
+     2. CHARGEMENT DU PROFIL
+     Seulement si un utilisateur est connecté
+  ========================================================= */
+
   const {
     data: profile,
-    isLoading,
-    isError,
+    isLoading: profileLoading,
+    isError: profileError,
     error,
   } = useQuery({
     queryKey: ['current-profile'],
     queryFn: getCurrentProfile,
     retry: false,
+    enabled: Boolean(user),
   })
 
-  if (isLoading) {
+  /* =========================================================
+     CHARGEMENT
+  ========================================================= */
+
+  if (userLoading || (user && profileLoading)) {
     return (
-      <div className="min-h-[calc(100vh-80px)] bg-[#faf8f4] px-4 py-8 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-[#faf8f4] px-4 py-8 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl rounded-[2rem] border border-[#eadfd6] bg-white p-8 text-slate-600">
           Chargement de ton accès...
         </div>
@@ -37,9 +66,29 @@ export default function RequireAccess({
     )
   }
 
-  if (isError) {
+  /* =========================================================
+     PAS CONNECTÉ
+  ========================================================= */
+
+  if (userError || !user) {
     return (
-      <div className="min-h-[calc(100vh-80px)] bg-[#faf8f4] px-4 py-8 sm:px-6 lg:px-8">
+      <Navigate
+        to="/login"
+        replace
+        state={{
+          from: location.pathname,
+        }}
+      />
+    )
+  }
+
+  /* =========================================================
+     ERREUR PROFIL
+  ========================================================= */
+
+  if (profileError) {
+    return (
+      <div className="min-h-screen bg-[#faf8f4] px-4 py-8 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl rounded-[2rem] border border-red-200 bg-red-50 p-8 text-red-700">
           {(error as Error)?.message || 'Impossible de charger ton profil.'}
         </div>
@@ -47,15 +96,35 @@ export default function RequireAccess({
     )
   }
 
+  /* =========================================================
+     PROFIL INTROUVABLE
+  ========================================================= */
+
+  if (!profile) {
+    return (
+      <div className="min-h-screen bg-[#faf8f4] px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-3xl rounded-[2rem] border border-red-200 bg-red-50 p-8 text-red-700">
+          Impossible de trouver le profil associé à ce compte.
+        </div>
+      </div>
+    )
+  }
+
+  /* =========================================================
+     VÉRIFICATION DES PERMISSIONS
+  ========================================================= */
+
   if (!hasPermission(profile, permission)) {
     const isPendingAssociation =
-      profile?.role === 'association' && profile?.statut_compte !== 'actif'
+      profile.role === 'association' &&
+      profile.statut_compte !== 'actif'
 
     const isPendingVolunteer =
-      profile?.role === 'benevole' && profile?.statut_compte !== 'actif'
+      profile.role === 'benevole' &&
+      profile.statut_compte !== 'actif'
 
     return (
-      <div className="min-h-[calc(100vh-80px)] bg-[#faf8f4] px-4 py-8 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-[#faf8f4] px-4 py-8 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl rounded-[2rem] border border-orange-200 bg-white p-8 shadow-sm">
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-100 text-xl">
             🔒
@@ -88,7 +157,7 @@ export default function RequireAccess({
           ) : isPendingVolunteer ? (
             <>
               <p className="mt-3 text-base leading-relaxed text-slate-600">
-                Ton compte bénévole doit d’abord être rattaché et validé par
+                Ton compte bénévole doit d'abord être rattaché et validé par
                 une association.
               </p>
 
@@ -102,7 +171,7 @@ export default function RequireAccess({
           ) : (
             <>
               <p className="mt-3 text-base leading-relaxed text-slate-600">
-                Ton rôle actuel ne permet pas d’accéder à cette page.
+                Ton rôle actuel ne permet pas d'accéder à cette page.
               </p>
 
               <Link
@@ -118,5 +187,9 @@ export default function RequireAccess({
     )
   }
 
-  return children
+  /* =========================================================
+     ACCÈS AUTORISÉ
+  ========================================================= */
+
+  return <>{children}</>
 }

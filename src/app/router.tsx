@@ -44,6 +44,8 @@ import AssociationTeamPage from '@/features/associations/pages/AssociationTeamPa
 import PlanningPage from '@/features/planning/pages/PlanningPage'
 import NotificationsPage from '@/features/notifications/pages/NotificationsPage'
 
+import StartPage from '@/features/auth/pages/StartPage'
+
 import AppLayout from '@/shared/components/AppLayout'
 
 export const router = createBrowserRouter([
@@ -81,9 +83,9 @@ export const router = createBrowserRouter([
   // =========================================================
 
   {
-    path: '/',
-    element: <Navigate to="/carte" replace />,
-  },
+  path: '/',
+  element: <StartPage />,
+},
 
   // =========================================================
   // AUTHENTIFICATION
