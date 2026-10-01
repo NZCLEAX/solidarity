@@ -12,6 +12,7 @@ import { initTheme } from '@/shared/theme/theme'
 import { queryClient } from '@/lib/query-client'
 import { router } from '@/app/router'
 import '@/shared/i18n/i18n'
+import { initializeMobileAuth } from '@/features/auth/utils/mobileAuth'
 
 initTheme()
 
@@ -22,6 +23,8 @@ document.documentElement.classList.toggle(
   'compact',
   compactMode
 )
+
+void initializeMobileAuth()
 
 ReactDOM.createRoot(
   document.getElementById('root')!

@@ -9,6 +9,7 @@ import LoginPage from '@/features/auth/pages/LoginPage'
 import RegisterPage from '@/features/auth/pages/RegisterPage'
 import ForgotPasswordPage from '@/features/auth/pages/ForgotPasswordPage'
 import ResetPasswordPage from '@/features/auth/pages/ResetPasswordPage'
+import StartPage from '@/features/auth/pages/StartPage'
 import RequireAccess from '@/features/auth/components/RequireAccess'
 
 import AdminPage from '@/features/admin/pages/AdminPage'
@@ -44,8 +45,6 @@ import AssociationTeamPage from '@/features/associations/pages/AssociationTeamPa
 import PlanningPage from '@/features/planning/pages/PlanningPage'
 import NotificationsPage from '@/features/notifications/pages/NotificationsPage'
 
-import StartPage from '@/features/auth/pages/StartPage'
-
 import AppLayout from '@/shared/components/AppLayout'
 
 export const router = createBrowserRouter([
@@ -80,12 +79,20 @@ export const router = createBrowserRouter([
 
   // =========================================================
   // RACINE
+  //
+  // StartPage décide :
+  //
+  // - aucune session
+  //   → /login
+  //
+  // - session existante
+  //   → page adaptée au rôle
   // =========================================================
 
   {
-  path: '/',
-  element: <StartPage />,
-},
+    path: '/',
+    element: <StartPage />,
+  },
 
   // =========================================================
   // AUTHENTIFICATION
@@ -384,10 +391,16 @@ export const router = createBrowserRouter([
 
   // =========================================================
   // ROUTE INCONNUE
+  //
+  // On repasse par StartPage.
+  //
+  // Ainsi :
+  // - non connecté → login
+  // - connecté → bonne page selon le rôle
   // =========================================================
 
   {
     path: '*',
-    element: <Navigate to="/carte" replace />,
+    element: <Navigate to="/" replace />,
   },
 ])
