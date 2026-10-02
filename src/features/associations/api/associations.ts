@@ -86,7 +86,11 @@ export type AssociationVolunteer = {
   updated_at: string | null
 }
 
-export type VolunteerAction = 'actif' | 'suspendu' | 'en_attente' | 'retirer'
+export type VolunteerAction =
+  | 'actif'
+  | 'suspendu'
+  | 'en_attente'
+  | 'retirer'
 
 function safeFileName(fileName: string) {
   return fileName
@@ -96,14 +100,20 @@ function safeFileName(fileName: string) {
     .toLowerCase()
 }
 
-export async function getValidatedAssociations(): Promise<Association[]> {
+export async function getValidatedAssociations(): Promise<
+  Association[]
+> {
   const { data, error } = await supabase
     .from('associations')
     .select('*')
     .eq('statut', 'validee')
-    .order('created_at', { ascending: false })
+    .order('created_at', {
+      ascending: false,
+    })
 
-  if (error) throw error
+  if (error) {
+    throw error
+  }
 
   return data ?? []
 }
@@ -128,7 +138,9 @@ export async function createAssociationRequest(
 
   if (
     signUpError &&
-    !signUpError.message.toLowerCase().includes('already registered')
+    !signUpError.message
+      .toLowerCase()
+      .includes('already registered')
   ) {
     throw signUpError
   }
@@ -141,33 +153,47 @@ export async function createAssociationRequest(
 
   if (signInError) {
     throw new Error(
-      "Ce compte existe déjà. Connecte-toi avec ce compte ou utilise le bon mot de passe."
+      'Ce compte existe déjà. Connecte-toi avec ce compte ou utilise le bon mot de passe.'
     )
   }
 
   if (!signInData.user) {
-    throw new Error('Utilisateur introuvable après connexion.')
+    throw new Error(
+      'Utilisateur introuvable après connexion.'
+    )
   }
 
-  const { data, error } = await supabase.rpc('upsert_association_dossier', {
-    p_nom: input.nom?.trim() ?? '',
-    p_email: email,
-    p_telephone: input.telephone?.trim() ?? '',
-    p_ville: input.ville?.trim() ?? '',
-    p_zone_action: input.zoneAction?.trim() ?? '',
-    p_type_aide_principale: input.typeAidePrincipale?.trim() ?? '',
-    p_description: input.description?.trim() ?? '',
-    p_siren: input.siren?.trim() ?? '',
-    p_siret: input.siret?.trim() ?? '',
-    p_representant_nom: input.representantNom?.trim() ?? '',
-    p_representant_fonction: input.representantFonction?.trim() ?? '',
-    p_official_name: input.officialData?.officialName ?? '',
-    p_official_city: input.officialData?.officialCity ?? '',
-    p_official_siren: input.officialData?.officialSiren ?? '',
-    p_official_siret: input.officialData?.officialSiret ?? '',
-  })
+  const { data, error } = await supabase.rpc(
+    'upsert_association_dossier',
+    {
+      p_nom: input.nom?.trim() ?? '',
+      p_email: email,
+      p_telephone: input.telephone?.trim() ?? '',
+      p_ville: input.ville?.trim() ?? '',
+      p_zone_action: input.zoneAction?.trim() ?? '',
+      p_type_aide_principale:
+        input.typeAidePrincipale?.trim() ?? '',
+      p_description: input.description?.trim() ?? '',
+      p_siren: input.siren?.trim() ?? '',
+      p_siret: input.siret?.trim() ?? '',
+      p_representant_nom:
+        input.representantNom?.trim() ?? '',
+      p_representant_fonction:
+        input.representantFonction?.trim() ?? '',
+      p_official_name:
+        input.officialData?.officialName ?? '',
+      p_official_city:
+        input.officialData?.officialCity ?? '',
+      p_official_siren:
+        input.officialData?.officialSiren ?? '',
+      p_official_siret:
+        input.officialData?.officialSiret ?? '',
+    }
+  )
 
-  if (error) throw error
+  if (error) {
+    throw error
+  }
 
   return data as string
 }
@@ -177,7 +203,9 @@ export async function uploadAssociationDocuments(
   documents: AssociationDocumentUpload[]
 ) {
   if (!associationId) {
-    throw new Error("Association introuvable pour l'envoi des documents.")
+    throw new Error(
+      "Association introuvable pour l'envoi des documents."
+    )
   }
 
   if (documents.length === 0) {
@@ -199,7 +227,9 @@ export async function uploadAssociationDocuments(
       })
 
     if (uploadError) {
-      throw new Error(`Erreur upload Storage : ${uploadError.message}`)
+      throw new Error(
+        `Erreur upload Storage : ${uploadError.message}`
+      )
     }
 
     const { error: insertError } = await supabase
@@ -216,28 +246,42 @@ export async function uploadAssociationDocuments(
       })
 
     if (insertError) {
-      throw new Error(`Erreur enregistrement document : ${insertError.message}`)
+      throw new Error(
+        `Erreur enregistrement document : ${insertError.message}`
+      )
     }
   }
 
   await updateAssociationVerificationScore(associationId)
 }
 
-export async function updateAssociationVerificationScore(associationId: string) {
-  const { data: association, error: associationError } = await supabase
+export async function updateAssociationVerificationScore(
+  associationId: string
+) {
+  const {
+    data: association,
+    error: associationError,
+  } = await supabase
     .from('associations')
     .select('*')
     .eq('id', associationId)
     .single()
 
-  if (associationError) throw associationError
+  if (associationError) {
+    throw associationError
+  }
 
-  const { data: documents, error: documentsError } = await supabase
+  const {
+    data: documents,
+    error: documentsError,
+  } = await supabase
     .from('association_documents')
     .select('*')
     .eq('association_id', associationId)
 
-  if (documentsError) throw documentsError
+  if (documentsError) {
+    throw documentsError
+  }
 
   let score = 0
   const notes: string[] = []
@@ -261,9 +305,18 @@ export async function updateAssociationVerificationScore(associationId: string) 
     notes.push('Ville officielle récupérée.')
   }
 
-  const hasStatuts = documents?.some((doc) => doc.type_document === 'statuts')
-  const hasRecepisse = documents?.some((doc) => doc.type_document === 'recepisse')
-  const hasPv = documents?.some((doc) => doc.type_document === 'pv_bureau')
+  const hasStatuts = documents?.some(
+    (doc) => doc.type_document === 'statuts'
+  )
+
+  const hasRecepisse = documents?.some(
+    (doc) => doc.type_document === 'recepisse'
+  )
+
+  const hasPv = documents?.some(
+    (doc) => doc.type_document === 'pv_bureau'
+  )
+
   const hasAttestation = documents?.some(
     (doc) => doc.type_document === 'attestation'
   )
@@ -315,7 +368,9 @@ export async function updateAssociationVerificationScore(associationId: string) 
     })
     .eq('id', associationId)
 
-  if (error) throw error
+  if (error) {
+    throw error
+  }
 }
 
 export async function requestJoinAssociation(
@@ -341,17 +396,23 @@ export async function requestJoinAssociation(
     .select('id')
     .single()
 
-  if (error) throw error
+  if (error) {
+    throw error
+  }
 
   return data.id as string
 }
 
-export async function getMyJoinRequests(): Promise<MyJoinRequest[]> {
+export async function getMyJoinRequests(): Promise<
+  MyJoinRequest[]
+> {
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) return []
+  if (!user) {
+    return []
+  }
 
   const { data, error } = await supabase
     .from('association_join_requests')
@@ -372,17 +433,23 @@ export async function getMyJoinRequests(): Promise<MyJoinRequest[]> {
     `
     )
     .eq('benevole_id', user.id)
-    .order('created_at', { ascending: false })
+    .order('created_at', {
+      ascending: false,
+    })
 
-  if (error) throw error
+  if (error) {
+    throw error
+  }
 
   return (data ?? []).map((item: any) => ({
     id: item.id,
     association_id: item.association_id,
     association_nom: item.associations?.nom ?? null,
     association_ville: item.associations?.ville ?? null,
-    association_zone_action: item.associations?.zone_action ?? null,
-    association_description: item.associations?.description ?? null,
+    association_zone_action:
+      item.associations?.zone_action ?? null,
+    association_description:
+      item.associations?.description ?? null,
     message: item.message,
     statut: item.statut,
     created_at: item.created_at,
@@ -390,47 +457,26 @@ export async function getMyJoinRequests(): Promise<MyJoinRequest[]> {
   }))
 }
 
+/*
+ * Récupération sécurisée des demandes reçues par
+ * l'association connectée.
+ *
+ * La RPC permet notamment de conserver l'accès au nom
+ * et à l'email du bénévole dans l'historique même après
+ * son retrait de l'association.
+ */
 export async function getAssociationJoinRequests(): Promise<
   AssociationJoinRequest[]
 > {
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser()
-
-  if (userError) {
-    throw userError
-  }
-
-  if (!user) {
-    return []
-  }
-
   const { data, error } = await supabase.rpc(
-    'get_association_join_requests'
+    'get_my_association_join_requests'
   )
 
   if (error) {
-    console.error(
-      'Erreur récupération demandes bénévoles :',
-      error
-    )
-
-    throw new Error(error.message)
+    throw error
   }
 
-  return (data ?? []).map((item: any) => ({
-    id: item.id,
-    association_id: item.association_id,
-    association_nom: item.association_nom ?? null,
-    benevole_id: item.benevole_id,
-    benevole_nom: item.benevole_nom ?? null,
-    benevole_email: item.benevole_email ?? null,
-    message: item.message ?? null,
-    statut: item.statut,
-    created_at: item.created_at,
-    updated_at: item.updated_at,
-  }))
+  return (data ?? []) as AssociationJoinRequest[]
 }
 
 export async function respondJoinRequest(
@@ -438,102 +484,90 @@ export async function respondJoinRequest(
   decision: 'acceptee' | 'refusee'
 ) {
   const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser()
-
-  if (userError) {
-    throw userError
-  }
-
-  if (!user) {
-    throw new Error('Utilisateur non connecté.')
-  }
-
-  const { error } = await supabase.rpc(
-    'respond_association_join_request',
-    {
-      p_request_id: requestId,
-      p_decision: decision,
-    }
-  )
-
-  if (error) {
-    console.error(
-      'Erreur traitement demande bénévole :',
-      error
+    data: request,
+    error: requestError,
+  } = await supabase
+    .from('association_join_requests')
+    .select(
+      'id, association_id, benevole_id'
     )
+    .eq('id', requestId)
+    .single()
 
-    throw new Error(error.message)
+  if (requestError) {
+    throw requestError
+  }
+
+  const { error: updateRequestError } = await supabase
+    .from('association_join_requests')
+    .update({
+      statut: decision,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', requestId)
+
+  if (updateRequestError) {
+    throw updateRequestError
+  }
+
+  if (decision === 'acceptee') {
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .update({
+        role: 'benevole',
+        association_id: request.association_id,
+        statut_compte: 'actif',
+        updated_at: new Date().toISOString(),
+      })
+      .eq(
+        'id',
+        request.benevole_id
+      )
+
+    if (profileError) {
+      throw profileError
+    }
   }
 }
+
+/*
+ * Lecture sécurisée de l'équipe de l'association.
+ *
+ * Cette RPC contourne uniquement les restrictions RLS
+ * nécessaires à cette fonctionnalité et vérifie côté SQL
+ * que l'utilisateur connecté est bien l'association.
+ */
 export async function getAssociationVolunteers(): Promise<
   AssociationVolunteer[]
 > {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { data, error } = await supabase.rpc(
+    'get_my_association_volunteers'
+  )
 
-  if (!user) return []
+  if (error) {
+    throw error
+  }
 
-  const { data: profile, error: profileError } = await supabase
-    .from('profiles')
-    .select('association_id')
-    .eq('id', user.id)
-    .single()
-
-  if (profileError) throw profileError
-  if (!profile?.association_id) return []
-
-  const { data, error } = await supabase
-    .from('profiles')
-    .select(
-      `
-      id,
-      nom,
-      email,
-      role,
-      association_id,
-      statut_compte,
-      created_at,
-      updated_at
-    `
-    )
-    .eq('role', 'benevole')
-    .eq('association_id', profile.association_id)
-    .order('created_at', { ascending: false })
-
-  if (error) throw error
-
-  return data ?? []
+  return (data ?? []) as AssociationVolunteer[]
 }
 
+/*
+ * Activer, suspendre, mettre en attente ou retirer
+ * un bénévole de l'association connectée.
+ */
 export async function updateAssociationVolunteerStatus(
   volunteerId: string,
   action: VolunteerAction
 ) {
-  if (action === 'retirer') {
-    const { error } = await supabase
-      .from('profiles')
-      .update({
-        association_id: null,
-        statut_compte: 'en_attente',
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', volunteerId)
+  const { error } = await supabase.rpc(
+    'update_my_association_volunteer',
+    {
+      p_volunteer_id: volunteerId,
+      p_action: action,
+    }
+  )
 
-    if (error) throw error
-
-    return
+  if (error) {
+    throw error
   }
-
-  const { error } = await supabase
-    .from('profiles')
-    .update({
-      statut_compte: action,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', volunteerId)
-
-  if (error) throw error
 }
