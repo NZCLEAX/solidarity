@@ -21,7 +21,7 @@ workflows:
         bundle_identifier: fr.humanspulse.app
 
       vars:
-        XCODE_WORKSPACE: "ios/App/App.xcworkspace"
+        XCODE_PROJECT: "ios/App/App.xcodeproj"
         XCODE_SCHEME: "App"
 
     scripts:
@@ -37,6 +37,15 @@ workflows:
         script: |
           npx cap sync ios
 
+      - name: Verify Xcode project
+        script: |
+          if [ ! -d "$CM_BUILD_DIR/$XCODE_PROJECT" ]; then
+            echo "ERROR: Xcode project not found"
+            ls -la "$CM_BUILD_DIR/ios/App"
+            exit 1
+          fi
+          echo "Xcode project found"
+
       - name: Set up iOS signing
         script: |
           xcode-project use-profiles
@@ -44,12 +53,11 @@ workflows:
       - name: Build IPA
         script: |
           xcode-project build-ipa \
-            --workspace "$CM_BUILD_DIR/$XCODE_WORKSPACE" \
+            --project "$CM_BUILD_DIR/$XCODE_PROJECT" \
             --scheme "$XCODE_SCHEME"
 
     artifacts:
       - build/ios/ipa/*.ipa
-      - ios/App/build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
       - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.app
       - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
