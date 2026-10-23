@@ -1,13 +1,17 @@
+
 workflows:
   pulse-ios:
     name: PULSE iOS
 
     max_build_duration: 60
-
     instance_type: mac_mini_m2
 
     environment:
+      groups:
+        - pulse_env
+
       node: 22
+      xcode: latest
 
       ios_signing:
         distribution_type: app_store
@@ -20,7 +24,7 @@ workflows:
     scripts:
       - name: Install dependencies
         script: |
-          npm install
+          npm ci
 
       - name: Build web app
         script: |
@@ -37,11 +41,12 @@ workflows:
       - name: Build IPA
         script: |
           xcode-project build-ipa \
-            --workspace "$XCODE_WORKSPACE" \
+            --workspace "$CM_BUILD_DIR/$XCODE_WORKSPACE" \
             --scheme "$XCODE_SCHEME"
 
     artifacts:
       - build/ios/ipa/*.ipa
+      - ios/App/build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
       - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.app
       - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
