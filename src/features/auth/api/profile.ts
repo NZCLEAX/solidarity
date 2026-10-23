@@ -1,3 +1,4 @@
+
 import { supabase } from '@/lib/supabase'
 import type { UserRole } from '@/features/auth/utils/roles'
 
@@ -7,10 +8,7 @@ export type CurrentProfile = {
   nom: string | null
   role: UserRole | null
   association_id: string | null
-
-  // Nom lisible de l'association
   association_nom: string | null
-
   statut_compte: string | null
   created_at: string | null
   updated_at: string | null
@@ -40,11 +38,7 @@ export async function getCurrentProfile(): Promise<CurrentProfile> {
     throw new Error('Utilisateur non connecté.')
   }
 
-  // =========================================================
-  // RÉCUPÉRATION DU PROFIL
-  // =========================================================
-
-  const { data, error } = await supabase
+  const { data: profile, error } = await supabase
     .from('profiles')
     .select(`
       id,
@@ -57,29 +51,14 @@ export async function getCurrentProfile(): Promise<CurrentProfile> {
       updated_at
     `)
     .eq('id', session.user.id)
-    .order('updated_at', {
-      ascending: false,
-      nullsFirst: false,
-    })
-    .limit(1)
+    .maybeSingle()
 
   if (error) {
     throw error
   }
 
-  const profile = data?.[0]
-
-  // =========================================================
-  // PROFIL ABSENT
-  // =========================================================
-
+  // Aucun profil enregistré : aucun rôle attribué par défaut.
   if (!profile) {
-    const metadataRole = session.user.user_metadata?.role
-
-    const role: UserRole = isValidRole(metadataRole)
-      ? metadataRole
-      : 'citoyen'
-
     return {
       id: session.user.id,
       email: session.user.email ?? null,
@@ -87,22 +66,16 @@ export async function getCurrentProfile(): Promise<CurrentProfile> {
         session.user.user_metadata?.nom ??
         session.user.user_metadata?.name ??
         null,
-      role,
+      role: null,
       association_id: null,
       association_nom: null,
-      statut_compte:
-        role === 'association'
-          ? 'en_attente'
-          : 'actif',
+      statut_compte: null,
       created_at: null,
       updated_at: null,
     }
   }
 
-  // =========================================================
-  // RÉCUPÉRATION DU NOM DE L'ASSOCIATION
-  // =========================================================
-
+  // Récupération du nom de l'association.
   let associationNom: string | null = null
 
   if (profile.association_id) {
@@ -125,21 +98,78 @@ export async function getCurrentProfile(): Promise<CurrentProfile> {
     }
   }
 
-  // =========================================================
-  // RETOUR
-  // =========================================================
-
   return {
     id: profile.id,
     email: profile.email ?? session.user.email ?? null,
     nom: profile.nom ?? null,
-    role: isValidRole(profile.role)
-      ? profile.role
-      : null,
+    role: isValidRole(profile.role) ? profile.role : null,
     association_id: profile.association_id ?? null,
     association_nom: associationNom,
     statut_compte: profile.statut_compte ?? null,
     created_at: profile.created_at ?? null,
     updated_at: profile.updated_at ?? null,
   }
+}
+
+/**
+ * Enregistre le rôle choisi lors de la première connexion sociale.
+ * Les comptes ayant déjà un rôle le conservent.
+ */
+export async function savePublicRole(
+  role: 'citoyen' | 'benevole'
+): Promise<CurrentProfile> {
+  if (role !== 'citoyen' && role !== 'benevole') {
+    throw new Error('Le rôle sélectionné est invalide.')
+  }
+
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser()
+
+  if (userError) {
+    throw userError
+  }
+
+  if (!user) {
+    throw new Error('Utilisateur non connecté.')
+  }
+
+  const { data: existingProfile, error: profileError } =
+    await supabase
+      .from('profiles')
+      .select('id, role')
+      .eq('id', user.id)
+      .maybeSingle()
+
+  if (profileError) {
+    throw profileError
+  }
+
+  // Ne jamais écraser le rôle d'un compte existant.
+  if (existingProfile?.role) {
+    return getCurrentProfile()
+  }
+
+  const { error: saveError } = await supabase
+    .from('profiles')
+    .upsert(
+      {
+        id: user.id,
+        email: user.email ?? null,
+        nom:
+          user.user_metadata?.nom ??
+          user.user_metadata?.name ??
+          null,
+        role,
+        statut_compte: 'actif',
+      },
+      { onConflict: 'id' }
+    )
+
+  if (saveError) {
+    throw saveError
+  }
+
+  return getCurrentProfile()
 }

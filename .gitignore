@@ -30,3 +30,5 @@ pnpm-debug.log*
 # OS
 .DS_Store
 Thumbs.db
+/android/app/upload-key.jks
+/android/keystore.properties

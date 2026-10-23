@@ -1,3 +1,4 @@
+
 import { supabase } from '@/lib/supabase'
 
 export type Intervention = {
@@ -52,7 +53,9 @@ async function getCurrentProfileAssociationId(userId: string) {
   return data?.association_id ?? null
 }
 
-export async function createIntervention(input: CreateInterventionInput) {
+export async function createIntervention(
+  input: CreateInterventionInput
+) {
   const {
     data: { session },
   } = await supabase.auth.getSession()
@@ -63,7 +66,8 @@ export async function createIntervention(input: CreateInterventionInput) {
     )
   }
 
-  const associationId = await getCurrentProfileAssociationId(session.user.id)
+  const associationId =
+    await getCurrentProfileAssociationId(session.user.id)
 
   if (!associationId) {
     throw new Error(
@@ -83,9 +87,6 @@ export async function createIntervention(input: CreateInterventionInput) {
     nombre_repas: Number(input.nombreRepas) || 0,
     nombre_benevoles: Number(input.nombreBenevoles) || 0,
     commentaire: input.commentaire?.trim() || null,
-
-    // Valeurs acceptées par ta contrainte SQL :
-    // prevue | en_cours | terminee | annulee
     statut: 'prevue',
   }
 
@@ -104,10 +105,11 @@ export async function createIntervention(input: CreateInterventionInput) {
 }
 
 export async function getInterventions(): Promise<Intervention[]> {
+  // Récupère toutes les interventions, passées et futures.
+  // Aucune intervention n'est supprimée ni masquée par sa date.
   const { data, error } = await supabase
     .from('interventions')
-    .select(
-      `
+    .select(`
       *,
       points (
         adresse
@@ -115,9 +117,9 @@ export async function getInterventions(): Promise<Intervention[]> {
       associations (
         nom
       )
-    `
-    )
-    .order('created_at', { ascending: false })
+    `)
+    .order('date_intervention', { ascending: true })
+    .order('heure_debut', { ascending: true })
 
   if (error) {
     throw new Error(error.message)
