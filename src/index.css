@@ -951,3 +951,138 @@ body,
 * {
   box-sizing: border-box;
 }
+
+/* =========================================================
+   PULSE — CORRECTION DU ZOOM AUTOMATIQUE SUR IPHONE
+   ========================================================= */
+
+@media screen and (max-width: 767px) {
+
+  /* Empêcher le zoom automatique lors de la saisie */
+
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  /* Éviter les débordements horizontaux */
+
+  input,
+  select,
+  textarea {
+    box-sizing: border-box;
+  }
+
+  /* Garder les contenus flexibles à l'intérieur de l'écran */
+
+  form,
+  form > div {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  /* Adapter le sélecteur de documents PDF */
+
+  input[type="file"] {
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+  }
+}
+
+/* =========================================================
+   PULSE — RESPONSIVE IPHONE ET FORMULAIRES
+   ========================================================= */
+
+@media screen and (max-width: 767px) {
+  /* Empêche Safari iOS de zoomer lors de la saisie */
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  /* Empêche les champs de dépasser leur conteneur */
+  input,
+  select,
+  textarea {
+    box-sizing: border-box;
+  }
+
+  /* Adapte les sélecteurs de documents */
+  input[type="file"] {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  /* Permet au formulaire de s'adapter à la largeur mobile */
+  form,
+  form > div {
+    min-width: 0;
+    max-width: 100%;
+  }
+}
+
+/* ================================================
+   PULSE — CORRECTION ZOOM AUTOMATIQUE IPHONE
+   ================================================ */
+
+/*
+ * iOS agrandit automatiquement la page lorsqu'un
+ * champ de formulaire utilise une police < 16px.
+ * Cette règle corrige tous les formulaires PULSE,
+ * notamment l'inscription des associations.
+ */
+
+@supports (-webkit-touch-callout: none) {
+  @media (max-width: 768px) {
+    input,
+    textarea,
+    select {
+      font-size: 16px !important;
+    }
+
+    input[type="file"] {
+      font-size: 16px !important;
+      max-width: 100%;
+    }
+
+    input,
+    textarea,
+    select {
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    textarea {
+      overflow-wrap: anywhere;
+    }
+  }
+}
+
+/* Eviter les débordements des formulaires mobiles */
+
+@media (max-width: 640px) {
+  form,
+  form > div,
+  form section {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  input[type="file"] {
+    max-width: 100%;
+  }
+
+  input[type="file"]::file-selector-button {
+    max-width: 100%;
+    white-space: normal;
+  }
+}

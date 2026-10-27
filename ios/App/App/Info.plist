@@ -1,3 +1,4 @@
+
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -32,15 +33,30 @@
     <key>CFBundleVersion</key>
     <string>$(CURRENT_PROJECT_VERSION)</string>
 
-    <!-- Retour vers l'application après connexion OAuth -->
+    <!-- IDENTIFIANT GOOGLE OAUTH IOS -->
+    <key>GIDClientID</key>
+    <string>827941194570-qgctsuh6gm2r6l8vpriscn16en6lgrcp.apps.googleusercontent.com</string>
+
+    <!-- REDIRECTIONS APPLE ET GOOGLE -->
     <key>CFBundleURLTypes</key>
     <array>
+        <!-- Retour OAuth Apple / Supabase -->
         <dict>
             <key>CFBundleURLName</key>
             <string>fr.humanspulse.app</string>
             <key>CFBundleURLSchemes</key>
             <array>
                 <string>fr.humanspulse.app</string>
+            </array>
+        </dict>
+
+        <!-- Retour OAuth Google iOS -->
+        <dict>
+            <key>CFBundleURLName</key>
+            <string>Google Sign-In</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>com.googleusercontent.apps.827941194570-qgctsuh6gm2r6l8vpriscn16en6lgrcp</string>
             </array>
         </dict>
     </array>
@@ -52,6 +68,7 @@
     <dict>
         <key>UIApplicationSupportsMultipleScenes</key>
         <false/>
+
         <key>UISceneConfigurations</key>
         <dict>
             <key>UIWindowSceneSessionRoleApplication</key>
@@ -59,8 +76,10 @@
                 <dict>
                     <key>UISceneConfigurationName</key>
                     <string>Default Configuration</string>
+
                     <key>UISceneDelegateClassName</key>
                     <string>$(PRODUCT_MODULE_NAME).SceneDelegate</string>
+
                     <key>UISceneStoryboardFile</key>
                     <string>Main</string>
                 </dict>
