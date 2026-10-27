@@ -917,3 +917,37 @@ main article {
     margin 180ms ease,
     gap 180ms ease;
 }
+
+
+/* ============================================
+   PULSE - CORRECTION ZOOM MOBILE iOS
+   ============================================ */
+
+/* Empêche le zoom automatique au focus des champs */
+@media screen and (max-width: 767px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  /* Évite le zoom par double pression sur les boutons */
+  button,
+  a,
+  [role="button"] {
+    touch-action: manipulation;
+  }
+}
+
+/* Garde les éléments dans la largeur de l'écran */
+html,
+body,
+#root {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Assure une bonne gestion des dimensions */
+* {
+  box-sizing: border-box;
+}

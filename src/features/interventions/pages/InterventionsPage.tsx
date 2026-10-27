@@ -33,7 +33,7 @@ function formatDate(
   locale: string
 ) {
   if (!value) {
-    return 'Date non renseignÃ©e'
+    return 'Date non renseignée'
   }
 
   const [year, month, day] = value.split('-').map(Number)
@@ -56,14 +56,14 @@ function formatTimeRange(
   end: string | null
 ) {
   if (!start && !end) {
-    return 'Horaire non renseignÃ©'
+    return 'Horaire non renseigné'
   }
 
   if (start && end) {
     return `${start} - ${end}`
   }
 
-  return start || end || 'Horaire non renseignÃ©'
+  return start || end || 'Horaire non renseigné'
 }
 
 function formatAidType(value: string | null) {
@@ -96,20 +96,20 @@ function getEffectiveStatus(
 function getStatusLabel(status: string) {
   switch (status) {
     case 'prevue':
-      return 'PrÃ©vue'
+      return 'Prévue'
     case 'en_cours':
       return 'En cours'
     case 'declaree':
-      return 'DÃ©clarÃ©e'
+      return 'Déclarée'
     case 'terminee':
     case 'realisee':
-      return 'TerminÃ©e'
+      return 'Terminée'
     case 'annulee':
-      return 'AnnulÃ©e'
+      return 'Annulée'
     case 'expiree':
-      return 'Date passÃ©e'
+      return 'Date passée'
     default:
-      return 'Non renseignÃ©'
+      return 'Non renseigné'
   }
 }
 
@@ -323,7 +323,7 @@ export default function InterventionsPage() {
             <p className="mt-3 max-w-3xl text-base leading-relaxed text-slate-600 sm:text-lg">
               {t(
                 'interventions.description',
-                'Suivi des interventions dÃ©clarÃ©es par les associations : distributions, bÃ©nÃ©voles mobilisÃ©s et repas distribuÃ©s.'
+                'Suivi des interventions déclarées par les associations : distributions, bénévoles mobilisés et repas distribués.'
               )}
             </p>
           </div>
@@ -351,7 +351,7 @@ export default function InterventionsPage() {
                 : 'border-slate-300 bg-white text-slate-700'
             }`}
           >
-            Ã€ venir ({upcomingCount})
+            À venir ({upcomingCount})
           </button>
 
           <button
@@ -384,25 +384,25 @@ export default function InterventionsPage() {
         <section className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <article className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm">
             <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
-              Interventions affichÃ©es
+              Interventions affichées
             </p>
             <p className="mt-3 text-4xl font-black text-slate-950">
               {filteredInterventions.length}
             </p>
             <p className="mt-2 text-sm text-slate-500">
-              Selon les filtres sÃ©lectionnÃ©s
+              Selon les filtres sélectionnés
             </p>
           </article>
 
           <article className="rounded-[1.5rem] border border-blue-200 bg-blue-50 p-5 shadow-sm">
             <p className="text-xs font-bold uppercase tracking-wide text-blue-600">
-              PrÃ©vues
+              Prévues
             </p>
             <p className="mt-3 text-4xl font-black text-blue-700">
               {upcomingCount}
             </p>
             <p className="mt-2 text-sm text-blue-600">
-              Interventions Ã  venir
+              Interventions à venir
             </p>
           </article>
 
@@ -414,19 +414,19 @@ export default function InterventionsPage() {
               {totalRepas}
             </p>
             <p className="mt-2 text-sm text-emerald-600">
-              Total des interventions affichÃ©es
+              Total des interventions affichées
             </p>
           </article>
 
           <article className="rounded-[1.5rem] border border-orange-200 bg-orange-50 p-5 shadow-sm">
             <p className="text-xs font-bold uppercase tracking-wide text-orange-600">
-              BÃ©nÃ©voles
+              Bénévoles
             </p>
             <p className="mt-3 text-4xl font-black text-orange-700">
               {totalBenevoles}
             </p>
             <p className="mt-2 text-sm text-orange-600">
-              Effectifs dÃ©clarÃ©s
+              Effectifs déclarés
             </p>
           </article>
         </section>
@@ -446,7 +446,7 @@ export default function InterventionsPage() {
                 onChange={(event) =>
                   setSearchTerm(event.target.value)
                 }
-                placeholder="Type dâ€™aide, point, commentaire..."
+                placeholder="Type d’aide, point, commentaire..."
                 className="min-h-12 w-full min-w-0 rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none focus:border-[#d94a0b]"
               />
             </div>
@@ -464,14 +464,14 @@ export default function InterventionsPage() {
                 className="min-h-12 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900"
               >
                 <option value="all">Tous les statuts</option>
-                <option value="prevue">PrÃ©vue</option>
+                <option value="prevue">Prévue</option>
                 <option value="en_cours">En cours</option>
-                <option value="declaree">DÃ©clarÃ©e</option>
-                <option value="terminee">TerminÃ©e</option>
-                <option value="expiree">Date passÃ©e</option>
-                <option value="annulee">AnnulÃ©e</option>
+                <option value="declaree">Déclarée</option>
+                <option value="terminee">Terminée</option>
+                <option value="expiree">Date passée</option>
+                <option value="annulee">Annulée</option>
                 <option value="non_renseigne">
-                  Non renseignÃ©
+                  Non renseigné
                 </option>
               </select>
             </div>
@@ -481,13 +481,13 @@ export default function InterventionsPage() {
               onClick={resetFilters}
               className="min-h-12 rounded-2xl border border-slate-300 bg-slate-50 px-5 py-3 text-sm font-bold text-slate-700"
             >
-              RÃ©initialiser
+              Réinitialiser
             </button>
           </div>
 
           <p className="mt-4 text-sm text-slate-500">
             {filteredInterventions.length} intervention(s)
-            affichÃ©e(s) â€¢ {pointsCouverts} point(s)
+            affichée(s) • {pointsCouverts} point(s)
             couvert(s)
           </p>
         </section>
@@ -512,12 +512,12 @@ export default function InterventionsPage() {
           filteredInterventions.length === 0 && (
             <div className="rounded-[2rem] border border-dashed border-slate-300 bg-white p-8 text-center shadow-sm">
               <h2 className="text-xl font-black text-slate-950">
-                Aucune intervention trouvÃ©e
+                Aucune intervention trouvée
               </h2>
 
               <p className="mt-3 text-sm text-slate-500">
                 {dateFilter === 'upcoming'
-                  ? 'Aucune intervention Ã  venir pour le moment.'
+                  ? 'Aucune intervention à venir pour le moment.'
                   : 'Aucune intervention ne correspond aux filtres.'}
               </p>
 
@@ -526,7 +526,7 @@ export default function InterventionsPage() {
                 onClick={resetFilters}
                 className="mt-5 min-h-11 rounded-xl bg-[#d94a0b] px-5 text-sm font-bold text-white"
               >
-                RÃ©initialiser les filtres
+                Réinitialiser les filtres
               </button>
             </div>
           )}
@@ -568,10 +568,10 @@ export default function InterventionsPage() {
                         </div>
 
                         <p className="mt-3 break-words text-sm text-slate-600">
-                          Point concernÃ© :{' '}
+                          Point concerné :{' '}
                           <span className="font-bold text-slate-700">
                             {intervention.points?.adresse ||
-                              'Point non renseignÃ©'}
+                              'Point non renseigné'}
                           </span>
                         </p>
 
@@ -618,7 +618,7 @@ export default function InterventionsPage() {
 
                           <div className="rounded-2xl bg-orange-50 p-4">
                             <p className="text-xs font-bold uppercase text-orange-600">
-                              BÃ©nÃ©voles
+                              Bénévoles
                             </p>
                             <p className="mt-2 text-2xl font-black text-orange-700">
                               {intervention.nombre_benevoles ?? 0}

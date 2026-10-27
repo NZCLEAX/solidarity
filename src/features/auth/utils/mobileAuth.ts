@@ -1,79 +1,88 @@
-
 import { App } from '@capacitor/app'
 import { Browser } from '@capacitor/browser'
 import { Capacitor } from '@capacitor/core'
 
+import { router } from '@/app/router'
 import { supabase } from '@/lib/supabase'
 
-const APPLE_CALLBACK_URL =
-  'fr.humanspulse.app://auth/callback'
-
 let initialized = false
+let handlingCallback = false
+
+function isAppleCallback(url: string): boolean {
+  try {
+    const parsed = new URL(url)
+
+    return (
+      parsed.protocol === 'fr.humanspulse.app:' &&
+      parsed.hostname === 'auth' &&
+      parsed.pathname === '/callback'
+    )
+  } catch {
+    return false
+  }
+}
 
 async function handleAuthCallback(url: string) {
-  if (!url.startsWith(APPLE_CALLBACK_URL)) return
+  if (!isAppleCallback(url) || handlingCallback) return
 
-  const callbackUrl = new URL(url)
+  handlingCallback = true
 
-  const authError =
-    callbackUrl.searchParams.get('error_description') ??
-    callbackUrl.searchParams.get('error')
+  try {
+    const callbackUrl = new URL(url)
 
-  if (authError) {
-    console.error('Échec de la connexion Apple :', authError)
+    const authError =
+      callbackUrl.searchParams.get('error_description') ||
+      callbackUrl.searchParams.get('error')
+
+    if (authError) {
+      throw new Error(authError)
+    }
+
+    const code = callbackUrl.searchParams.get('code')
+
+    if (!code) {
+      throw new Error(
+        'Retour Apple sans code OAuth. Vérifie les Redirect URLs Supabase.'
+      )
+    }
+
+    const { error } =
+      await supabase.auth.exchangeCodeForSession(code)
+
+    if (error) throw error
+
     await Browser.close().catch(() => undefined)
-    window.location.replace('/login?oauth=error')
-    return
-  }
 
-  const code = callbackUrl.searchParams.get('code')
+    await router.navigate('/login?oauth=complete', {
+      replace: true,
+    })
+  } catch (error) {
+    console.error('Erreur OAuth Apple dans PULSE :', error)
 
-  if (!code) {
-    console.error(
-      "Le retour Apple ne contient pas de code d'authentification."
-    )
     await Browser.close().catch(() => undefined)
-    window.location.replace('/login?oauth=error')
-    return
+
+    await router.navigate('/login?oauth=error', {
+      replace: true,
+    })
+  } finally {
+    handlingCallback = false
   }
-
-  const { error } =
-    await supabase.auth.exchangeCodeForSession(code)
-
-  await Browser.close().catch(() => undefined)
-
-  if (error) {
-    console.error(
-      "Impossible de créer la session après la connexion Apple :",
-      error
-    )
-    window.location.replace('/login?oauth=error')
-    return
-  }
-
-  window.location.replace('/login?oauth=complete')
 }
 
 export async function initializeMobileAuth() {
-  if (!Capacitor.isNativePlatform() || initialized) return
+  if (!Capacitor.isNativePlatform() || initialized) {
+    return
+  }
 
   initialized = true
 
-  await App.addListener('appUrlOpen', async ({ url }) => {
-    try {
-      await handleAuthCallback(url)
-    } catch (error) {
-      console.error(
-        'Erreur lors du retour OAuth dans PULSE :',
-        error
-      )
-      window.location.replace('/login?oauth=error')
-    }
+  await App.addListener('appUrlOpen', ({ url }) => {
+    void handleAuthCallback(url)
   })
 
   const launch = await App.getLaunchUrl()
 
   if (launch?.url) {
-    await handleAuthCallback(launch.url)
+    void handleAuthCallback(launch.url)
   }
 }

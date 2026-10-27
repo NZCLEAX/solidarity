@@ -243,7 +243,7 @@ export default function RegisterPage() {
             value={name}
             autoComplete="name"
             onChange={(e) => setName(e.target.value)}
-            className="min-h-12 w-full min-w-0 rounded-lg border px-3 py-2"
+            className="min-h-12 w-full min-w-0 rounded-lg border px-3 py-2 text-base"
           />
 
           <input
@@ -253,7 +253,7 @@ export default function RegisterPage() {
             value={email}
             autoComplete="email"
             onChange={(e) => setEmail(e.target.value)}
-            className="min-h-12 w-full min-w-0 rounded-lg border px-3 py-2"
+            className="min-h-12 w-full min-w-0 rounded-lg border px-3 py-2 text-base"
           />
 
           <div>
@@ -266,7 +266,7 @@ export default function RegisterPage() {
               onChange={(e) =>
                 setRole(e.target.value as PublicRegisterRole)
               }
-              className="min-h-12 w-full min-w-0 rounded-lg border px-3 py-2"
+              className="min-h-12 w-full min-w-0 rounded-lg border px-3 py-2 text-base"
             >
               {publicRegisterRoles.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -284,7 +284,7 @@ export default function RegisterPage() {
               value={password}
               autoComplete="new-password"
               onChange={(e) => setPassword(e.target.value)}
-              className="min-h-12 w-full min-w-0 rounded-lg border px-3 py-2"
+              className="min-h-12 w-full min-w-0 rounded-lg border px-3 py-2 text-base"
             />
 
             <p className="mt-2 text-xs text-slate-500">

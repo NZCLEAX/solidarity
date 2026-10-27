@@ -397,7 +397,7 @@ export default function LoginPage() {
               required
               disabled={isLoading}
               placeholder="Email"
-              className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-[#d94a0b] focus:ring-4 focus:ring-orange-100 disabled:cursor-not-allowed disabled:bg-slate-100"
+              className="w-full rounded-xl border border-slate-300 px-4 py-3 text-base outline-none transition focus:border-[#d94a0b] focus:ring-4 focus:ring-orange-100 disabled:cursor-not-allowed disabled:bg-slate-100"
             />
           </div>
 
@@ -419,7 +419,7 @@ export default function LoginPage() {
               required
               disabled={isLoading}
               placeholder="Mot de passe"
-              className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-[#d94a0b] focus:ring-4 focus:ring-orange-100 disabled:cursor-not-allowed disabled:bg-slate-100"
+              className="w-full rounded-xl border border-slate-300 px-4 py-3 text-base outline-none transition focus:border-[#d94a0b] focus:ring-4 focus:ring-orange-100 disabled:cursor-not-allowed disabled:bg-slate-100"
             />
 
             <div className="mt-2 text-right">

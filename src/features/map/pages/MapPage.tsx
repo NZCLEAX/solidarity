@@ -25,6 +25,7 @@ import {
   type Intervention,
 } from '@/features/interventions/api/interventions'
 import { getRepasCoverage } from '@/features/map/utils/coverage'
+import { getInterventionEndDate } from '@/features/interventions/utils/interventionDates'
 
 const DEFAULT_CENTER: [number, number] = [48.8566, 2.3522]
 
@@ -230,6 +231,25 @@ function createPointIcon(
   })
 }
 
+function isActiveMapIntervention(
+  intervention: Intervention,
+  now: Date
+) {
+  if (
+    intervention.statut !== 'prevue' &&
+    intervention.statut !== 'en_cours'
+  ) {
+    return false
+  }
+
+  const endDate = getInterventionEndDate(intervention)
+
+  return (
+    endDate !== null &&
+    endDate.getTime() >= now.getTime()
+  )
+}
+
 export default function MapPage() {
   const { t, i18n } = useTranslation()
 
@@ -251,6 +271,22 @@ export default function MapPage() {
 
   const [mobilePoint, setMobilePoint] =
     useState<any | null>(null)
+
+  const [now, setNow] = useState(() => new Date())
+
+  useEffect(() => {
+    const refresh = () => setNow(new Date())
+    const timer = window.setInterval(refresh, 30000)
+
+    window.addEventListener('focus', refresh)
+    document.addEventListener('visibilitychange', refresh)
+
+    return () => {
+      window.clearInterval(timer)
+      window.removeEventListener('focus', refresh)
+      document.removeEventListener('visibilitychange', refresh)
+    }
+  }, [])
 
   const [search, setSearch] = useState('')
   const [showFilters, setShowFilters] =
@@ -296,6 +332,7 @@ export default function MapPage() {
 
     interventions.forEach((intervention) => {
       if (!intervention.point_id) return
+      if (!isActiveMapIntervention(intervention, now)) return
 
       if (!grouped[intervention.point_id]) {
         grouped[intervention.point_id] = []
@@ -325,7 +362,7 @@ export default function MapPage() {
     })
 
     return grouped
-  }, [interventions])
+  }, [interventions, now])
 
   const pointsWithCoordinates = useMemo(
   () =>
@@ -425,6 +462,49 @@ useEffect(() => {
   targetPoint,
   interventionsByPointId,
 ])
+
+  useEffect(() => {
+    setMobilePoint((current: any | null) => {
+      if (!current) return null
+
+      const point = pointsWithCoordinates.find(
+        (item) => String(item.id) === String(current.id)
+      )
+
+      if (!point) return null
+
+      const pointInterventions =
+        interventionsByPointId[point.id] ?? []
+
+      return {
+        ...point,
+        pointInterventions,
+
+        totalRepas: pointInterventions.reduce(
+          (total, item) =>
+            total + (item.nombre_repas ?? 0),
+          0
+        ),
+
+        totalBenevoles: pointInterventions.reduce(
+          (total, item) =>
+            total + (item.nombre_benevoles ?? 0),
+          0
+        ),
+
+        repasCoverage: getRepasCoverage(
+          point.nombre_personnes_estime,
+          pointInterventions
+        ),
+
+        hasRepasNeed:
+          point.besoins?.toLowerCase().includes('repas') ??
+          false,
+
+        latestIntervention: pointInterventions[0],
+      }
+    })
+  }, [pointsWithCoordinates, interventionsByPointId])
 
   const availableNeeds = useMemo(() => {
     const needs = pointsWithCoordinates.flatMap(
@@ -640,7 +720,7 @@ useEffect(() => {
   return (
     <div
       dir={i18n.dir()}
-      className="relative h-[calc(100dvh-64px)] w-full overflow-hidden bg-[#faf8f4]"
+      className="relative h-full w-full overflow-hidden bg-[#faf8f4]"
     >
       {isLoading && (
         <div className="flex h-full items-center justify-center p-8 text-slate-600">
@@ -1000,7 +1080,7 @@ useEffect(() => {
           </MapContainer>
 
           {mobilePoint && (
-            <div className="fixed inset-x-0 bottom-24 top-20 z-[2000] overflow-y-auto rounded-t-[2rem] bg-white px-5 pb-6 pt-4 shadow-2xl ring-1 ring-slate-200 sm:hidden">
+            <div className="absolute inset-x-0 bottom-24 top-0 z-[2000] overscroll-contain overflow-y-auto rounded-t-[2rem] bg-white px-5 pb-6 pt-4 shadow-2xl ring-1 ring-slate-200 sm:hidden">
               <div className="mx-auto mb-4 h-1.5 w-14 rounded-full bg-slate-300" />
 
               <div className="flex items-start justify-between gap-3">
@@ -1173,7 +1253,7 @@ useEffect(() => {
 
                 {mobilePoint.pointInterventions
                   .length > 0 && (
-                  <div className="mt-3 max-h-40 space-y-2 overflow-y-auto pr-1">
+                  <div className="mt-3 space-y-2 pr-1">
                     {mobilePoint.pointInterventions.map(
                       (intervention: any) => (
                         <div
