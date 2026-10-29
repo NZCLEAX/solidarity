@@ -151,7 +151,17 @@ export async function createAssociationRequest(
       password,
     })
 
-  if (signInError) {
+    if (signInError) {
+    // Compte tout juste créé : l'e-mail doit d'abord être confirmé.
+    if (
+      signInError.code === 'email_not_confirmed' ||
+      signInError.message.toLowerCase().includes('not confirmed')
+    ) {
+      throw new Error(
+        `Compte créé ! Confirme ton adresse e-mail avec le lien envoyé à ${email}, puis reviens sur cette page et renvoie le formulaire pour finaliser le dossier.`
+      )
+    }
+
     throw new Error(
       'Ce compte existe déjà. Connecte-toi avec ce compte ou utilise le bon mot de passe.'
     )

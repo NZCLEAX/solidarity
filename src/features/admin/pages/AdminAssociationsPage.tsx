@@ -1,4 +1,7 @@
 import { useMemo, useState } from 'react'
+import { Browser } from '@capacitor/browser'
+import { Capacitor } from '@capacitor/core'
+
 import {
   useMutation,
   useQuery,
@@ -320,9 +323,22 @@ export default function AdminAssociationsPage() {
       )
     }, [associations, search])
 
-  async function handleOpenDocument(
+    async function handleOpenDocument(
     document: AssociationDocument
   ) {
+    const isNative =
+      Capacitor.isNativePlatform()
+
+    // Sur le web, l'onglet doit s'ouvrir pendant le clic :
+    // après l'attente du lien, le navigateur le bloquerait.
+    const webTab = isNative
+      ? null
+      : window.open('', '_blank')
+
+    if (webTab) {
+      webTab.opener = null
+    }
+
     try {
       setOpeningDocumentId(
         document.id
@@ -333,10 +349,19 @@ export default function AdminAssociationsPage() {
           document.file_path
         )
 
-      window.open(
-        url,
-        '_blank',
-        'noopener,noreferrer'
+      if (isNative) {
+        await Browser.open({ url })
+      } else if (webTab) {
+        webTab.location.href = url
+      } else {
+        window.location.href = url
+      }
+    } catch (error) {
+      webTab?.close()
+
+      window.alert(
+        (error as Error)?.message ||
+          "Impossible d'ouvrir le document."
       )
     } finally {
       setOpeningDocumentId(null)

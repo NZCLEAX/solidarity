@@ -360,6 +360,16 @@ export default function RegisterPage() {
             </div>
           )}
 
+<p className="mt-5 text-center text-sm text-slate-600">
+          Tu représentes une association ?{' '}
+          <Link
+            to="/associations/register"
+            className="font-bold text-[#d94a0b]"
+          >
+            Demander un accès association
+          </Link>
+        </p>
+        
           <div className="space-y-3">
 
             {isIOS && (
@@ -429,15 +439,7 @@ export default function RegisterPage() {
           </Link>
         </div>
 
-        <p className="mt-5 text-center text-sm text-slate-600">
-          Tu représentes une association ?{' '}
-          <Link
-            to="/associations/register"
-            className="font-bold text-[#d94a0b]"
-          >
-            Demander un accès association
-          </Link>
-        </p>
+        
       </div>
     </div>
   )

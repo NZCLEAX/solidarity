@@ -5,6 +5,31 @@ import type { OfficialAssociationData } from '@/features/associations/api/offici
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker
 
+
+// Safari / iPhone : pdf.js 5 lit le texte des PDF avec `for await`
+// sur un ReadableStream, ce que WebKit ne sait pas encore faire.
+const streamPrototype = ReadableStream.prototype as unknown as {
+  [Symbol.asyncIterator]?: (this: ReadableStream) => AsyncGenerator
+}
+
+if (!streamPrototype[Symbol.asyncIterator]) {
+  streamPrototype[Symbol.asyncIterator] = async function* () {
+    const reader = this.getReader()
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read()
+
+        if (done) return
+
+        yield value
+      }
+    } finally {
+      reader.releaseLock()
+    }
+  }
+}
+
 export type VerificationContext = {
   nom: string
   siren: string
