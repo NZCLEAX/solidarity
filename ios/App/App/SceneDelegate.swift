@@ -15,7 +15,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         }
 
         window = UIWindow(windowScene: windowScene)
-        window?.rootViewController = CAPBridgeViewController()
+                window?.rootViewController = PulseViewController()
         window?.makeKeyAndVisible()
 
         SceneDelegateProxy.shared.scene(
@@ -43,5 +43,14 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             scene,
             continue: userActivity
         )
+    }
+}
+
+class PulseViewController: CAPBridgeViewController {
+    override func capacitorDidLoad() {
+        super.capacitorDidLoad()
+
+        // Glisser depuis le bord gauche pour revenir à la page précédente.
+        webView?.allowsBackForwardNavigationGestures = true
     }
 }

@@ -269,7 +269,7 @@ export default function LoginPage() {
   if (pendingProfile) {
     return (
       <div className="flex min-h-[100dvh] items-center justify-center bg-white px-4 py-8">
-        <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="w-full max-w-sm">
           <div className="flex flex-col items-center text-center">
             <PulseLogo className="h-14 w-auto" />
 
@@ -366,9 +366,9 @@ export default function LoginPage() {
    */
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-100 px-4 py-8">
-      <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="flex flex-col items-center text-center">
+<div className="flex min-h-[100dvh] items-center justify-center bg-white px-4 py-8">
+  <div className="w-full max-w-sm">
+          <div className="flex flex-col items-center text-center">
           <PulseLogo className="h-14 w-auto" />
 
           <h1 className="mt-6 text-2xl font-black text-slate-950">

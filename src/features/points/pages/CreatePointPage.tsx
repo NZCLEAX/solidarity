@@ -12,7 +12,8 @@ import {
 } from '@tanstack/react-query'
 
 import { useTranslation } from 'react-i18next'
-
+import { Capacitor } from '@capacitor/core'
+import { Geolocation } from '@capacitor/geolocation'
 import {
   Utensils,
   Droplets,
@@ -180,6 +181,9 @@ export default function CreatePointPage() {
     positionError,
     setPositionError,
   ] = useState('')
+
+  const [isLocating, setIsLocating] =
+    useState(false)
 
   const hasCoordinates =
     latitude.trim() !==
@@ -511,74 +515,63 @@ export default function CreatePointPage() {
     )
   }
 
-  function useCurrentPosition() {
+    async function useCurrentPosition() {
     setPositionError('')
     setAddressError('')
     setSuccessMessage('')
+    setIsLocating(true)
 
-    if (
-      !navigator.geolocation
-    ) {
-      setPositionError(
-        t(
-          'createPoint.geolocationUnavailable',
-          'La géolocalisation n’est pas disponible sur ce navigateur.'
-        )
+    try {
+      // Sur iPhone / Android, on demande l'autorisation explicitement.
+      if (Capacitor.isNativePlatform()) {
+        const permission =
+          await Geolocation.requestPermissions()
+
+        if (permission.location !== 'granted') {
+          setPositionError(
+            t(
+              'createPoint.geolocationDenied',
+              'Autorise la localisation pour PULSE dans les réglages du téléphone.'
+            )
+          )
+
+          return
+        }
+      }
+
+      const position =
+        await Geolocation.getCurrentPosition({
+          enableHighAccuracy: true,
+          timeout: 15000,
+          maximumAge: 60000,
+        })
+
+      setLatitude(
+        position.coords.latitude.toFixed(6)
       )
 
-      return
-    }
+      setLongitude(
+        position.coords.longitude.toFixed(6)
+      )
 
-    navigator.geolocation.getCurrentPosition(
-      (
-        position
-      ) => {
-        setLatitude(
-          position.coords.latitude.toFixed(
-            6
-          )
-        )
-
-        setLongitude(
-          position.coords.longitude.toFixed(
-            6
-          )
-        )
-
-        if (
-          !adresse.trim()
-        ) {
-          setAdresse(
-            'Position actuelle'
-          )
-        }
-
-        setAddressSuggestions(
-          []
-        )
-
-        setShowAddressSuggestions(
-          false
-        )
-      },
-
-           () => {
-        setPositionError(
-          t(
-            'createPoint.geolocationError',
-            'Impossible de récupérer ta position. Vérifie les autorisations du navigateur.'
-          )
-        )
-      },
-
-      {
-        enableHighAccuracy: true,
-        timeout: 15000,
-        maximumAge: 60000,
+      if (!adresse.trim()) {
+        setAdresse('Position actuelle')
       }
-    )
-    
+
+      setAddressSuggestions([])
+      setShowAddressSuggestions(false)
+    } catch {
+      setPositionError(
+        t(
+          'createPoint.geolocationError',
+          'Impossible de récupérer ta position. Vérifie les autorisations du navigateur.'
+        )
+      )
+    } finally {
+      setIsLocating(false)
+    }
   }
+
 
   function handleSubmit(
     event:
@@ -867,17 +860,23 @@ export default function CreatePointPage() {
 
                   <div className="mt-3 flex flex-wrap gap-3">
 
-                    <button
+                                        <button
                       type="button"
-                      onClick={
-                        useCurrentPosition
+                      onClick={() =>
+                        void useCurrentPosition()
                       }
-                      className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-50"
+                      disabled={isLocating}
+                      className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-50 disabled:opacity-60"
                     >
-                      {t(
-                        'createPoint.myPosition',
-                        'Ma position'
-                      )}
+                      {isLocating
+                        ? t(
+                            'createPoint.locating',
+                            'Localisation...'
+                          )
+                        : t(
+                            'createPoint.myPosition',
+                            'Ma position'
+                          )}
                     </button>
 
                     {canAccessMap() && (

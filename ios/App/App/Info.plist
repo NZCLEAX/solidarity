@@ -37,6 +37,13 @@
     <key>GIDClientID</key>
     <string>827941194570-qgctsuh6gm2r6l8vpriscn16en6lgrcp.apps.googleusercontent.com</string>
 
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>PULSE utilise ta position pour localiser le point que tu signales.</string>
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>PULSE utilise ta position pour localiser le point que tu signales.</string>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>PULSE utilise ta position pour localiser le point que tu signales.</string>
+
     <!-- REDIRECTIONS APPLE ET GOOGLE -->
     <key>CFBundleURLTypes</key>
     <array>
