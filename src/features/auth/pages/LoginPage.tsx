@@ -21,6 +21,10 @@ import {
   type CurrentProfile,
 } from '@/features/auth/api/profile'
 
+import {
+  PENDING_ROLE_STORAGE_KEY,
+} from '@/features/auth/utils/roles'
+
 import type { PublicRegisterRole } from '@/features/auth/utils/roles'
 
 import { getDefaultPathForProfile } from '@/features/auth/utils/permissions'
@@ -81,7 +85,16 @@ export default function LoginPage() {
       setLocalError(null)
 
       try {
-        const profile = await getCurrentProfile()
+                // Rôle choisi sur la page d'inscription avant Apple / Google.
+        const pendingRole = sessionStorage.getItem(
+          PENDING_ROLE_STORAGE_KEY
+        )
+        sessionStorage.removeItem(PENDING_ROLE_STORAGE_KEY)
+
+        const profile =
+          pendingRole === 'citoyen' || pendingRole === 'benevole'
+            ? await savePublicRole(pendingRole)
+            : await getCurrentProfile()
 
         if (cancelled) return
 
@@ -255,7 +268,7 @@ export default function LoginPage() {
 
   if (pendingProfile) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-100 px-4 py-8">
+      <div className="flex min-h-[100dvh] items-center justify-center bg-white px-4 py-8">
         <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="flex flex-col items-center text-center">
             <PulseLogo className="h-14 w-auto" />

@@ -10,8 +10,8 @@ export default function PulseLogo({
   className = '',
 }: PulseLogoProps) {
   const lightSrc = compact
-    ? '/branding/pulse-icon-light.svg'
-    : '/branding/pulse-logo-light.svg'
+    ? '/branding/pulse-icon-light.png'
+    : '/branding/pulse-logo-light.png'
 
   const darkSrc = compact
     ? '/branding/pulse-icon-dark.svg'

@@ -562,15 +562,22 @@ export default function CreatePointPage() {
         )
       },
 
-      () => {
+           () => {
         setPositionError(
           t(
             'createPoint.geolocationError',
             'Impossible de récupérer ta position. Vérifie les autorisations du navigateur.'
           )
         )
+      },
+
+      {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 60000,
       }
     )
+    
   }
 
   function handleSubmit(

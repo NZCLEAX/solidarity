@@ -10,6 +10,9 @@ export type PublicRegisterRole = Exclude<
   'association' | 'admin' | 'moderateur'
 >
 
+// Rôle choisi à l'inscription, appliqué au retour d'Apple / Google.
+export const PENDING_ROLE_STORAGE_KEY = 'pulse-pending-role'
+
 export const publicRegisterRoles: Array<{
   label: string
   value: PublicRegisterRole

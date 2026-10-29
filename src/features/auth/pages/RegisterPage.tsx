@@ -9,10 +9,11 @@ import {
   signInWithProvider,
 } from '../api/auth'
 
-import { getCurrentProfile } from '../api/profile'
 import { getDefaultPathForProfile } from '../utils/permissions'
+import { savePublicRole } from '../api/profile'   // remplace l'import de getCurrentProfile
 
 import {
+  PENDING_ROLE_STORAGE_KEY,
   publicRegisterRoles,
   type PublicRegisterRole,
 } from '../utils/roles'
@@ -118,20 +119,26 @@ export default function RegisterPage() {
       return
     }
 
-    try {
+        try {
       setLoading(true)
+
+      // Mémorise le rôle pour le retour OAuth (Apple, web).
+      sessionStorage.setItem(PENDING_ROLE_STORAGE_KEY, role)
 
       await signInWithProvider(provider)
 
-      // Le flux Apple natif revient via le lien OAuth.
+      // Apple et la version web reviennent via /login?oauth=complete,
+      // qui applique le rôle mémorisé.
       if (
-        provider === 'apple' &&
-        Capacitor.isNativePlatform()
+        provider === 'apple' ||
+        !Capacitor.isNativePlatform()
       ) {
         return
       }
 
-      const profile = await getCurrentProfile()
+      sessionStorage.removeItem(PENDING_ROLE_STORAGE_KEY)
+
+      const profile = await savePublicRole(role)
 
       queryClient.setQueryData(
         ['current-profile'],
@@ -149,6 +156,8 @@ export default function RegisterPage() {
         replace: true,
       })
     } catch (err) {
+      sessionStorage.removeItem(PENDING_ROLE_STORAGE_KEY)
+
       setError(
         err instanceof Error
           ? err.message
@@ -160,7 +169,7 @@ export default function RegisterPage() {
   }
 
   const pageClass =
-    'min-h-[100dvh] w-full overflow-x-hidden bg-slate-100 px-4 sm:px-6'
+    'min-h-[100dvh] w-full overflow-x-hidden bg-white px-4 sm:px-6'
 
   const safePadding = {
     paddingTop: 'max(24px, env(safe-area-inset-top, 0px))',
@@ -170,7 +179,7 @@ export default function RegisterPage() {
   if (successEmail) {
     return (
       <div className={pageClass} style={safePadding}>
-        <div className="mx-auto w-full max-w-md rounded-xl bg-white p-6 shadow">
+        <div className="mx-auto w-full max-w-md">
           <div className="flex flex-col items-center text-center">
             <PulseLogo className="h-14 w-auto" />
 
@@ -218,8 +227,7 @@ export default function RegisterPage() {
 
   return (
     <div className={pageClass} style={safePadding}>
-      <div className="mx-auto w-full min-w-0 max-w-md rounded-xl bg-white p-5 shadow sm:p-6">
-
+      <div className="mx-auto w-full min-w-0 max-w-md">
         <div className="flex flex-col items-center text-center">
           <PulseLogo className="h-14 w-auto" />
 

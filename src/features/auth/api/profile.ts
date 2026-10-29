@@ -121,55 +121,13 @@ export async function savePublicRole(
   if (role !== 'citoyen' && role !== 'benevole') {
     throw new Error('Le rôle sélectionné est invalide.')
   }
+  // Le serveur ne modifie que les comptes tout juste créés.
+  const { error } = await supabase.rpc('set_initial_public_role', {
+    p_role: role,
+  })
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser()
-
-  if (userError) {
-    throw userError
+  if (error) {
+    throw error
   }
-
-  if (!user) {
-    throw new Error('Utilisateur non connecté.')
-  }
-
-  const { data: existingProfile, error: profileError } =
-    await supabase
-      .from('profiles')
-      .select('id, role')
-      .eq('id', user.id)
-      .maybeSingle()
-
-  if (profileError) {
-    throw profileError
-  }
-
-  // Ne jamais écraser le rôle d'un compte existant.
-  if (existingProfile?.role) {
-    return getCurrentProfile()
-  }
-
-  const { error: saveError } = await supabase
-    .from('profiles')
-    .upsert(
-      {
-        id: user.id,
-        email: user.email ?? null,
-        nom:
-          user.user_metadata?.nom ??
-          user.user_metadata?.name ??
-          null,
-        role,
-        statut_compte: 'actif',
-      },
-      { onConflict: 'id' }
-    )
-
-  if (saveError) {
-    throw saveError
-  }
-
   return getCurrentProfile()
 }
