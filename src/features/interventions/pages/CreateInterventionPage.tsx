@@ -1,4 +1,4 @@
-﻿import {
+import {
   useEffect,
   useMemo,
   useState,
@@ -46,7 +46,7 @@ const typeAideOptions = [
     icon: Droplets,
   },
   {
-    value: 'Distribution de vÃªtements',
+    value: 'Distribution de vêtements',
     icon: Shirt,
   },
   {
@@ -400,7 +400,7 @@ useEffect(() => {
       adresse?.trim() ||
       t(
         'createIntervention.addressNotProvided',
-        'Adresse non renseignÃ©e'
+        'Adresse non renseignée'
       )
     )
   }
@@ -414,7 +414,7 @@ useEffect(() => {
     if (!date) {
       return t(
         'createIntervention.notProvidedFeminine',
-        'Non renseignÃ©e'
+        'Non renseignée'
       )
     }
 
@@ -474,7 +474,7 @@ useEffect(() => {
           value ||
           t(
             'createIntervention.notProvidedFeminine',
-            'Non renseignÃ©e'
+            'Non renseignée'
           )
         )
     }
@@ -498,16 +498,16 @@ useEffect(() => {
           'Eau'
         )
 
-      case 'HygiÃ¨ne':
+      case 'Hygiène':
         return t(
           'createIntervention.needHygiene',
-          'HygiÃ¨ne'
+          'Hygiène'
         )
 
-      case 'VÃªtements':
+      case 'Vêtements':
         return t(
           'createIntervention.needClothing',
-          'VÃªtements'
+          'Vêtements'
         )
 
       case 'Couvertures':
@@ -542,7 +542,7 @@ useEffect(() => {
     if (!value) {
       return t(
         'createIntervention.notProvidedPlural',
-        'Non renseignÃ©s'
+        'Non renseignés'
       )
     }
 
@@ -570,10 +570,10 @@ useEffect(() => {
           'Eau'
         )
 
-      case 'Distribution de vÃªtements':
+      case 'Distribution de vêtements':
         return t(
           'createIntervention.aidClothing',
-          'VÃªtements'
+          'Vêtements'
         )
 
       case 'Maraude':
@@ -614,7 +614,7 @@ useEffect(() => {
     if (!value) {
       return t(
         'createIntervention.aidNotProvided',
-        'Aide non renseignÃ©e'
+        'Aide non renseignée'
       )
     }
 
@@ -740,7 +740,7 @@ useEffect(() => {
       setError(
         t(
           'createIntervention.errorPoint',
-          'Veuillez sÃ©lectionner un point concernÃ©.'
+          'Veuillez sélectionner un point concerné.'
         )
       )
 
@@ -762,7 +762,7 @@ useEffect(() => {
       setError(
         t(
           'createIntervention.errorStartTime',
-          "Veuillez renseigner l'heure de dÃ©but."
+          "Veuillez renseigner l'heure de début."
         )
       )
 
@@ -787,7 +787,7 @@ useEffect(() => {
       setError(
         t(
           'createIntervention.errorTimeOrder',
-          "L'heure de fin doit Ãªtre aprÃ¨s l'heure de dÃ©but."
+          "L'heure de fin doit être après l'heure de début."
         )
       )
 
@@ -801,7 +801,7 @@ useEffect(() => {
       setError(
         t(
           'createIntervention.errorAidType',
-          "Veuillez sÃ©lectionner au moins un type d'aide."
+          "Veuillez sélectionner au moins un type d'aide."
         )
       )
 
@@ -834,7 +834,7 @@ useEffect(() => {
       setError(
         t(
           'createIntervention.errorVolunteers',
-          'Veuillez renseigner un nombre de bÃ©nÃ©voles valide.'
+          'Veuillez renseigner un nombre de bénévoles valide.'
         )
       )
 
@@ -877,7 +877,7 @@ useEffect(() => {
           ? err.message
           : t(
               'createIntervention.declarationError',
-              'Une erreur est survenue lors de la dÃ©claration.'
+              'Une erreur est survenue lors de la déclaration.'
             )
       )
     }
@@ -898,8 +898,8 @@ useEffect(() => {
             <span>
               {i18n.dir() ===
               'rtl'
-                ? 'â†’'
-                : 'â†'}
+                ? '→'
+                : '←'}
             </span>
 
             <span>
@@ -922,14 +922,14 @@ useEffect(() => {
           <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl xl:text-5xl">
             {t(
               'createIntervention.title',
-              'DÃ©clarer une intervention'
+              'Déclarer une intervention'
             )}
           </h1>
 
           <p className="mt-3 max-w-3xl text-base leading-relaxed text-slate-600 sm:text-lg">
             {t(
               'createIntervention.description',
-              'Renseigne les informations de lâ€™intervention rÃ©alisÃ©e sur un point afin dâ€™assurer un suivi clair des actions de terrain.'
+              'Renseigne les informations de l’intervention réalisée sur un point afin d’assurer un suivi clair des actions de terrain.'
             )}
           </p>
         </div>
@@ -948,14 +948,14 @@ useEffect(() => {
                 <h2 className="text-xl font-black text-slate-950 sm:text-2xl">
                   {t(
                     'createIntervention.concernedPoint',
-                    'Point concernÃ©'
+                    'Point concerné'
                   )}
                 </h2>
 
                 <p className="mt-1 text-sm text-slate-500">
                   {t(
                     'createIntervention.concernedPointDescription',
-                    'SÃ©lectionne le point sur lequel lâ€™intervention a Ã©tÃ© rÃ©alisÃ©e.'
+                    'Sélectionne le point sur lequel l’intervention a été réalisée.'
                   )}
                 </p>
               </div>
@@ -984,7 +984,7 @@ useEffect(() => {
                 <label className="mb-2 block text-sm font-bold text-slate-700">
                   {t(
                     'createIntervention.concernedPoint',
-                    'Point concernÃ©'
+                    'Point concerné'
                   )}{' '}
                   *
                 </label>
@@ -1008,7 +1008,7 @@ useEffect(() => {
                   <option value="">
                     {t(
                       'createIntervention.selectPoint',
-                      'SÃ©lectionner un point'
+                      'Sélectionner un point'
                     )}
                   </option>
 
@@ -1032,7 +1032,7 @@ useEffect(() => {
 
                 {isPointFromMapValid && (
                   <p className="mt-2 text-xs font-semibold text-slate-500">
-                    Point sÃ©lectionnÃ© automatiquement depuis la carte.
+                    Point sélectionné automatiquement depuis la carte.
                   </p>
                 )}
               </div>
@@ -1043,7 +1043,7 @@ useEffect(() => {
                   <p className="text-sm font-black text-emerald-800">
                     {t(
                       'createIntervention.selectedPoint',
-                      'Point sÃ©lectionnÃ©'
+                      'Point sélectionné'
                     )}
                   </p>
 
@@ -1059,7 +1059,7 @@ useEffect(() => {
                       <p className="text-xs font-black uppercase text-slate-500">
                         {t(
                           'createIntervention.estimatedPeople',
-                          'Personnes estimÃ©es'
+                          'Personnes estimées'
                         )}
                       </p>
 
@@ -1129,7 +1129,7 @@ useEffect(() => {
                         <p className="text-xs font-bold text-slate-500">
                           {t(
                             'createIntervention.alreadyCovered',
-                            'DÃ©jÃ  couverts'
+                            'Déjà couverts'
                           )}
                         </p>
 
@@ -1164,7 +1164,7 @@ useEffect(() => {
                             repasRestants,
 
                           defaultValue:
-                            'PrÃ©vois environ {{count}} repas/eaux pour complÃ©ter le besoin restant.',
+                            'Prévois environ {{count}} repas/eaux pour compléter le besoin restant.',
                         }
                       )}
                     </p>
@@ -1174,7 +1174,7 @@ useEffect(() => {
                     <p className="text-xs font-black uppercase text-slate-500">
                       {t(
                         'createIntervention.associationsPositioned',
-                        'Associations dÃ©jÃ  positionnÃ©es'
+                        'Associations déjà positionnées'
                       )}
                     </p>
 
@@ -1190,7 +1190,7 @@ useEffect(() => {
                       <p className="mt-2 text-sm font-semibold text-slate-500">
                         {t(
                           'createIntervention.noAssociation',
-                          'Aucune association positionnÃ©e pour le moment.'
+                          'Aucune association positionnée pour le moment.'
                         )}
                       </p>
                     ) : (
@@ -1217,7 +1217,7 @@ useEffect(() => {
                                 {formatStoredAidTypes(
                                   intervention.type_aide
                                 )}{' '}
-                                â€”{' '}
+                                —{' '}
                                 {formatDatePreview(
                                   intervention.date_intervention
                                 )}
@@ -1235,7 +1235,7 @@ useEffect(() => {
                                         0,
 
                                       defaultValue:
-                                        '{{count}} repas prÃ©vus',
+                                        '{{count}} repas prévus',
                                     }
                                   )}
                                 </p>
@@ -1256,14 +1256,14 @@ useEffect(() => {
                 <h2 className="text-xl font-black text-slate-950 sm:text-2xl">
                   {t(
                     'createIntervention.information',
-                    'Informations de lâ€™intervention'
+                    'Informations de l’intervention'
                   )}
                 </h2>
 
                 <p className="mt-1 text-sm text-slate-500">
                   {t(
                     'createIntervention.informationDescription',
-                    'Indique la date, les horaires et les types dâ€™aide apportÃ©s.'
+                    'Indique la date, les horaires et les types d’aide apportés.'
                   )}
                 </p>
               </div>
@@ -1301,7 +1301,7 @@ useEffect(() => {
                   <label className="mb-2 block text-sm font-bold text-slate-700">
                     {t(
                       'createIntervention.startTime',
-                      'Heure de dÃ©but'
+                      'Heure de début'
                     )}{' '}
                     *
                   </label>
@@ -1356,7 +1356,7 @@ useEffect(() => {
                 <label className="mb-3 block text-sm font-bold text-slate-700">
                   {t(
                     'createIntervention.aidTypes',
-                    'Type dâ€™aide * â€” plusieurs choix possibles'
+                    'Type d’aide * — plusieurs choix possibles'
                   )}
                 </label>
 
@@ -1484,14 +1484,14 @@ useEffect(() => {
                 <h2 className="text-xl font-black text-slate-950 sm:text-2xl">
                   {t(
                     'createIntervention.resources',
-                    'Moyens mobilisÃ©s'
+                    'Moyens mobilisés'
                   )}
                 </h2>
 
                 <p className="mt-1 text-sm text-slate-500">
                   {t(
                     'createIntervention.resourcesDescription',
-                    'Renseigne les quantitÃ©s mobilisÃ©es pendant lâ€™intervention.'
+                    'Renseigne les quantités mobilisées pendant l’intervention.'
                   )}
                 </p>
               </div>
@@ -1541,7 +1541,7 @@ useEffect(() => {
                           )
                         : t(
                             'createIntervention.mealsNotSelected',
-                            'Repas non sÃ©lectionnÃ©'
+                            'Repas non sélectionné'
                           )
                     }
                     className="min-h-12 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#d94a0b] focus:ring-4 focus:ring-orange-100 disabled:bg-slate-100 disabled:text-slate-400"
@@ -1551,7 +1551,7 @@ useEffect(() => {
                     <p className="mt-2 text-xs font-semibold text-slate-500">
                       {t(
                         'createIntervention.mealsDisabled',
-                        'Ce champ est dÃ©sactivÃ© car tu nâ€™as pas sÃ©lectionnÃ© Repas.'
+                        'Ce champ est désactivé car tu n’as pas sélectionné Repas.'
                       )}
                     </p>
                   )}
@@ -1561,7 +1561,7 @@ useEffect(() => {
                   <label className="mb-2 block text-sm font-bold text-slate-700">
                     {t(
                       'createIntervention.numberOfVolunteers',
-                      'Nombre de bÃ©nÃ©voles'
+                      'Nombre de bénévoles'
                     )}{' '}
                     *
                   </label>
@@ -1613,7 +1613,7 @@ useEffect(() => {
                   }
                   placeholder={t(
                     'createIntervention.commentPlaceholder',
-                    'Informations complÃ©mentaires...'
+                    'Informations complémentaires...'
                   )}
                   rows={5}
                   className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#d94a0b] focus:ring-4 focus:ring-orange-100"
@@ -1646,11 +1646,11 @@ useEffect(() => {
                 {isSubmitting
                   ? t(
                       'createIntervention.submitting',
-                      'DÃ©claration en cours...'
+                      'Déclaration en cours...'
                     )
                   : t(
                       'createIntervention.submit',
-                      "DÃ©clarer l'intervention"
+                      "Déclarer l'intervention"
                     )}
               </button>
 
@@ -1679,14 +1679,14 @@ useEffect(() => {
                 <h2 className="text-xl font-black text-slate-950">
                   {t(
                     'createIntervention.summary',
-                    'RÃ©sumÃ©'
+                    'Résumé'
                   )}
                 </h2>
 
                 <p className="mt-1 text-sm text-slate-500">
                   {t(
                     'createIntervention.summaryDescription',
-                    'AperÃ§u de lâ€™intervention avant validation.'
+                    'Aperçu de l’intervention avant validation.'
                   )}
                 </p>
               </div>
@@ -1708,7 +1708,7 @@ useEffect(() => {
                         )
                       : t(
                           'createIntervention.notSelected',
-                          'Non sÃ©lectionnÃ©'
+                          'Non sélectionné'
                         )}
                   </p>
                 </div>
@@ -1785,7 +1785,7 @@ useEffect(() => {
                         )
                       : t(
                           'createIntervention.notProvidedFeminine',
-                          'Non renseignÃ©e'
+                          'Non renseignée'
                         )}
                   </p>
                 </div>
@@ -1801,7 +1801,7 @@ useEffect(() => {
                   <p className="mt-2 text-sm font-bold text-slate-900">
                     {heureDebut ||
                       '--:--'}{' '}
-                    â†’{' '}
+                    →{' '}
                     {heureFin ||
                       '--:--'}
                   </p>
@@ -1811,7 +1811,7 @@ useEffect(() => {
                   <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
                     {t(
                       'createIntervention.aidTypesSummary',
-                      'Types dâ€™aide'
+                      'Types d’aide'
                     )}
                   </p>
 
@@ -1820,7 +1820,7 @@ useEffect(() => {
                     <p className="mt-2 text-sm font-bold text-slate-900">
                       {t(
                         'createIntervention.notProvided',
-                        'Non renseignÃ©'
+                        'Non renseigné'
                       )}
                     </p>
                   ) : (
@@ -1866,7 +1866,7 @@ useEffect(() => {
                     <p className="text-xs font-bold uppercase tracking-wide text-emerald-600">
                       {t(
                         'createIntervention.declaredMeals',
-                        'Repas dÃ©clarÃ©s'
+                        'Repas déclarés'
                       )}
                     </p>
 
@@ -1882,7 +1882,7 @@ useEffect(() => {
                     <p className="text-xs font-bold uppercase tracking-wide text-indigo-600">
                       {t(
                         'createIntervention.volunteers',
-                        'BÃ©nÃ©voles'
+                        'Bénévoles'
                       )}
                     </p>
 
@@ -1904,7 +1904,7 @@ useEffect(() => {
                   <p className="mt-2 text-sm leading-relaxed text-orange-700">
                     {t(
                       'createIntervention.tipDescription',
-                      'Pour les repas, le champ se remplit avec le nombre restant Ã  couvrir. Pour les soins, vÃªtements, eau ou maraude, le nombre de repas reste Ã  0.'
+                      'Pour les repas, le champ se remplit avec le nombre restant à couvrir. Pour les soins, vêtements, eau ou maraude, le nombre de repas reste à 0.'
                     )}
                   </p>
                 </div>

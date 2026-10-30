@@ -179,20 +179,11 @@ export default function DashboardPage() {
 
         {!isLoading && !isError && (
           <>
-            <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <section className="grid grid-cols-2 gap-x-6 border-t border-slate-200 xl:grid-cols-4">
               {stats.map((stat) => (
                 <article
                   key={stat.label}
-                  className={[
-                    'rounded-3xl border p-6 shadow-sm',
-                    stat.tone === 'red'
-                      ? 'border-red-200 bg-red-50'
-                      : stat.tone === 'green'
-                        ? 'border-emerald-200 bg-emerald-50'
-                        : stat.tone === 'orange'
-                          ? 'border-orange-200 bg-orange-50'
-                          : 'border-slate-200 bg-white',
-                  ].join(' ')}
+                  className="border-b border-slate-200 py-4"
                 >
                   <p className="text-sm font-semibold text-slate-600">
                     {stat.label}
@@ -200,7 +191,7 @@ export default function DashboardPage() {
 
                   <p
                     className={[
-                      'mt-4 text-4xl font-black leading-none tracking-tight',
+                      'mt-2 text-3xl font-black leading-none tracking-tight',
                       stat.tone === 'red'
                         ? 'text-red-600'
                         : stat.tone === 'green'
@@ -213,25 +204,28 @@ export default function DashboardPage() {
                     {stat.value}
                   </p>
 
-                  <p className="mt-3 text-sm font-medium text-slate-500">
+                  <p className="mt-2 text-sm font-medium text-slate-500">
                     {stat.helper}
                   </p>
                 </article>
               ))}
             </section>
 
-            <section className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <section className="grid grid-cols-2 gap-x-6 lg:grid-cols-3">
               {interventionStats.map((stat) => (
-                <article key={stat.label} className="dashboard-card p-6">
+                <article
+                  key={stat.label}
+                  className="border-b border-slate-200 py-4"
+                >
                   <p className="text-sm font-semibold text-slate-600">
                     {stat.label}
                   </p>
 
-                  <p className="mt-4 text-4xl font-black leading-none tracking-tight text-slate-950">
+                  <p className="mt-2 text-3xl font-black leading-none tracking-tight text-slate-950">
                     {stat.value}
                   </p>
 
-                  <p className="mt-3 text-sm font-medium text-slate-500">
+                  <p className="mt-2 text-sm font-medium text-slate-500">
                     {stat.helper}
                   </p>
                 </article>

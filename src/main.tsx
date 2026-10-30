@@ -26,6 +26,23 @@ document.documentElement.classList.toggle(
 
 void initializeMobileAuth()
 
+// Empêche la molette de la souris de modifier un champ numérique
+// (nombre de bénévoles, repas, personnes) en faisant défiler la page.
+document.addEventListener(
+  'wheel',
+  () => {
+    const element = document.activeElement
+
+    if (
+      element instanceof HTMLInputElement &&
+      element.type === 'number'
+    ) {
+      element.blur()
+    }
+  },
+  { passive: true }
+)
+
 ReactDOM.createRoot(
   document.getElementById('root')!
 ).render(

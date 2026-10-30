@@ -863,8 +863,8 @@ export default function PlanningPage() {
 
         {/* STATISTIQUES */}
 
-        <section className="mb-4 grid grid-cols-3 gap-2 sm:gap-3">
-          <div className="min-w-0 rounded-2xl border border-[#eadfd6] bg-white p-3 shadow-sm sm:p-4">
+        <section className="mb-4 grid grid-cols-3 divide-x divide-slate-200 border-y border-slate-200 py-3">
+          <div className="min-w-0 pr-3">
             <p className="text-xl font-black text-slate-950 sm:text-2xl">
               {periodInterventions.length}
             </p>
@@ -874,7 +874,7 @@ export default function PlanningPage() {
             </p>
           </div>
 
-          <div className="min-w-0 rounded-2xl border border-orange-100 bg-orange-50 p-3 shadow-sm sm:p-4">
+          <div className="min-w-0 px-3">
             <p className="text-xl font-black text-orange-700 sm:text-2xl">
               {totalRepas}
             </p>
@@ -884,7 +884,7 @@ export default function PlanningPage() {
             </p>
           </div>
 
-          <div className="min-w-0 rounded-2xl border border-emerald-100 bg-emerald-50 p-3 shadow-sm sm:p-4">
+          <div className="min-w-0 px-3">
             <p className="text-xl font-black text-emerald-700 sm:text-2xl">
               {totalBenevoles}
             </p>
@@ -898,7 +898,7 @@ export default function PlanningPage() {
         {/* CHOIX DE PÉRIODE */}
 
         <section className="mb-4">
-          <div className="grid grid-cols-3 rounded-2xl bg-slate-200/70 p-1">
+          <div className="grid grid-cols-3 rounded-2xl bg-slate-100 p-1">
             {(
               ['today', 'week', 'month'] as PeriodMode[]
             ).map((mode) => (

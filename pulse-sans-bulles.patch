@@ -1,0 +1,171 @@
+diff --git a/src/features/dashboard/pages/DashboardPage.tsx b/src/features/dashboard/pages/DashboardPage.tsx
+--- a/src/features/dashboard/pages/DashboardPage.tsx
++++ b/src/features/dashboard/pages/DashboardPage.tsx
+@@ -179,20 +179,11 @@
+ 
+         {!isLoading && !isError && (
+           <>
+-            <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
++            <section className="grid grid-cols-2 gap-x-6 border-t border-slate-200 xl:grid-cols-4">
+               {stats.map((stat) => (
+                 <article
+                   key={stat.label}
+-                  className={[
+-                    'rounded-3xl border p-6 shadow-sm',
+-                    stat.tone === 'red'
+-                      ? 'border-red-200 bg-red-50'
+-                      : stat.tone === 'green'
+-                        ? 'border-emerald-200 bg-emerald-50'
+-                        : stat.tone === 'orange'
+-                          ? 'border-orange-200 bg-orange-50'
+-                          : 'border-slate-200 bg-white',
+-                  ].join(' ')}
++                  className="border-b border-slate-200 py-4"
+                 >
+                   <p className="text-sm font-semibold text-slate-600">
+                     {stat.label}
+@@ -200,7 +191,7 @@
+ 
+                   <p
+                     className={[
+-                      'mt-4 text-4xl font-black leading-none tracking-tight',
++                      'mt-2 text-3xl font-black leading-none tracking-tight',
+                       stat.tone === 'red'
+                         ? 'text-red-600'
+                         : stat.tone === 'green'
+@@ -213,25 +204,28 @@
+                     {stat.value}
+                   </p>
+ 
+-                  <p className="mt-3 text-sm font-medium text-slate-500">
++                  <p className="mt-2 text-sm font-medium text-slate-500">
+                     {stat.helper}
+                   </p>
+                 </article>
+               ))}
+             </section>
+ 
+-            <section className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
++            <section className="grid grid-cols-2 gap-x-6 lg:grid-cols-3">
+               {interventionStats.map((stat) => (
+-                <article key={stat.label} className="dashboard-card p-6">
++                <article
++                  key={stat.label}
++                  className="border-b border-slate-200 py-4"
++                >
+                   <p className="text-sm font-semibold text-slate-600">
+                     {stat.label}
+                   </p>
+ 
+-                  <p className="mt-4 text-4xl font-black leading-none tracking-tight text-slate-950">
++                  <p className="mt-2 text-3xl font-black leading-none tracking-tight text-slate-950">
+                     {stat.value}
+                   </p>
+ 
+-                  <p className="mt-3 text-sm font-medium text-slate-500">
++                  <p className="mt-2 text-sm font-medium text-slate-500">
+                     {stat.helper}
+                   </p>
+                 </article>
+diff --git a/src/features/planning/pages/PlanningPage.tsx b/src/features/planning/pages/PlanningPage.tsx
+--- a/src/features/planning/pages/PlanningPage.tsx
++++ b/src/features/planning/pages/PlanningPage.tsx
+@@ -863,8 +863,8 @@
+ 
+         {/* STATISTIQUES */}
+ 
+-        <section className="mb-4 grid grid-cols-3 gap-2 sm:gap-3">
+-          <div className="min-w-0 rounded-2xl border border-[#eadfd6] bg-white p-3 shadow-sm sm:p-4">
++        <section className="mb-4 grid grid-cols-3 divide-x divide-slate-200 border-y border-slate-200 py-3">
++          <div className="min-w-0 pr-3">
+             <p className="text-xl font-black text-slate-950 sm:text-2xl">
+               {periodInterventions.length}
+             </p>
+@@ -874,7 +874,7 @@
+             </p>
+           </div>
+ 
+-          <div className="min-w-0 rounded-2xl border border-orange-100 bg-orange-50 p-3 shadow-sm sm:p-4">
++          <div className="min-w-0 px-3">
+             <p className="text-xl font-black text-orange-700 sm:text-2xl">
+               {totalRepas}
+             </p>
+@@ -884,7 +884,7 @@
+             </p>
+           </div>
+ 
+-          <div className="min-w-0 rounded-2xl border border-emerald-100 bg-emerald-50 p-3 shadow-sm sm:p-4">
++          <div className="min-w-0 px-3">
+             <p className="text-xl font-black text-emerald-700 sm:text-2xl">
+               {totalBenevoles}
+             </p>
+@@ -898,7 +898,7 @@
+         {/* CHOIX DE PÉRIODE */}
+ 
+         <section className="mb-4">
+-          <div className="grid grid-cols-3 rounded-2xl bg-slate-200/70 p-1">
++          <div className="grid grid-cols-3 rounded-2xl bg-slate-100 p-1">
+             {(
+               ['today', 'week', 'month'] as PeriodMode[]
+             ).map((mode) => (
+diff --git a/src/features/interventions/pages/InterventionsPage.tsx b/src/features/interventions/pages/InterventionsPage.tsx
+--- a/src/features/interventions/pages/InterventionsPage.tsx
++++ b/src/features/interventions/pages/InterventionsPage.tsx
+@@ -381,12 +381,12 @@
+ 
+         {/* STATISTIQUES */}
+ 
+-        <section className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+-          <article className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm">
++        <section className="mb-6 grid grid-cols-2 gap-x-6 border-t border-slate-200 xl:grid-cols-4">
++          <article className="border-b border-slate-200 py-4">
+             <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
+               Interventions affichées
+             </p>
+-            <p className="mt-3 text-4xl font-black text-slate-950">
++            <p className="mt-2 text-3xl font-black text-slate-950">
+               {filteredInterventions.length}
+             </p>
+             <p className="mt-2 text-sm text-slate-500">
+@@ -394,11 +394,11 @@
+             </p>
+           </article>
+ 
+-          <article className="rounded-[1.5rem] border border-blue-200 bg-blue-50 p-5 shadow-sm">
++          <article className="border-b border-slate-200 py-4">
+             <p className="text-xs font-bold uppercase tracking-wide text-blue-600">
+               Prévues
+             </p>
+-            <p className="mt-3 text-4xl font-black text-blue-700">
++            <p className="mt-2 text-3xl font-black text-blue-700">
+               {upcomingCount}
+             </p>
+             <p className="mt-2 text-sm text-blue-600">
+@@ -406,11 +406,11 @@
+             </p>
+           </article>
+ 
+-          <article className="rounded-[1.5rem] border border-emerald-200 bg-emerald-50 p-5 shadow-sm">
++          <article className="border-b border-slate-200 py-4">
+             <p className="text-xs font-bold uppercase tracking-wide text-emerald-600">
+               Repas
+             </p>
+-            <p className="mt-3 text-4xl font-black text-emerald-700">
++            <p className="mt-2 text-3xl font-black text-emerald-700">
+               {totalRepas}
+             </p>
+             <p className="mt-2 text-sm text-emerald-600">
+@@ -418,11 +418,11 @@
+             </p>
+           </article>
+ 
+-          <article className="rounded-[1.5rem] border border-orange-200 bg-orange-50 p-5 shadow-sm">
++          <article className="border-b border-slate-200 py-4">
+             <p className="text-xs font-bold uppercase tracking-wide text-orange-600">
+               Bénévoles
+             </p>
+-            <p className="mt-3 text-4xl font-black text-orange-700">
++            <p className="mt-2 text-3xl font-black text-orange-700">
+               {totalBenevoles}
+             </p>
+             <p className="mt-2 text-sm text-orange-600">

@@ -104,6 +104,25 @@ export async function createIntervention(
   return data
 }
 
+export async function deleteIntervention(interventionId: string) {
+  const { data, error } = await supabase
+    .from('interventions')
+    .delete()
+    .eq('id', interventionId)
+    .select('id')
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  // Sans droit de suppression, Supabase ne renvoie aucune ligne.
+  if (!data || data.length === 0) {
+    throw new Error(
+      "Tu n'as pas le droit de supprimer cette intervention."
+    )
+  }
+}
+
 export async function getInterventions(): Promise<Intervention[]> {
   // Récupère toutes les interventions, passées et futures.
   // Aucune intervention n'est supprimée ni masquée par sa date.

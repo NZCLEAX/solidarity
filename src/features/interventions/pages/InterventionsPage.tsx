@@ -1,13 +1,20 @@
 ﻿
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 
 import {
+  deleteIntervention,
   getInterventions,
   type Intervention,
 } from '@/features/interventions/api/interventions'
+
+import { getCurrentProfile } from '@/features/auth/api/profile'
 
 import {
   isInterventionExpired,
@@ -201,6 +208,56 @@ export default function InterventionsPage() {
     refetchOnWindowFocus: true,
   })
 
+  const queryClient = useQueryClient()
+
+  const { data: profile } = useQuery({
+    queryKey: ['current-profile'],
+    queryFn: getCurrentProfile,
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteIntervention,
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: ['interventions'],
+      })
+    },
+    onError: (error) => {
+      window.alert(
+        (error as Error)?.message ||
+          "Impossible de supprimer l'intervention."
+      )
+    },
+  })
+
+  // Admin / modérateur, ou l'association qui a déclaré l'intervention.
+  function canDeleteIntervention(intervention: Intervention) {
+    if (
+      profile?.role === 'admin' ||
+      profile?.role === 'moderateur'
+    ) {
+      return true
+    }
+
+    return (
+      profile?.role === 'association' &&
+      Boolean(profile.association_id) &&
+      profile.association_id === intervention.association_id
+    )
+  }
+
+  function handleDeleteIntervention(intervention: Intervention) {
+    if (
+      !window.confirm(
+        'Supprimer définitivement cette intervention ?'
+      )
+    ) {
+      return
+    }
+
+    deleteMutation.mutate(intervention.id)
+  }
+
   const upcomingCount = useMemo(() => {
     return interventions.filter((intervention) =>
       isUpcomingIntervention(intervention, now)
@@ -381,12 +438,12 @@ export default function InterventionsPage() {
 
         {/* STATISTIQUES */}
 
-        <section className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <article className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm">
+        <section className="mb-6 grid grid-cols-2 gap-x-6 border-t border-slate-200 xl:grid-cols-4">
+          <article className="border-b border-slate-200 py-4">
             <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
               Interventions affichées
             </p>
-            <p className="mt-3 text-4xl font-black text-slate-950">
+            <p className="mt-2 text-3xl font-black text-slate-950">
               {filteredInterventions.length}
             </p>
             <p className="mt-2 text-sm text-slate-500">
@@ -394,11 +451,11 @@ export default function InterventionsPage() {
             </p>
           </article>
 
-          <article className="rounded-[1.5rem] border border-blue-200 bg-blue-50 p-5 shadow-sm">
+          <article className="border-b border-slate-200 py-4">
             <p className="text-xs font-bold uppercase tracking-wide text-blue-600">
               Prévues
             </p>
-            <p className="mt-3 text-4xl font-black text-blue-700">
+            <p className="mt-2 text-3xl font-black text-blue-700">
               {upcomingCount}
             </p>
             <p className="mt-2 text-sm text-blue-600">
@@ -406,11 +463,11 @@ export default function InterventionsPage() {
             </p>
           </article>
 
-          <article className="rounded-[1.5rem] border border-emerald-200 bg-emerald-50 p-5 shadow-sm">
+          <article className="border-b border-slate-200 py-4">
             <p className="text-xs font-bold uppercase tracking-wide text-emerald-600">
               Repas
             </p>
-            <p className="mt-3 text-4xl font-black text-emerald-700">
+            <p className="mt-2 text-3xl font-black text-emerald-700">
               {totalRepas}
             </p>
             <p className="mt-2 text-sm text-emerald-600">
@@ -418,11 +475,11 @@ export default function InterventionsPage() {
             </p>
           </article>
 
-          <article className="rounded-[1.5rem] border border-orange-200 bg-orange-50 p-5 shadow-sm">
+          <article className="border-b border-slate-200 py-4">
             <p className="text-xs font-bold uppercase tracking-wide text-orange-600">
               Bénévoles
             </p>
-            <p className="mt-3 text-4xl font-black text-orange-700">
+            <p className="mt-2 text-3xl font-black text-orange-700">
               {totalBenevoles}
             </p>
             <p className="mt-2 text-sm text-orange-600">
@@ -654,6 +711,22 @@ export default function InterventionsPage() {
                         >
                           Voir sur la carte
                         </Link>
+
+                        {canDeleteIntervention(intervention) && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleDeleteIntervention(intervention)
+                            }
+                            disabled={deleteMutation.isPending}
+                            className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-red-200 bg-red-50 px-5 py-3 text-center text-sm font-bold text-red-700 disabled:opacity-50"
+                          >
+                            {deleteMutation.isPending &&
+                            deleteMutation.variables === intervention.id
+                              ? 'Suppression...'
+                              : 'Supprimer'}
+                          </button>
+                        )}
                       </div>
                     </div>
                   </article>

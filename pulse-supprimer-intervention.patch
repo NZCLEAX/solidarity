@@ -1,0 +1,135 @@
+diff --git a/src/features/interventions/api/interventions.ts b/src/features/interventions/api/interventions.ts
+--- a/src/features/interventions/api/interventions.ts
++++ b/src/features/interventions/api/interventions.ts
+@@ -104,6 +104,25 @@
+   return data
+ }
+ 
++export async function deleteIntervention(interventionId: string) {
++  const { data, error } = await supabase
++    .from('interventions')
++    .delete()
++    .eq('id', interventionId)
++    .select('id')
++
++  if (error) {
++    throw new Error(error.message)
++  }
++
++  // Sans droit de suppression, Supabase ne renvoie aucune ligne.
++  if (!data || data.length === 0) {
++    throw new Error(
++      "Tu n'as pas le droit de supprimer cette intervention."
++    )
++  }
++}
++
+ export async function getInterventions(): Promise<Intervention[]> {
+   // Récupère toutes les interventions, passées et futures.
+   // Aucune intervention n'est supprimée ni masquée par sa date.
+diff --git a/src/features/interventions/pages/InterventionsPage.tsx b/src/features/interventions/pages/InterventionsPage.tsx
+--- a/src/features/interventions/pages/InterventionsPage.tsx
++++ b/src/features/interventions/pages/InterventionsPage.tsx
+@@ -1,14 +1,21 @@
+ ﻿
+ import { useEffect, useMemo, useState } from 'react'
+ import { Link } from 'react-router-dom'
+-import { useQuery } from '@tanstack/react-query'
++import {
++  useMutation,
++  useQuery,
++  useQueryClient,
++} from '@tanstack/react-query'
+ import { useTranslation } from 'react-i18next'
+ 
+ import {
++  deleteIntervention,
+   getInterventions,
+   type Intervention,
+ } from '@/features/interventions/api/interventions'
+ 
++import { getCurrentProfile } from '@/features/auth/api/profile'
++
+ import {
+   isInterventionExpired,
+   isUpcomingIntervention,
+@@ -201,6 +208,56 @@
+     refetchOnWindowFocus: true,
+   })
+ 
++  const queryClient = useQueryClient()
++
++  const { data: profile } = useQuery({
++    queryKey: ['current-profile'],
++    queryFn: getCurrentProfile,
++  })
++
++  const deleteMutation = useMutation({
++    mutationFn: deleteIntervention,
++    onSuccess: () => {
++      void queryClient.invalidateQueries({
++        queryKey: ['interventions'],
++      })
++    },
++    onError: (error) => {
++      window.alert(
++        (error as Error)?.message ||
++          "Impossible de supprimer l'intervention."
++      )
++    },
++  })
++
++  // Admin / modérateur, ou l'association qui a déclaré l'intervention.
++  function canDeleteIntervention(intervention: Intervention) {
++    if (
++      profile?.role === 'admin' ||
++      profile?.role === 'moderateur'
++    ) {
++      return true
++    }
++
++    return (
++      profile?.role === 'association' &&
++      Boolean(profile.association_id) &&
++      profile.association_id === intervention.association_id
++    )
++  }
++
++  function handleDeleteIntervention(intervention: Intervention) {
++    if (
++      !window.confirm(
++        'Supprimer définitivement cette intervention ?'
++      )
++    ) {
++      return
++    }
++
++    deleteMutation.mutate(intervention.id)
++  }
++
+   const upcomingCount = useMemo(() => {
+     return interventions.filter((intervention) =>
+       isUpcomingIntervention(intervention, now)
+@@ -654,6 +711,22 @@
+                         >
+                           Voir sur la carte
+                         </Link>
++
++                        {canDeleteIntervention(intervention) && (
++                          <button
++                            type="button"
++                            onClick={() =>
++                              handleDeleteIntervention(intervention)
++                            }
++                            disabled={deleteMutation.isPending}
++                            className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-red-200 bg-red-50 px-5 py-3 text-center text-sm font-bold text-red-700 disabled:opacity-50"
++                          >
++                            {deleteMutation.isPending &&
++                            deleteMutation.variables === intervention.id
++                              ? 'Suppression...'
++                              : 'Supprimer'}
++                          </button>
++                        )}
+                       </div>
+                     </div>
+                   </article>
