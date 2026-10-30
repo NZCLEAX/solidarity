@@ -35,12 +35,12 @@ function normalizeText(
   return value?.toLowerCase().trim() || ''
 }
 
-function formatDate(
+function getDateParts(
   value: string | null,
   locale: string
 ) {
   if (!value) {
-    return 'Date non renseignée'
+    return { day: '–', month: '' }
   }
 
   const [year, month, day] = value.split('-').map(Number)
@@ -48,14 +48,20 @@ function formatDate(
   const date = new Date(year, month - 1, day)
 
   if (Number.isNaN(date.getTime())) {
-    return value
+    return { day: value, month: '' }
   }
 
-  return new Intl.DateTimeFormat(locale, {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  }).format(date)
+  return {
+    day: String(date.getDate()),
+    month: new Intl.DateTimeFormat(locale, { month: 'short' })
+      .format(date)
+      .replace('.', ''),
+  }
+}
+
+// « 10:00:00 » → « 10:00 »
+function shortTime(value: string | null) {
+  return value ? value.slice(0, 5) : ''
 }
 
 function formatTimeRange(
@@ -67,10 +73,10 @@ function formatTimeRange(
   }
 
   if (start && end) {
-    return `${start} - ${end}`
+    return `${shortTime(start)} – ${shortTime(end)}`
   }
 
-  return start || end || 'Horaire non renseigné'
+  return shortTime(start || end) || 'Horaire non renseigné'
 }
 
 function formatAidType(value: string | null) {
@@ -123,22 +129,22 @@ function getStatusLabel(status: string) {
 function getStatusClass(status: string) {
   switch (status) {
     case 'prevue':
-      return 'bg-blue-50 text-blue-700 ring-blue-200'
+      return 'text-blue-600'
 
     case 'en_cours':
-      return 'bg-orange-50 text-orange-700 ring-orange-200'
+      return 'text-orange-600'
 
     case 'terminee':
-      return 'bg-emerald-50 text-emerald-700 ring-emerald-200'
+      return 'text-emerald-600'
 
     case 'annulee':
-      return 'bg-red-50 text-red-700 ring-red-200'
+      return 'text-red-600'
 
     case 'expiree':
-      return 'bg-amber-50 text-amber-700 ring-amber-200'
+      return 'text-amber-600'
 
     default:
-      return 'bg-slate-100 text-slate-700 ring-slate-200'
+      return 'text-slate-500'
   }
 }
 
@@ -231,7 +237,7 @@ export default function InterventionsPage() {
   })
 
   // Admin / modérateur, ou l'association qui a déclaré l'intervention.
-  function canDeleteIntervention(intervention: Intervention) {
+  function canManageIntervention(intervention: Intervention) {
     if (
       profile?.role === 'admin' ||
       profile?.role === 'moderateur'
@@ -354,40 +360,32 @@ export default function InterventionsPage() {
     setDateFilter('upcoming')
   }
 
+  const tabs: Array<{ value: DateFilter; label: string }> = [
+    { value: 'upcoming', label: `À venir (${upcomingCount})` },
+    { value: 'history', label: `Historique (${historyCount})` },
+    { value: 'all', label: 'Toutes' },
+  ]
+
   return (
     <div
       dir={i18n.dir()}
-      className="min-h-[100dvh] min-w-0 overflow-x-hidden bg-[#faf8f4] px-4 py-6 sm:px-6 lg:px-8"
+      className="min-w-0 overflow-x-hidden px-4 pb-10 pt-6"
     >
-      <div className="mx-auto w-full max-w-[1600px]">
+      <div className="mx-auto w-full max-w-3xl">
 
-        <div className="mb-8 flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
-          <div className="min-w-0">
-            <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#d94a0b]">
-              {t(
-                'interventions.fieldActions',
-                'Actions terrain'
-              )}
-            </p>
+        {/* EN-TÊTE */}
 
-            <h1 className="mt-2 break-words text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
-              {t(
-                'interventions.title',
-                'Interventions'
-              )}
-            </h1>
-
-            <p className="mt-3 max-w-3xl text-base leading-relaxed text-slate-600 sm:text-lg">
-              {t(
-                'interventions.description',
-                'Suivi des interventions déclarées par les associations : distributions, bénévoles mobilisés et repas distribués.'
-              )}
-            </p>
-          </div>
+        <div className="flex items-center justify-between gap-4">
+          <h1 className="text-2xl font-bold text-slate-950">
+            {t(
+              'interventions.title',
+              'Interventions'
+            )}
+          </h1>
 
           <Link
             to="/interventions/new"
-            className="inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-indigo-600 px-5 py-3 text-center text-sm font-black text-white shadow-sm transition hover:bg-indigo-700 sm:w-auto"
+            className="inline-flex shrink-0 items-center rounded-lg bg-[#d94a0b] px-3 py-2 text-sm font-semibold text-white transition hover:bg-[#b93607]"
           >
             {t(
               'interventions.newIntervention',
@@ -396,169 +394,100 @@ export default function InterventionsPage() {
           </Link>
         </div>
 
+        <p className="mt-1 text-sm text-slate-500">
+          {t(
+            'interventions.description',
+            'Suivi des interventions déclarées par les associations : distributions, bénévoles mobilisés et repas distribués.'
+          )}
+        </p>
+
         {/* FILTRE TEMPOREL */}
 
-        <section className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <button
-            type="button"
-            onClick={() => setDateFilter('upcoming')}
-            className={`min-h-12 rounded-2xl border px-4 py-3 text-sm font-bold transition ${
-              dateFilter === 'upcoming'
-                ? 'border-[#d94a0b] bg-[#d94a0b] text-white'
-                : 'border-slate-300 bg-white text-slate-700'
-            }`}
-          >
-            À venir ({upcomingCount})
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setDateFilter('history')}
-            className={`min-h-12 rounded-2xl border px-4 py-3 text-sm font-bold transition ${
-              dateFilter === 'history'
-                ? 'border-[#d94a0b] bg-[#d94a0b] text-white'
-                : 'border-slate-300 bg-white text-slate-700'
-            }`}
-          >
-            Historique ({historyCount})
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setDateFilter('all')}
-            className={`min-h-12 rounded-2xl border px-4 py-3 text-sm font-bold transition ${
-              dateFilter === 'all'
-                ? 'border-[#d94a0b] bg-[#d94a0b] text-white'
-                : 'border-slate-300 bg-white text-slate-700'
-            }`}
-          >
-            Toutes les interventions
-          </button>
-        </section>
-
-        {/* STATISTIQUES */}
-
-        <section className="mb-6 grid grid-cols-2 gap-x-6 border-t border-slate-200 xl:grid-cols-4">
-          <article className="border-b border-slate-200 py-4">
-            <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
-              Interventions affichées
-            </p>
-            <p className="mt-2 text-3xl font-black text-slate-950">
-              {filteredInterventions.length}
-            </p>
-            <p className="mt-2 text-sm text-slate-500">
-              Selon les filtres sélectionnés
-            </p>
-          </article>
-
-          <article className="border-b border-slate-200 py-4">
-            <p className="text-xs font-bold uppercase tracking-wide text-blue-600">
-              Prévues
-            </p>
-            <p className="mt-2 text-3xl font-black text-blue-700">
-              {upcomingCount}
-            </p>
-            <p className="mt-2 text-sm text-blue-600">
-              Interventions à venir
-            </p>
-          </article>
-
-          <article className="border-b border-slate-200 py-4">
-            <p className="text-xs font-bold uppercase tracking-wide text-emerald-600">
-              Repas
-            </p>
-            <p className="mt-2 text-3xl font-black text-emerald-700">
-              {totalRepas}
-            </p>
-            <p className="mt-2 text-sm text-emerald-600">
-              Total des interventions affichées
-            </p>
-          </article>
-
-          <article className="border-b border-slate-200 py-4">
-            <p className="text-xs font-bold uppercase tracking-wide text-orange-600">
-              Bénévoles
-            </p>
-            <p className="mt-2 text-3xl font-black text-orange-700">
-              {totalBenevoles}
-            </p>
-            <p className="mt-2 text-sm text-orange-600">
-              Effectifs déclarés
-            </p>
-          </article>
-        </section>
+        <div className="mt-5 grid grid-cols-3 rounded-lg border border-slate-300 p-1">
+          {tabs.map((tab) => (
+            <button
+              key={tab.value}
+              type="button"
+              onClick={() => setDateFilter(tab.value)}
+              className={`rounded-md py-2 text-sm font-medium transition ${
+                dateFilter === tab.value
+                  ? 'bg-slate-100 text-slate-950'
+                  : 'text-slate-600'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
 
         {/* RECHERCHE ET FILTRES */}
 
-        <section className="mb-6 rounded-[2rem] border border-[#eadfd6] bg-white p-4 shadow-sm sm:p-5">
-          <div className="grid gap-4 xl:grid-cols-[1fr_260px_auto] xl:items-end">
-            <div className="min-w-0">
-              <label className="mb-2 block text-sm font-bold text-slate-700">
-                Rechercher une intervention
-              </label>
+        <div className="mt-3 flex gap-2">
+          <input
+            type="search"
+            value={searchTerm}
+            onChange={(event) =>
+              setSearchTerm(event.target.value)
+            }
+            aria-label="Rechercher une intervention"
+            placeholder="Rechercher : type d’aide, point, commentaire…"
+            className="min-h-11 w-full min-w-0 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-[#d94a0b]"
+          />
 
-              <input
-                type="search"
-                value={searchTerm}
-                onChange={(event) =>
-                  setSearchTerm(event.target.value)
-                }
-                placeholder="Type d’aide, point, commentaire..."
-                className="min-h-12 w-full min-w-0 rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none focus:border-[#d94a0b]"
-              />
-            </div>
+          <select
+            value={statusFilter}
+            onChange={(event) =>
+              setStatusFilter(event.target.value)
+            }
+            aria-label="Statut"
+            className="min-h-11 w-36 shrink-0 rounded-lg border border-slate-300 bg-white px-2 text-sm text-slate-900"
+          >
+            <option value="all">Tous les statuts</option>
+            <option value="prevue">Prévue</option>
+            <option value="en_cours">En cours</option>
+            <option value="declaree">Déclarée</option>
+            <option value="terminee">Terminée</option>
+            <option value="expiree">Date passée</option>
+            <option value="annulee">Annulée</option>
+            <option value="non_renseigne">
+              Non renseigné
+            </option>
+          </select>
+        </div>
 
-            <div>
-              <label className="mb-2 block text-sm font-bold text-slate-700">
-                Statut
-              </label>
+        {/* RÉSUMÉ */}
 
-              <select
-                value={statusFilter}
-                onChange={(event) =>
-                  setStatusFilter(event.target.value)
-                }
-                className="min-h-12 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900"
-              >
-                <option value="all">Tous les statuts</option>
-                <option value="prevue">Prévue</option>
-                <option value="en_cours">En cours</option>
-                <option value="declaree">Déclarée</option>
-                <option value="terminee">Terminée</option>
-                <option value="expiree">Date passée</option>
-                <option value="annulee">Annulée</option>
-                <option value="non_renseigne">
-                  Non renseigné
-                </option>
-              </select>
-            </div>
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-y border-slate-200 py-2 text-sm text-slate-600">
+          <span>
+            {filteredInterventions.length} affichée(s) ·{' '}
+            {upcomingCount} prévue(s) · {totalRepas} repas ·{' '}
+            {totalBenevoles} bénévole(s) · {pointsCouverts}{' '}
+            point(s) couvert(s)
+          </span>
 
+          {(searchTerm ||
+            statusFilter !== 'all' ||
+            dateFilter !== 'upcoming') && (
             <button
               type="button"
               onClick={resetFilters}
-              className="min-h-12 rounded-2xl border border-slate-300 bg-slate-50 px-5 py-3 text-sm font-bold text-slate-700"
+              className="font-medium text-[#d94a0b]"
             >
               Réinitialiser
             </button>
-          </div>
-
-          <p className="mt-4 text-sm text-slate-500">
-            {filteredInterventions.length} intervention(s)
-            affichée(s) • {pointsCouverts} point(s)
-            couvert(s)
-          </p>
-        </section>
+          )}
+        </div>
 
         {/* CHARGEMENT */}
 
         {isLoading && (
-          <div className="rounded-[2rem] border border-slate-200 bg-white p-8 text-slate-600">
+          <p className="mt-6 text-sm text-slate-500">
             Chargement des interventions...
-          </div>
+          </p>
         )}
 
         {isError && (
-          <div className="rounded-[2rem] border border-red-200 bg-red-50 p-8 text-red-700">
+          <div className="mt-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
             {(error as Error)?.message ||
               'Erreur lors du chargement des interventions.'}
           </div>
@@ -567,12 +496,12 @@ export default function InterventionsPage() {
         {!isLoading &&
           !isError &&
           filteredInterventions.length === 0 && (
-            <div className="rounded-[2rem] border border-dashed border-slate-300 bg-white p-8 text-center shadow-sm">
-              <h2 className="text-xl font-black text-slate-950">
+            <div className="mt-8 text-center">
+              <p className="font-semibold text-slate-950">
                 Aucune intervention trouvée
-              </h2>
+              </p>
 
-              <p className="mt-3 text-sm text-slate-500">
+              <p className="mt-1 text-sm text-slate-500">
                 {dateFilter === 'upcoming'
                   ? 'Aucune intervention à venir pour le moment.'
                   : 'Aucune intervention ne correspond aux filtres.'}
@@ -581,145 +510,131 @@ export default function InterventionsPage() {
               <button
                 type="button"
                 onClick={resetFilters}
-                className="mt-5 min-h-11 rounded-xl bg-[#d94a0b] px-5 text-sm font-bold text-white"
+                className="mt-3 text-sm font-semibold text-[#d94a0b]"
               >
                 Réinitialiser les filtres
               </button>
             </div>
           )}
 
-        {/* LISTE DES INTERVENTIONS */}
+        {/* LISTE DES INTERVENTIONS (AGENDA) */}
 
         {!isLoading &&
           !isError &&
           filteredInterventions.length > 0 && (
-            <div className="grid gap-5">
+            <div className="mt-4 space-y-3">
               {filteredInterventions.map((intervention) => {
                 const effectiveStatus = getEffectiveStatus(
                   intervention,
                   now
                 )
 
+                const dateParts = getDateParts(
+                  intervention.date_intervention,
+                  locale
+                )
+
+                const canManage =
+                  canManageIntervention(intervention)
+
+                const meta = [
+                  intervention.association_nom,
+                  `${intervention.nombre_repas ?? 0} repas`,
+                  `${intervention.nombre_benevoles ?? 0} bénévole${
+                    (intervention.nombre_benevoles ?? 0) > 1
+                      ? 's'
+                      : ''
+                  }`,
+                ]
+                  .filter(Boolean)
+                  .join(' · ')
+
                 return (
                   <article
                     key={intervention.id}
-                    className="min-w-0 rounded-[2rem] border border-[#eadfd6] bg-white p-5 shadow-sm sm:p-6"
+                    className="flex min-w-0 gap-4 rounded-xl border border-slate-200 bg-white p-4"
                   >
-                    <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
-                      <div className="min-w-0 flex-1">
+                    <div className="w-12 shrink-0 text-center">
+                      <p className="text-2xl font-bold leading-none text-slate-950">
+                        {dateParts.day}
+                      </p>
 
-                        <div className="flex flex-wrap items-center gap-3">
-                          <h2 className="break-words text-xl font-black text-slate-950 sm:text-2xl">
-                            {formatAidType(
-                              intervention.type_aide
-                            )}
-                          </h2>
+                      <p className="mt-1 text-xs uppercase text-slate-500">
+                        {dateParts.month}
+                      </p>
+                    </div>
 
-                          <span
-                            className={`rounded-full px-3 py-1 text-xs font-bold ring-1 ${getStatusClass(
-                              effectiveStatus
-                            )}`}
-                          >
-                            {getStatusLabel(effectiveStatus)}
-                          </span>
-                        </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <h2 className="break-words font-semibold text-slate-950">
+                          {formatAidType(
+                            intervention.type_aide
+                          )}
+                        </h2>
 
-                        <p className="mt-3 break-words text-sm text-slate-600">
-                          Point concerné :{' '}
-                          <span className="font-bold text-slate-700">
-                            {intervention.points?.adresse ||
-                              'Point non renseigné'}
-                          </span>
-                        </p>
-
-                        {intervention.association_nom && (
-                          <p className="mt-2 text-sm text-slate-500">
-                            Association :{' '}
-                            {intervention.association_nom}
-                          </p>
-                        )}
-
-                        <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                          <div className="rounded-2xl bg-slate-50 p-4">
-                            <p className="text-xs font-bold uppercase text-slate-500">
-                              Date
-                            </p>
-                            <p className="mt-2 font-black text-slate-950">
-                              {formatDate(
-                                intervention.date_intervention,
-                                locale
-                              )}
-                            </p>
-                          </div>
-
-                          <div className="rounded-2xl bg-slate-50 p-4">
-                            <p className="text-xs font-bold uppercase text-slate-500">
-                              Horaires
-                            </p>
-                            <p className="mt-2 font-black text-slate-950">
-                              {formatTimeRange(
-                                intervention.heure_debut,
-                                intervention.heure_fin
-                              )}
-                            </p>
-                          </div>
-
-                          <div className="rounded-2xl bg-emerald-50 p-4">
-                            <p className="text-xs font-bold uppercase text-emerald-600">
-                              Repas
-                            </p>
-                            <p className="mt-2 text-2xl font-black text-emerald-700">
-                              {intervention.nombre_repas ?? 0}
-                            </p>
-                          </div>
-
-                          <div className="rounded-2xl bg-orange-50 p-4">
-                            <p className="text-xs font-bold uppercase text-orange-600">
-                              Bénévoles
-                            </p>
-                            <p className="mt-2 text-2xl font-black text-orange-700">
-                              {intervention.nombre_benevoles ?? 0}
-                            </p>
-                          </div>
-                        </div>
-
-                        {intervention.commentaire?.trim() && (
-                          <div className="mt-5 rounded-2xl bg-slate-50 p-4">
-                            <p className="mb-2 text-sm font-bold text-slate-700">
-                              Commentaire
-                            </p>
-                            <p className="break-words text-sm leading-relaxed text-slate-600">
-                              {intervention.commentaire}
-                            </p>
-                          </div>
-                        )}
+                        <span
+                          className={`shrink-0 text-xs font-medium ${getStatusClass(
+                            effectiveStatus
+                          )}`}
+                        >
+                          ● {getStatusLabel(effectiveStatus)}
+                        </span>
                       </div>
 
-                      <div className="flex w-full flex-col gap-3 xl:w-auto xl:min-w-[190px]">
+                      <p className="mt-1 break-words text-sm text-slate-600">
+                        {formatTimeRange(
+                          intervention.heure_debut,
+                          intervention.heure_fin
+                        )}{' '}
+                        ·{' '}
+                        {intervention.points?.adresse ||
+                          'Point non renseigné'}
+                      </p>
+
+                      <p className="mt-1 text-sm text-slate-500">
+                        {meta}
+                      </p>
+
+                      {intervention.commentaire && (
+                        <p className="mt-2 break-words text-sm italic text-slate-500">
+                          « {intervention.commentaire} »
+                        </p>
+                      )}
+
+                      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 whitespace-nowrap text-sm font-semibold">
+                        <Link
+                          to="/carte"
+                          className="text-[#d94a0b]"
+                        >
+                          Voir sur la carte
+                        </Link>
+
                         {intervention.point_id && (
                           <Link
                             to={`/points/${intervention.point_id}`}
-                            className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-slate-300 bg-white px-5 py-3 text-center text-sm font-bold text-slate-700"
+                            className="text-slate-600"
                           >
                             Voir le point
                           </Link>
                         )}
 
-                        <Link
-                          to="/carte"
-                          className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-[#d94a0b] px-5 py-3 text-center text-sm font-bold text-white"
-                        >
-                          Voir sur la carte
-                        </Link>
+                        {canManage && (
+                          <Link
+                            to={`/interventions/${intervention.id}/edit`}
+                            className="text-slate-600"
+                          >
+                            Modifier
+                          </Link>
+                        )}
 
-                        {canDeleteIntervention(intervention) && (
+                        {canManage && (
                           <button
                             type="button"
                             onClick={() =>
                               handleDeleteIntervention(intervention)
                             }
                             disabled={deleteMutation.isPending}
-                            className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-red-200 bg-red-50 px-5 py-3 text-center text-sm font-bold text-red-700 disabled:opacity-50"
+                            className="ml-auto text-red-600 disabled:opacity-50"
                           >
                             {deleteMutation.isPending &&
                             deleteMutation.variables === intervention.id
@@ -734,9 +649,7 @@ export default function InterventionsPage() {
               })}
             </div>
           )}
-
       </div>
     </div>
   )
 }
-

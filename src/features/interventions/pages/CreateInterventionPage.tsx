@@ -7,6 +7,7 @@ import {
 import {
   Link,
   useNavigate,
+  useParams,
   useSearchParams,
 } from 'react-router-dom'
 
@@ -27,13 +28,24 @@ import {
   Handshake,
   MoreHorizontal,
   Check,
+  ArrowLeft,
 } from 'lucide-react'
 
 import { getPoints } from '@/features/points/api/points'
 
+import FormSection, {
+  chipClass,
+  formFieldClass as fieldClass,
+  formFooterClass,
+  formLabelClass as labelClass,
+} from '@/shared/components/FormSection'
+
 import {
   createIntervention,
+  getInterventionById,
   getInterventions,
+  updateIntervention,
+  type CreateInterventionInput,
 } from '@/features/interventions/api/interventions'
 
 const typeAideOptions = [
@@ -94,6 +106,11 @@ export default function CreateInterventionPage() {
 
   const pointIdFromUrl =
     searchParams.get('pointId')
+
+  // Modification d'une intervention existante
+  // (/interventions/:interventionId/edit).
+  const { interventionId } = useParams()
+  const isEdit = Boolean(interventionId)
 
   const language = (
     i18n.resolvedLanguage ??
@@ -170,6 +187,51 @@ export default function CreateInterventionPage() {
     queryKey: ['interventions'],
     queryFn: getInterventions,
   })
+
+  const {
+    data: existingIntervention,
+    isLoading: existingLoading,
+    isError: existingError,
+    error: existingErrorDetails,
+  } = useQuery({
+    queryKey: ['intervention', interventionId],
+    queryFn: () =>
+      getInterventionById(interventionId as string),
+    enabled: isEdit,
+  })
+
+  // Pré-remplit le formulaire en mode modification.
+  useEffect(() => {
+    if (!existingIntervention) {
+      return
+    }
+
+    setPointId(existingIntervention.point_id ?? '')
+    setDateIntervention(
+      existingIntervention.date_intervention ?? ''
+    )
+    setHeureDebut(
+      existingIntervention.heure_debut?.slice(0, 5) ?? ''
+    )
+    setHeureFin(
+      existingIntervention.heure_fin?.slice(0, 5) ?? ''
+    )
+    setTypesAide(
+      (existingIntervention.type_aide ?? '')
+        .split(',')
+        .map((type: string) => type.trim())
+        .filter(Boolean)
+    )
+    setNombreRepas(
+      String(existingIntervention.nombre_repas ?? 0)
+    )
+    setNombreBenevoles(
+      existingIntervention.nombre_benevoles
+        ? String(existingIntervention.nombre_benevoles)
+        : ''
+    )
+    setCommentaire(existingIntervention.commentaire ?? '')
+  }, [existingIntervention])
 useEffect(() => {
   if (
     !pointIdFromUrl ||
@@ -328,11 +390,13 @@ useEffect(() => {
       return interventions.filter(
         (intervention) =>
           intervention.point_id ===
-          pointId
+            pointId &&
+          intervention.id !== interventionId
       )
     }, [
       interventions,
       pointId,
+      interventionId,
     ])
 
   const repasDejaCouverts =
@@ -630,8 +694,13 @@ useEffect(() => {
 
   const createMutation =
     useMutation({
-      mutationFn:
-        createIntervention,
+      mutationFn: (input: CreateInterventionInput) =>
+        isEdit
+          ? updateIntervention(
+              interventionId as string,
+              input
+            )
+          : createIntervention(input),
 
       onSuccess:
         async () => {
@@ -642,6 +711,12 @@ useEffect(() => {
               ],
             }
           )
+
+          if (isEdit) {
+            await queryClient.invalidateQueries({
+              queryKey: ['intervention', interventionId],
+            })
+          }
 
           navigate(
             '/interventions'
@@ -694,7 +769,8 @@ useEffect(() => {
       interventions.filter(
         (intervention) =>
           intervention.point_id ===
-          selectedId
+            selectedId &&
+          intervention.id !== interventionId
       )
 
     const repasCouverts =
@@ -883,1035 +959,549 @@ useEffect(() => {
     }
   }
 
+  // Date courte pour le récapitulatif : « dim. 1 nov. »
+  function formatShortDate(value: string) {
+    const [year, month, day] = value.split('-').map(Number)
+    const date = new Date(year, month - 1, day)
+
+    if (Number.isNaN(date.getTime())) {
+      return value
+    }
+
+    return new Intl.DateTimeFormat(locale, {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+    }).format(date)
+  }
+
+  const coveragePercent =
+    selectedPoint?.nombre_personnes_estime
+      ? Math.min(
+          100,
+          Math.round(
+            (repasDejaCouverts /
+              selectedPoint.nombre_personnes_estime) *
+              100
+          )
+        )
+      : 0
+
+  const volunteersLabel = t(
+    'createIntervention.volunteers',
+    'Bénévoles'
+  ).toLowerCase()
+
+  const summary = [
+    dateIntervention
+      ? formatShortDate(dateIntervention)
+      : null,
+    heureDebut && heureFin
+      ? `${heureDebut} – ${heureFin}`
+      : null,
+    selectedTypesAide
+      .map((option) => formatAidLabel(option.value))
+      .join(', ') || null,
+    repasSelected && nombreRepas
+      ? `${nombreRepas} repas`
+      : null,
+    nombreBenevoles
+      ? `${nombreBenevoles} ${
+          Number(nombreBenevoles) === 1
+            ? volunteersLabel.replace(/s$/, '')
+            : volunteersLabel
+        }`
+      : null,
+  ]
+    .filter(Boolean)
+    .join(' · ')
+
+  const pageTitle = isEdit
+    ? t('createIntervention.editTitle', 'Modifier l’intervention')
+    : t('createIntervention.title', 'Déclarer une intervention')
+
+  if (isEdit && (existingLoading || existingError)) {
+    return (
+      <div className="mx-auto w-full max-w-xl px-4 py-8">
+        {existingLoading ? (
+          <p className="text-sm text-slate-500">
+            Chargement de l’intervention...
+          </p>
+        ) : (
+          <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            {(existingErrorDetails as Error)?.message ||
+              'Impossible de charger cette intervention.'}
+          </div>
+        )}
+      </div>
+    )
+  }
+
   return (
     <div
       dir={i18n.dir()}
-      className="min-h-[calc(100vh-80px)] bg-[#faf8f4] px-4 py-6 sm:px-6 lg:px-8 xl:px-10"
+      className="min-w-0 px-4 pt-4"
     >
-      <div className="mx-auto w-full max-w-[1500px]">
+      <div className="mx-auto w-full max-w-xl">
+        <Link
+          to="/interventions"
+          className="inline-flex items-center gap-1 text-sm text-slate-500 transition hover:text-slate-900"
+        >
+          <ArrowLeft
+            size={16}
+            className={i18n.dir() === 'rtl' ? 'rotate-180' : ''}
+          />
+          {t('createIntervention.back', 'Retour aux interventions')}
+        </Link>
 
-        <div className="mb-5">
-          <Link
-            to="/interventions"
-            className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-slate-900"
+        <h1 className="mt-3 text-2xl font-bold text-slate-950">
+          {pageTitle}
+        </h1>
+
+        <p className="mt-1 text-sm text-slate-500">
+          {t(
+            'createIntervention.description',
+            'Renseigne les informations de l’intervention réalisée sur un point afin d’assurer un suivi clair des actions de terrain.'
+          )}
+        </p>
+
+        <form
+          onSubmit={handleSubmit}
+          className="mt-5"
+        >
+          {/* 1. POINT CONCERNÉ */}
+
+          <FormSection
+            number={1}
+            title={t(
+              'createIntervention.concernedPoint',
+              'Point concerné'
+            )}
           >
-            <span>
-              {i18n.dir() ===
-              'rtl'
-                ? '→'
-                : '←'}
-            </span>
+            {pointsLoading && (
+              <p className="mb-2 text-sm text-slate-500">
+                {t(
+                  'createIntervention.loadingPoints',
+                  'Chargement des points...'
+                )}
+              </p>
+            )}
 
-            <span>
-              {t(
-                'createIntervention.back',
-                'Retour aux interventions'
+            {pointsError && (
+              <p className="mb-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                {(pointsErrorDetails as Error)?.message ||
+                  t(
+                    'createIntervention.pointsError',
+                    'Impossible de charger les points.'
+                  )}
+              </p>
+            )}
+
+            <select
+              value={pointId}
+              disabled={isPointFromMapValid}
+              aria-label={t(
+                'createIntervention.concernedPoint',
+                'Point concerné'
               )}
-            </span>
-          </Link>
-        </div>
+              onChange={(event) =>
+                handlePointChange(event.target.value)
+              }
+              className={fieldClass}
+            >
+              <option value="">
+                {t(
+                  'createIntervention.selectPoint',
+                  'Sélectionner un point'
+                )}
+              </option>
 
-        <div className="mb-8">
-          <p className="text-sm font-bold uppercase tracking-[0.22em] text-[#d94a0b]">
-            {t(
-              'createIntervention.fieldIntervention',
-              'Intervention terrain'
+              {points.map((point) => (
+                <option key={point.id} value={point.id}>
+                  {formatPointLabel(point.adresse)}
+                </option>
+              ))}
+            </select>
+
+            {isPointFromMapValid && (
+              <p className="mt-1 text-xs text-slate-500">
+                Point sélectionné automatiquement depuis la carte.
+              </p>
             )}
-          </p>
 
-          <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl xl:text-5xl">
-            {t(
-              'createIntervention.title',
-              'Déclarer une intervention'
-            )}
-          </h1>
-
-          <p className="mt-3 max-w-3xl text-base leading-relaxed text-slate-600 sm:text-lg">
-            {t(
-              'createIntervention.description',
-              'Renseigne les informations de l’intervention réalisée sur un point afin d’assurer un suivi clair des actions de terrain.'
-            )}
-          </p>
-        </div>
-
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_320px] 2xl:grid-cols-[minmax(0,1.45fr)_340px]">
-
-          <form
-            onSubmit={
-              handleSubmit
-            }
-            className="space-y-6"
-          >
-
-            <section className="rounded-[2rem] border border-[#eadfd6] bg-white p-5 shadow-sm sm:p-6">
-              <div className="mb-5">
-                <h2 className="text-xl font-black text-slate-950 sm:text-2xl">
+            {selectedPoint && (
+              <div className="mt-3 space-y-1 text-sm text-slate-600">
+                <p>
+                  {selectedPoint.nombre_personnes_estime ?? 0}{' '}
                   {t(
-                    'createIntervention.concernedPoint',
-                    'Point concerné'
-                  )}
-                </h2>
-
-                <p className="mt-1 text-sm text-slate-500">
-                  {t(
-                    'createIntervention.concernedPointDescription',
-                    'Sélectionne le point sur lequel l’intervention a été réalisée.'
-                  )}
+                    'createIntervention.estimatedPeople',
+                    'Personnes estimées'
+                  ).toLowerCase()}{' '}
+                  · {t('createIntervention.urgency', 'Urgence').toLowerCase()}{' '}
+                  <span className="font-medium text-orange-600">
+                    {formatUrgency(
+                      selectedPoint.niveau_urgence
+                    ).toLowerCase()}
+                  </span>{' '}
+                  · {t('createIntervention.needs', 'Besoins').toLowerCase()} :{' '}
+                  {formatNeeds(selectedPoint.besoins).toLowerCase()}
                 </p>
-              </div>
 
-              {pointsLoading && (
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                <p>
                   {t(
-                    'createIntervention.loadingPoints',
-                    'Chargement des points...'
-                  )}
-                </div>
-              )}
-
-              {pointsError && (
-                <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                  {(pointsErrorDetails as Error)
-                    ?.message ||
-                    t(
-                      'createIntervention.pointsError',
-                      'Impossible de charger les points.'
-                    )}
-                </div>
-              )}
-
-              <div>
-                <label className="mb-2 block text-sm font-bold text-slate-700">
-                  {t(
-                    'createIntervention.concernedPoint',
-                    'Point concerné'
+                    'createIntervention.mealCoverage',
+                    'Couverture repas'
                   )}{' '}
-                  *
-                </label>
-
-                <select
-                  value={
-                    pointId
-                  }
-                  disabled={
-                    isPointFromMapValid
-                  }
-                  onChange={(
-                    event
-                  ) =>
-                    handlePointChange(
-                      event.target.value
-                    )
-                  }
-                  className="min-h-12 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-[#d94a0b] focus:ring-4 focus:ring-orange-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-600"
-                >
-                  <option value="">
+                  : {repasDejaCouverts}{' '}
+                  {t(
+                    'createIntervention.alreadyCovered',
+                    'Déjà couverts'
+                  ).toLowerCase()}{' '}
+                  / {selectedPoint.nombre_personnes_estime ?? 0} ·{' '}
+                  <span className="font-medium text-slate-900">
+                    {repasRestants}{' '}
                     {t(
-                      'createIntervention.selectPoint',
-                      'Sélectionner un point'
-                    )}
-                  </option>
+                      'createIntervention.remaining',
+                      'Restants'
+                    ).toLowerCase()}
+                  </span>
+                </p>
 
-                  {points.map(
-                    (point) => (
-                      <option
-                        key={
-                          point.id
-                        }
-                        value={
-                          point.id
-                        }
-                      >
-                        {formatPointLabel(
-                          point.adresse
-                        )}
-                      </option>
-                    )
-                  )}
-                </select>
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
+                  <div
+                    className="h-full bg-[#d94a0b]"
+                    style={{ width: `${coveragePercent}%` }}
+                  />
+                </div>
 
-                {isPointFromMapValid && (
-                  <p className="mt-2 text-xs font-semibold text-slate-500">
-                    Point sélectionné automatiquement depuis la carte.
-                  </p>
-                )}
-              </div>
+                <p className="text-xs text-slate-500">
+                  {t('createIntervention.mealsSuggestion', {
+                    count: repasRestants,
+                    defaultValue:
+                      'Prévois environ {{count}} repas/eaux pour compléter le besoin restant.',
+                  })}
+                </p>
 
-              {selectedPoint && (
-                <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
-
-                  <p className="text-sm font-black text-emerald-800">
+                <div className="pt-2">
+                  <p className="font-medium text-slate-700">
                     {t(
-                      'createIntervention.selectedPoint',
-                      'Point sélectionné'
+                      'createIntervention.associationsPositioned',
+                      'Associations déjà positionnées'
                     )}
                   </p>
 
-                  <p className="mt-1 text-sm font-semibold text-emerald-700">
-                    {formatPointLabel(
-                      selectedPoint.adresse
-                    )}
-                  </p>
-
-                  <div className="mt-4 grid gap-3 sm:grid-cols-3">
-
-                    <div className="rounded-2xl bg-white p-4">
-                      <p className="text-xs font-black uppercase text-slate-500">
-                        {t(
-                          'createIntervention.estimatedPeople',
-                          'Personnes estimées'
-                        )}
-                      </p>
-
-                      <p className="mt-1 text-3xl font-black text-slate-950">
-                        {selectedPoint
-                          .nombre_personnes_estime ??
-                          0}
-                      </p>
-                    </div>
-
-                    <div className="rounded-2xl bg-white p-4">
-                      <p className="text-xs font-black uppercase text-slate-500">
-                        {t(
-                          'createIntervention.urgency',
-                          'Urgence'
-                        )}
-                      </p>
-
-                      <p className="mt-1 text-lg font-black text-orange-700">
-                        {formatUrgency(
-                          selectedPoint.niveau_urgence
-                        )}
-                      </p>
-                    </div>
-
-                    <div className="rounded-2xl bg-white p-4">
-                      <p className="text-xs font-black uppercase text-slate-500">
-                        {t(
-                          'createIntervention.needs',
-                          'Besoins'
-                        )}
-                      </p>
-
-                      <p className="mt-1 text-sm font-bold text-slate-950">
-                        {formatNeeds(
-                          selectedPoint.besoins
-                        )}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 rounded-2xl bg-white p-4">
-                    <p className="text-xs font-black uppercase text-slate-500">
+                  {interventionsLoading ? (
+                    <p className="text-slate-500">
                       {t(
-                        'createIntervention.mealCoverage',
-                        'Couverture repas'
+                        'createIntervention.loadingInterventions',
+                        'Chargement des interventions...'
                       )}
                     </p>
-
-                    <div className="mt-3 grid gap-3 sm:grid-cols-3">
-                      <div>
-                        <p className="text-xs font-bold text-slate-500">
-                          {t(
-                            'createIntervention.totalNeed',
-                            'Besoin total'
-                          )}
-                        </p>
-
-                        <p className="text-2xl font-black text-slate-950">
-                          {selectedPoint
-                            .nombre_personnes_estime ??
-                            0}
-                        </p>
-                      </div>
-
-                      <div>
-                        <p className="text-xs font-bold text-slate-500">
-                          {t(
-                            'createIntervention.alreadyCovered',
-                            'Déjà couverts'
-                          )}
-                        </p>
-
-                        <p className="text-2xl font-black text-emerald-700">
-                          {
-                            repasDejaCouverts
-                          }
-                        </p>
-                      </div>
-
-                      <div>
-                        <p className="text-xs font-bold text-slate-500">
-                          {t(
-                            'createIntervention.remaining',
-                            'Restants'
-                          )}
-                        </p>
-
-                        <p className="text-2xl font-black text-orange-700">
-                          {
-                            repasRestants
-                          }
-                        </p>
-                      </div>
-                    </div>
-
-                    <p className="mt-3 text-sm font-semibold text-slate-700">
+                  ) : selectedPointInterventions.length === 0 ? (
+                    <p className="text-slate-500">
                       {t(
-                        'createIntervention.mealsSuggestion',
-                        {
-                          count:
-                            repasRestants,
-
-                          defaultValue:
-                            'Prévois environ {{count}} repas/eaux pour compléter le besoin restant.',
-                        }
+                        'createIntervention.noAssociation',
+                        'Aucune association positionnée pour le moment.'
                       )}
                     </p>
-                  </div>
-
-                  <div className="mt-4 rounded-2xl bg-white p-4">
-                    <p className="text-xs font-black uppercase text-slate-500">
-                      {t(
-                        'createIntervention.associationsPositioned',
-                        'Associations déjà positionnées'
-                      )}
-                    </p>
-
-                    {interventionsLoading ? (
-                      <p className="mt-2 text-sm font-semibold text-slate-500">
-                        {t(
-                          'createIntervention.loadingInterventions',
-                          'Chargement des interventions...'
-                        )}
-                      </p>
-                    ) : selectedPointInterventions.length ===
-                      0 ? (
-                      <p className="mt-2 text-sm font-semibold text-slate-500">
-                        {t(
-                          'createIntervention.noAssociation',
-                          'Aucune association positionnée pour le moment.'
-                        )}
-                      </p>
-                    ) : (
-                      <div className="mt-3 space-y-2">
-                        {selectedPointInterventions.map(
-                          (
-                            intervention
-                          ) => (
-                            <div
-                              key={
-                                intervention.id
-                              }
-                              className="rounded-xl border border-slate-200 bg-slate-50 p-3"
-                            >
-                              <p className="text-sm font-black text-slate-950">
-                                {intervention.association_nom ||
-                                  t(
-                                    'createIntervention.association',
-                                    'Association'
-                                  )}
-                              </p>
-
-                              <p className="mt-1 text-xs font-semibold text-slate-600">
-                                {formatStoredAidTypes(
-                                  intervention.type_aide
-                                )}{' '}
-                                —{' '}
-                                {formatDatePreview(
-                                  intervention.date_intervention
+                  ) : (
+                    <ul className="mt-1 space-y-1">
+                      {selectedPointInterventions.map(
+                        (intervention) => (
+                          <li
+                            key={intervention.id}
+                            className="text-slate-600"
+                          >
+                            <span className="font-medium text-slate-900">
+                              {intervention.association_nom ||
+                                t(
+                                  'createIntervention.association',
+                                  'Association'
                                 )}
-                              </p>
-
-                              {hasRepas(
-                                intervention.type_aide
-                              ) && (
-                                <p className="mt-1 text-xs font-bold text-orange-700">
-                                  {t(
-                                    'createIntervention.plannedMeals',
-                                    {
-                                      count:
-                                        intervention.nombre_repas ??
-                                        0,
-
-                                      defaultValue:
-                                        '{{count}} repas prévus',
-                                    }
-                                  )}
-                                </p>
-                              )}
-                            </div>
-                          )
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </section>
-
-            <section className="rounded-[2rem] border border-[#eadfd6] bg-white p-5 shadow-sm sm:p-6">
-
-              <div className="mb-5">
-                <h2 className="text-xl font-black text-slate-950 sm:text-2xl">
-                  {t(
-                    'createIntervention.information',
-                    'Informations de l’intervention'
-                  )}
-                </h2>
-
-                <p className="mt-1 text-sm text-slate-500">
-                  {t(
-                    'createIntervention.informationDescription',
-                    'Indique la date, les horaires et les types d’aide apportés.'
-                  )}
-                </p>
-              </div>
-
-              <div className="grid gap-5 md:grid-cols-3">
-
-                <div>
-                  <label className="mb-2 block text-sm font-bold text-slate-700">
-                    {t(
-                      'createIntervention.date',
-                      'Date'
-                    )}{' '}
-                    *
-                  </label>
-
-                  <input
-                    type="date"
-                    value={
-                      dateIntervention
-                    }
-                    onChange={(
-                      event
-                    ) =>
-                      setDateIntervention(
-                        event
-                          .target
-                          .value
-                      )
-                    }
-                    className="min-h-12 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-[#d94a0b] focus:ring-4 focus:ring-orange-100"
-                  />
-                </div>
-
-                <div>
-                  <label className="mb-2 block text-sm font-bold text-slate-700">
-                    {t(
-                      'createIntervention.startTime',
-                      'Heure de début'
-                    )}{' '}
-                    *
-                  </label>
-
-                  <input
-                    type="time"
-                    value={
-                      heureDebut
-                    }
-                    onChange={(
-                      event
-                    ) =>
-                      setHeureDebut(
-                        event
-                          .target
-                          .value
-                      )
-                    }
-                    className="min-h-12 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-[#d94a0b] focus:ring-4 focus:ring-orange-100"
-                  />
-                </div>
-
-                <div>
-                  <label className="mb-2 block text-sm font-bold text-slate-700">
-                    {t(
-                      'createIntervention.endTime',
-                      'Heure de fin'
-                    )}{' '}
-                    *
-                  </label>
-
-                  <input
-                    type="time"
-                    value={
-                      heureFin
-                    }
-                    onChange={(
-                      event
-                    ) =>
-                      setHeureFin(
-                        event
-                          .target
-                          .value
-                      )
-                    }
-                    className="min-h-12 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-[#d94a0b] focus:ring-4 focus:ring-orange-100"
-                  />
-                </div>
-              </div>
-
-              <div className="mt-5">
-                <label className="mb-3 block text-sm font-bold text-slate-700">
-                  {t(
-                    'createIntervention.aidTypes',
-                    'Type d’aide * — plusieurs choix possibles'
-                  )}
-                </label>
-
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-3 2xl:grid-cols-4">
-                  {typeAideOptions.map(
-                    (
-                      option
-                    ) => {
-                      const isActive =
-                        typesAide.includes(
-                          option.value
-                        )
-
-                      const Icon =
-                        option.icon
-
-                      return (
-                        <button
-                          key={
-                            option.value
-                          }
-                          type="button"
-                          onClick={() =>
-                            toggleTypeAide(
-                              option.value
-                            )
-                          }
-                          aria-pressed={
-                            isActive
-                          }
-                          className={`relative flex min-h-[110px] flex-col items-center justify-center rounded-[1.4rem] border px-3 py-4 text-center transition ${
-                            isActive
-                              ? 'border-[#d94a0b] bg-orange-50 shadow-sm ring-4 ring-orange-100'
-                              : 'border-slate-200 bg-white hover:border-orange-200 hover:bg-orange-50/40'
-                          }`}
-                        >
-                          {isActive && (
-                            <span className="absolute right-3 top-3 flex h-6 w-6 items-center justify-center rounded-full bg-[#d94a0b] text-white">
-                              <Check
-                                size={
-                                  14
-                                }
-                                strokeWidth={
-                                  3
-                                }
-                                aria-hidden="true"
-                              />
-                            </span>
-                          )}
-
-                          <Icon
-                            size={
-                              30
-                            }
-                            strokeWidth={
-                              1.8
-                            }
-                            aria-hidden="true"
-                            className={
-                              isActive
-                                ? 'text-[#d94a0b]'
-                                : 'text-slate-500'
-                            }
-                          />
-
-                          <span
-                            className={`mt-3 text-sm font-bold ${
-                              isActive
-                                ? 'text-[#d94a0b]'
-                                : 'text-slate-900'
-                            }`}
-                          >
-                            {formatAidLabel(
-                              option.value
+                            </span>{' '}
+                            ·{' '}
+                            {formatStoredAidTypes(
+                              intervention.type_aide
+                            )}{' '}
+                            ·{' '}
+                            {formatDatePreview(
+                              intervention.date_intervention
                             )}
-                          </span>
-                        </button>
-                      )
-                    }
-                  )}
-                </div>
-
-                {typesAide.length >
-                  0 && (
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {selectedTypesAide.map(
-                      (
-                        option
-                      ) => {
-                        const Icon =
-                          option.icon
-
-                        return (
-                          <span
-                            key={
-                              option.value
-                            }
-                            className="inline-flex items-center gap-1.5 rounded-full bg-orange-50 px-3 py-1 text-xs font-bold text-orange-700 ring-1 ring-orange-200"
-                          >
-                            <Icon
-                              size={
-                                14
-                              }
-                              strokeWidth={
-                                2
-                              }
-                              aria-hidden="true"
-                            />
-
-                            {formatAidLabel(
-                              option.value
+                            {hasRepas(intervention.type_aide) && (
+                              <>
+                                {' '}
+                                ·{' '}
+                                {t(
+                                  'createIntervention.plannedMeals',
+                                  {
+                                    count:
+                                      intervention.nombre_repas ??
+                                      0,
+                                    defaultValue:
+                                      '{{count}} repas prévus',
+                                  }
+                                )}
+                              </>
                             )}
-                          </span>
+                          </li>
                         )
-                      }
-                    )}
-                  </div>
-                )}
-              </div>
-            </section>
-
-            <section className="rounded-[2rem] border border-[#eadfd6] bg-white p-5 shadow-sm sm:p-6">
-
-              <div className="mb-5">
-                <h2 className="text-xl font-black text-slate-950 sm:text-2xl">
-                  {t(
-                    'createIntervention.resources',
-                    'Moyens mobilisés'
-                  )}
-                </h2>
-
-                <p className="mt-1 text-sm text-slate-500">
-                  {t(
-                    'createIntervention.resourcesDescription',
-                    'Renseigne les quantités mobilisées pendant l’intervention.'
-                  )}
-                </p>
-              </div>
-
-              <div className="grid gap-5 md:grid-cols-2">
-
-                <div>
-                  <label className="mb-2 block text-sm font-bold text-slate-700">
-                    {t(
-                      'createIntervention.numberOfMeals',
-                      'Nombre de repas'
-                    )}{' '}
-                    {repasSelected
-                      ? '*'
-                      : ''}
-                  </label>
-
-                  <input
-                    type="number"
-                    min="0"
-                    value={
-                      nombreRepas
-                    }
-                    disabled={
-                      !repasSelected
-                    }
-                    onChange={(
-                      event
-                    ) =>
-                      setNombreRepas(
-                        event
-                          .target
-                          .value
-                      )
-                    }
-                    placeholder={
-                      repasSelected
-                        ? t(
-                            'createIntervention.remainingPlaceholder',
-                            {
-                              count:
-                                repasRestants,
-
-                              defaultValue:
-                                'Restants : {{count}}',
-                            }
-                          )
-                        : t(
-                            'createIntervention.mealsNotSelected',
-                            'Repas non sélectionné'
-                          )
-                    }
-                    className="min-h-12 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#d94a0b] focus:ring-4 focus:ring-orange-100 disabled:bg-slate-100 disabled:text-slate-400"
-                  />
-
-                  {!repasSelected && (
-                    <p className="mt-2 text-xs font-semibold text-slate-500">
-                      {t(
-                        'createIntervention.mealsDisabled',
-                        'Ce champ est désactivé car tu n’as pas sélectionné Repas.'
                       )}
-                    </p>
+                    </ul>
                   )}
                 </div>
-
-                <div>
-                  <label className="mb-2 block text-sm font-bold text-slate-700">
-                    {t(
-                      'createIntervention.numberOfVolunteers',
-                      'Nombre de bénévoles'
-                    )}{' '}
-                    *
-                  </label>
-
-                  <input
-                    type="number"
-                    min="1"
-                    value={
-                      nombreBenevoles
-                    }
-                    onChange={(
-                      event
-                    ) =>
-                      setNombreBenevoles(
-                        event
-                          .target
-                          .value
-                      )
-                    }
-                    placeholder={t(
-                      'createIntervention.volunteersPlaceholder',
-                      'Ex : 6'
-                    )}
-                    className="min-h-12 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#d94a0b] focus:ring-4 focus:ring-orange-100"
-                  />
-                </div>
               </div>
+            )}
+          </FormSection>
 
-              <div className="mt-5">
-                <label className="mb-2 block text-sm font-bold text-slate-700">
+          {/* 2. DATE ET HORAIRES */}
+
+          <FormSection
+            number={2}
+            title={t(
+              'createIntervention.dateAndTime',
+              'Date et horaires'
+            )}
+          >
+            <label className={labelClass}>
+              {t('createIntervention.date', 'Date')}
+            </label>
+
+            <input
+              type="date"
+              value={dateIntervention}
+              onChange={(event) =>
+                setDateIntervention(event.target.value)
+              }
+              className={fieldClass}
+            />
+
+            <div className="mt-3 grid grid-cols-2 gap-3">
+              <div>
+                <label className={labelClass}>
                   {t(
-                    'createIntervention.comment',
-                    'Commentaire'
+                    'createIntervention.startTime',
+                    'Heure de début'
                   )}
                 </label>
 
-                <textarea
-                  value={
-                    commentaire
+                <input
+                  type="time"
+                  value={heureDebut}
+                  onChange={(event) =>
+                    setHeureDebut(event.target.value)
                   }
-                  onChange={(
-                    event
-                  ) =>
-                    setCommentaire(
-                      event
-                        .target
-                        .value
-                    )
-                  }
-                  placeholder={t(
-                    'createIntervention.commentPlaceholder',
-                    'Informations complémentaires...'
-                  )}
-                  rows={5}
-                  className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#d94a0b] focus:ring-4 focus:ring-orange-100"
+                  className={fieldClass}
                 />
               </div>
-            </section>
 
-            {(error ||
-              createMutation.isError) && (
-              <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
-                {error ||
-                  (createMutation.error as Error)
-                    ?.message ||
-                  t(
-                    'createIntervention.genericError',
-                    'Une erreur est survenue.'
-                  )}
+              <div>
+                <label className={labelClass}>
+                  {t('createIntervention.endTime', 'Heure de fin')}
+                </label>
+
+                <input
+                  type="time"
+                  value={heureFin}
+                  onChange={(event) =>
+                    setHeureFin(event.target.value)
+                  }
+                  className={fieldClass}
+                />
               </div>
+            </div>
+          </FormSection>
+
+          {/* 3. TYPE D'AIDE */}
+
+          <FormSection
+            number={3}
+            title={t(
+              'createIntervention.aidTypesSummary',
+              'Types d’aide'
+            )}
+          >
+            <div className="flex flex-wrap gap-2">
+              {typeAideOptions.map((option) => {
+                const selected = typesAide.includes(option.value)
+                const Icon = option.icon
+
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    aria-pressed={selected}
+                    onClick={() => toggleTypeAide(option.value)}
+                    className={chipClass(selected)}
+                  >
+                    {selected ? (
+                      <Check size={15} />
+                    ) : (
+                      <Icon size={15} />
+                    )}
+                    {formatAidLabel(option.value)}
+                  </button>
+                )
+              })}
+            </div>
+
+            <p className="mt-2 text-xs text-slate-500">
+              {t(
+                'createIntervention.severalChoices',
+                'Plusieurs choix possibles.'
+              )}
+            </p>
+          </FormSection>
+
+          {/* 4. MOYENS MOBILISÉS */}
+
+          <FormSection
+            number={4}
+            title={t(
+              'createIntervention.resources',
+              'Moyens mobilisés'
+            )}
+          >
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className={labelClass}>
+                  {t(
+                    'createIntervention.numberOfMeals',
+                    'Nombre de repas'
+                  )}
+                </label>
+
+                <input
+                  type="number"
+                  min="0"
+                  value={nombreRepas}
+                  disabled={!repasSelected}
+                  onChange={(event) =>
+                    setNombreRepas(event.target.value)
+                  }
+                  placeholder={
+                    repasSelected
+                      ? t(
+                          'createIntervention.remainingPlaceholder',
+                          {
+                            count: repasRestants,
+                            defaultValue: 'Restants : {{count}}',
+                          }
+                        )
+                      : t(
+                          'createIntervention.mealsNotSelected',
+                          'Repas non sélectionné'
+                        )
+                  }
+                  className={fieldClass}
+                />
+              </div>
+
+              <div>
+                <label className={labelClass}>
+                  {t(
+                    'createIntervention.numberOfVolunteers',
+                    'Nombre de bénévoles'
+                  )}
+                </label>
+
+                <input
+                  type="number"
+                  min="1"
+                  value={nombreBenevoles}
+                  onChange={(event) =>
+                    setNombreBenevoles(event.target.value)
+                  }
+                  placeholder={t(
+                    'createIntervention.volunteersPlaceholder',
+                    'Ex : 6'
+                  )}
+                  className={fieldClass}
+                />
+              </div>
+            </div>
+
+            <p className="mt-2 text-xs text-slate-500">
+              {repasSelected
+                ? t(
+                    'createIntervention.tipDescription',
+                    'Pour les repas, le champ se remplit avec le nombre restant à couvrir. Pour les soins, vêtements, eau ou maraude, le nombre de repas reste à 0.'
+                  )
+                : t(
+                    'createIntervention.mealsDisabled',
+                    'Ce champ est désactivé car tu n’as pas sélectionné Repas.'
+                  )}
+            </p>
+
+            <label className={`${labelClass} mt-4`}>
+              {t('createIntervention.comment', 'Commentaire')}
+            </label>
+
+            <textarea
+              rows={3}
+              value={commentaire}
+              onChange={(event) =>
+                setCommentaire(event.target.value)
+              }
+              placeholder={t(
+                'createIntervention.commentPlaceholder',
+                'Informations complémentaires...'
+              )}
+              className={`${fieldClass} py-2`}
+            />
+          </FormSection>
+
+          {/* RÉCAPITULATIF + VALIDATION
+              (au-dessus de la barre de navigation sur téléphone) */}
+
+          <div className={formFooterClass}>
+            {error && (
+              <p
+                role="alert"
+                className="mb-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+              >
+                {error}
+              </p>
             )}
 
-            <div className="flex flex-col gap-3 sm:flex-row">
+            <p className="text-sm text-slate-600">
+              {summary ||
+                t(
+                  'createIntervention.summaryDescription',
+                  'Aperçu de l’intervention avant validation.'
+                )}
+            </p>
 
+            <div className="mt-2 flex items-center gap-4">
               <button
                 type="submit"
-                disabled={
-                  isSubmitting
-                }
-                className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#544cf0] px-6 py-3 text-sm font-black text-white shadow-sm transition hover:bg-[#4338ca] disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={isSubmitting}
+                className="min-h-11 flex-1 rounded-lg bg-[#d94a0b] px-4 text-sm font-semibold text-white transition hover:bg-[#b93607] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isSubmitting
                   ? t(
                       'createIntervention.submitting',
                       'Déclaration en cours...'
                     )
-                  : t(
-                      'createIntervention.submit',
-                      "Déclarer l'intervention"
-                    )}
+                  : isEdit
+                    ? t(
+                        'createIntervention.saveChanges',
+                        'Enregistrer les modifications'
+                      )
+                    : t(
+                        'createIntervention.submit',
+                        "Déclarer l'intervention"
+                      )}
               </button>
 
-              <button
-                type="button"
-                onClick={() =>
-                  navigate(
-                    '/interventions'
-                  )
-                }
-                className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-slate-300 bg-white px-6 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+              <Link
+                to="/interventions"
+                className="text-sm font-medium text-slate-600"
               >
-                {t(
-                  'createIntervention.cancel',
-                  'Annuler'
-                )}
-              </button>
+                {t('createIntervention.cancel', 'Annuler')}
+              </Link>
             </div>
-          </form>
-
-          <aside className="space-y-6">
-
-            <section className="rounded-[2rem] border border-[#eadfd6] bg-white p-5 shadow-sm sm:p-6 xl:sticky xl:top-24">
-
-              <div className="mb-5">
-                <h2 className="text-xl font-black text-slate-950">
-                  {t(
-                    'createIntervention.summary',
-                    'Résumé'
-                  )}
-                </h2>
-
-                <p className="mt-1 text-sm text-slate-500">
-                  {t(
-                    'createIntervention.summaryDescription',
-                    'Aperçu de l’intervention avant validation.'
-                  )}
-                </p>
-              </div>
-
-              <div className="space-y-4">
-
-                <div className="rounded-2xl bg-slate-50 p-4">
-                  <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
-                    {t(
-                      'createIntervention.point',
-                      'Point'
-                    )}
-                  </p>
-
-                  <p className="mt-2 text-sm font-bold text-slate-900">
-                    {selectedPoint
-                      ? formatPointLabel(
-                          selectedPoint.adresse
-                        )
-                      : t(
-                          'createIntervention.notSelected',
-                          'Non sélectionné'
-                        )}
-                  </p>
-                </div>
-
-                <div className="rounded-2xl bg-slate-50 p-4">
-                  <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
-                    {t(
-                      'createIntervention.mealCoverage',
-                      'Couverture repas'
-                    )}
-                  </p>
-
-                  <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-
-                    <div>
-                      <p className="text-lg font-black text-slate-950">
-                        {selectedPoint
-                          ?.nombre_personnes_estime ??
-                          0}
-                      </p>
-
-                      <p className="text-[10px] font-bold text-slate-500">
-                        {t(
-                          'createIntervention.need',
-                          'Besoin'
-                        )}
-                      </p>
-                    </div>
-
-                    <div>
-                      <p className="text-lg font-black text-emerald-700">
-                        {
-                          repasDejaCouverts
-                        }
-                      </p>
-
-                      <p className="text-[10px] font-bold text-slate-500">
-                        {t(
-                          'createIntervention.covered',
-                          'Couvert'
-                        )}
-                      </p>
-                    </div>
-
-                    <div>
-                      <p className="text-lg font-black text-orange-700">
-                        {
-                          repasRestants
-                        }
-                      </p>
-
-                      <p className="text-[10px] font-bold text-slate-500">
-                        {t(
-                          'createIntervention.remainingSingular',
-                          'Restant'
-                        )}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="rounded-2xl bg-slate-50 p-4">
-                  <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
-                    {t(
-                      'createIntervention.date',
-                      'Date'
-                    )}
-                  </p>
-
-                  <p className="mt-2 text-sm font-bold text-slate-900">
-                    {dateIntervention
-                      ? formatDatePreview(
-                          dateIntervention
-                        )
-                      : t(
-                          'createIntervention.notProvidedFeminine',
-                          'Non renseignée'
-                        )}
-                  </p>
-                </div>
-
-                <div className="rounded-2xl bg-slate-50 p-4">
-                  <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
-                    {t(
-                      'createIntervention.schedule',
-                      'Horaires'
-                    )}
-                  </p>
-
-                  <p className="mt-2 text-sm font-bold text-slate-900">
-                    {heureDebut ||
-                      '--:--'}{' '}
-                    →{' '}
-                    {heureFin ||
-                      '--:--'}
-                  </p>
-                </div>
-
-                <div className="rounded-2xl bg-slate-50 p-4">
-                  <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
-                    {t(
-                      'createIntervention.aidTypesSummary',
-                      'Types d’aide'
-                    )}
-                  </p>
-
-                  {selectedTypesAide.length ===
-                  0 ? (
-                    <p className="mt-2 text-sm font-bold text-slate-900">
-                      {t(
-                        'createIntervention.notProvided',
-                        'Non renseigné'
-                      )}
-                    </p>
-                  ) : (
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {selectedTypesAide.map(
-                        (
-                          option
-                        ) => {
-                          const Icon =
-                            option.icon
-
-                          return (
-                            <span
-                              key={
-                                option.value
-                              }
-                              className="inline-flex items-center gap-1.5 rounded-full bg-orange-50 px-3 py-1 text-xs font-bold text-orange-700 ring-1 ring-orange-200"
-                            >
-                              <Icon
-                                size={
-                                  14
-                                }
-                                strokeWidth={
-                                  2
-                                }
-                                aria-hidden="true"
-                              />
-
-                              {formatAidLabel(
-                                option.value
-                              )}
-                            </span>
-                          )
-                        }
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-
-                  <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
-                    <p className="text-xs font-bold uppercase tracking-wide text-emerald-600">
-                      {t(
-                        'createIntervention.declaredMeals',
-                        'Repas déclarés'
-                      )}
-                    </p>
-
-                    <p className="mt-2 text-2xl font-black text-emerald-700">
-                      {repasSelected
-                        ? nombreRepas ||
-                          '0'
-                        : '0'}
-                    </p>
-                  </div>
-
-                  <div className="rounded-2xl border border-indigo-200 bg-indigo-50 p-4">
-                    <p className="text-xs font-bold uppercase tracking-wide text-indigo-600">
-                      {t(
-                        'createIntervention.volunteers',
-                        'Bénévoles'
-                      )}
-                    </p>
-
-                    <p className="mt-2 text-2xl font-black text-indigo-700">
-                      {nombreBenevoles ||
-                        '0'}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="rounded-2xl border border-orange-200 bg-orange-50 p-4">
-                  <p className="text-sm font-bold text-orange-800">
-                    {t(
-                      'createIntervention.tip',
-                      'Conseil'
-                    )}
-                  </p>
-
-                  <p className="mt-2 text-sm leading-relaxed text-orange-700">
-                    {t(
-                      'createIntervention.tipDescription',
-                      'Pour les repas, le champ se remplit avec le nombre restant à couvrir. Pour les soins, vêtements, eau ou maraude, le nombre de repas reste à 0.'
-                    )}
-                  </p>
-                </div>
-              </div>
-            </section>
-          </aside>
-        </div>
+          </div>
+        </form>
       </div>
     </div>
   )

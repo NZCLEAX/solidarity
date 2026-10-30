@@ -104,6 +104,54 @@ export async function createIntervention(
   return data
 }
 
+export async function getInterventionById(
+  interventionId: string
+): Promise<Intervention> {
+  const { data, error } = await supabase
+    .from('interventions')
+    .select('*')
+    .eq('id', interventionId)
+    .single()
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  return data as Intervention
+}
+
+export async function updateIntervention(
+  interventionId: string,
+  input: CreateInterventionInput
+) {
+  const { data, error } = await supabase
+    .from('interventions')
+    .update({
+      point_id: input.pointId,
+      date_intervention: input.dateIntervention,
+      heure_debut: input.heureDebut,
+      heure_fin: input.heureFin,
+      type_aide: input.typeAide,
+      nombre_repas: Number(input.nombreRepas) || 0,
+      nombre_benevoles: Number(input.nombreBenevoles) || 0,
+      commentaire: input.commentaire?.trim() || null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', interventionId)
+    .select('id')
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  // Sans droit de modification, Supabase ne renvoie aucune ligne.
+  if (!data || data.length === 0) {
+    throw new Error(
+      "Tu n'as pas le droit de modifier cette intervention."
+    )
+  }
+}
+
 export async function deleteIntervention(interventionId: string) {
   const { data, error } = await supabase
     .from('interventions')

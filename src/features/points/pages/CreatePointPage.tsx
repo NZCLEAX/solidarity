@@ -22,7 +22,19 @@ import {
   BedDouble,
   HeartPulse,
   MoreHorizontal,
+  ArrowLeft,
+  Check,
+  LocateFixed,
+  Map as MapIcon,
+  Search,
 } from 'lucide-react'
+
+import FormSection, {
+  chipClass,
+  formFieldClass,
+  formFooterClass,
+  formLabelClass,
+} from '@/shared/components/FormSection'
 
 import {
   createPoint,
@@ -82,6 +94,14 @@ const urgencyOptions = [
     value: 'critique',
   },
 ] as const
+
+// Couleur du point devant chaque niveau d'urgence.
+const urgencyDotClass: Record<string, string> = {
+  basse: 'bg-emerald-500',
+  moyenne: 'bg-amber-400',
+  haute: 'bg-orange-500',
+  critique: 'bg-red-500',
+}
 
 type UrgencyValue =
   (typeof urgencyOptions)[number]['value']
@@ -304,12 +324,6 @@ export default function CreatePointPage() {
     }
   }
 
-  const selectedUrgency =
-    urgencyOptions.find(
-      (option) =>
-        option.value ===
-        niveauUrgence
-    )
 
   const createPointMutation =
     useMutation({
@@ -638,761 +652,381 @@ export default function CreatePointPage() {
     )
   }
 
+  const formErrorMessage = createPointMutation.isError
+    ? (createPointMutation.error as Error)?.message ||
+      t(
+        'createPoint.createError',
+        'Erreur lors de la création du point.'
+      )
+    : addressError || positionError
+
+  const summary = [
+    `${nombrePersonnesEstime || '—'} ${t(
+      'createPoint.people',
+      'Personnes'
+    ).toLowerCase()}`,
+    `${t('createPoint.urgency', 'Urgence').toLowerCase()} ${getUrgencyLabel(
+      niveauUrgence
+    ).toLowerCase()}`,
+    besoins.length > 0
+      ? besoins
+          .map((besoin) => getNeedLabel(besoin))
+          .join(', ')
+          .toLowerCase()
+      : t(
+          'createPoint.noSelectedNeeds',
+          'Aucun besoin sélectionné pour le moment.'
+        ),
+  ].join(' · ')
+
   return (
     <div
       dir={i18n.dir()}
-      className="min-h-[calc(100vh-80px)] bg-[#faf8f4] px-4 py-6 sm:px-6 lg:px-8 xl:px-10"
+      className="min-w-0 px-4 pt-4"
     >
-      <div className="mx-auto w-full max-w-[1500px]">
-
+      <div className="mx-auto w-full max-w-xl">
         <Link
-          to={
-            getSafeBackPath()
-          }
-          className="inline-flex items-center gap-2 rounded-2xl px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-orange-50 hover:text-[#d94a0b]"
+          to={getSafeBackPath()}
+          className="inline-flex items-center gap-1 text-sm text-slate-500 transition hover:text-slate-900"
         >
-          <span
-            aria-hidden="true"
-          >
-            {i18n.dir() ===
-            'rtl'
-              ? '→'
-              : '←'}
-          </span>
-
-          <span>
-            {t(
-              'createPoint.back',
-              'Retour'
-            )}
-          </span>
+          <ArrowLeft
+            size={16}
+            className={i18n.dir() === 'rtl' ? 'rotate-180' : ''}
+          />
+          {t('createPoint.back', 'Retour')}
         </Link>
 
-        <div className="mt-5 grid gap-8 xl:grid-cols-[1.15fr_0.85fr] xl:items-start">
+        <h1 className="mt-3 text-2xl font-bold text-slate-950">
+          {t('createPoint.title', 'Signaler un point')}
+        </h1>
 
-          <section>
-            <div className="mb-7">
-              <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#d94a0b]">
-                {t(
-                  'createPoint.newReport',
-                  'Nouveau signalement'
-                )}
-              </p>
+        <p className="mt-1 text-sm text-slate-500">
+          {t(
+            'createPoint.description',
+            'Choisis une adresse proposée automatiquement. La latitude et la longitude seront remplies sans saisie manuelle.'
+          )}
+        </p>
 
-              <h1 className="mt-3 text-4xl font-black leading-tight tracking-tight text-slate-950 sm:text-5xl">
-                {t(
-                  'createPoint.title',
-                  'Signaler un point'
-                )}
-              </h1>
+        {successMessage && (
+          <p className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm font-medium text-emerald-700">
+            {successMessage}
+          </p>
+        )}
 
-              <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-600 sm:text-lg">
-                {t(
-                  'createPoint.description',
-                  'Choisis une adresse proposée automatiquement. La latitude et la longitude seront remplies sans saisie manuelle.'
-                )}
-              </p>
-            </div>
+        <form
+          onSubmit={handleSubmit}
+          className="mt-5"
+        >
+          {/* 1. LIEU */}
 
-            <form
-              onSubmit={
-                handleSubmit
-              }
-              className="rounded-[2rem] border border-[#eadfd6] bg-white p-5 shadow-sm sm:p-7 lg:p-8"
-            >
-              {successMessage && (
-                <div className="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-bold text-emerald-700">
-                  {
-                    successMessage
+          <FormSection
+            number={1}
+            title={t('createPoint.address', 'Adresse ou lieu')}
+          >
+            <div className="relative">
+              <div className="flex gap-2">
+                <input
+                  value={adresse}
+                  onChange={(event) =>
+                    handleAddressChange(event.target.value)
                   }
-                </div>
-              )}
-
-              {createPointMutation.isError && (
-                <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700">
-                  {(createPointMutation.error as Error)
-                    ?.message ||
-                    t(
-                      'createPoint.createError',
-                      'Erreur lors de la création du point.'
-                    )}
-                </div>
-              )}
-
-              {addressError && (
-                <div className="mb-6 rounded-2xl border border-orange-200 bg-orange-50 p-4 text-sm font-medium text-orange-700">
-                  {
-                    addressError
+                  onFocus={() =>
+                    setShowAddressSuggestions(true)
                   }
-                </div>
-              )}
-
-              {positionError && (
-                <div className="mb-6 rounded-2xl border border-orange-200 bg-orange-50 p-4 text-sm font-medium text-orange-700">
-                  {
-                    positionError
-                  }
-                </div>
-              )}
-
-              <div className="grid gap-6">
-
-                <div>
-                  <label className="mb-2 block text-sm font-bold text-slate-800">
-                    {t(
-                      'createPoint.address',
-                      'Adresse ou lieu'
-                    )}
-                  </label>
-
-                  <div className="relative">
-                    <div className="flex gap-3">
-                      <input
-                        value={
-                          adresse
-                        }
-                        onChange={(
-                          event
-                        ) =>
-                          handleAddressChange(
-                            event
-                              .target
-                              .value
-                          )
-                        }
-                        onFocus={() =>
-                          setShowAddressSuggestions(
-                            true
-                          )
-                        }
-                        required
-                        placeholder={t(
-                          'createPoint.addressPlaceholder',
-                          'Ex : Gare du Nord, Paris 10e'
-                        )}
-                        className="min-h-14 flex-1 rounded-2xl border border-slate-300 bg-white px-4 text-base text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#d94a0b] focus:ring-4 focus:ring-orange-100"
-                      />
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setShowAddressSuggestions(
-                            true
-                          )
-                        }
-                        className="hidden h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-slate-300 bg-white text-sm font-black text-slate-500 transition hover:bg-orange-50 hover:text-[#d94a0b] sm:flex"
-                        title={t(
-                          'createPoint.searchAddress',
-                          'Rechercher une adresse'
-                        )}
-                      >
-                        OK
-                      </button>
-                    </div>
-
-                    {showAddressSuggestions &&
-                      adresse
-                        .trim()
-                        .length >=
-                        3 && (
-                        <div className="absolute left-0 right-0 top-16 z-50 max-h-80 overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-slate-900/10">
-
-                          {isSearchingAddress && (
-                            <div className="px-4 py-3 text-sm text-slate-500">
-                              {t(
-                                'createPoint.searchingAddresses',
-                                'Recherche des adresses...'
-                              )}
-                            </div>
-                          )}
-
-                          {!isSearchingAddress &&
-                            addressSuggestions.length ===
-                              0 && (
-                              <div className="px-4 py-3 text-sm text-slate-500">
-                                {t(
-                                  'createPoint.noAddressFound',
-                                  'Aucune adresse trouvée.'
-                                )}
-                              </div>
-                            )}
-
-                          {!isSearchingAddress &&
-                            addressSuggestions.map(
-                              (
-                                suggestion
-                              ) => (
-                                <button
-                                  key={`${suggestion.label}-${suggestion.latitude}-${suggestion.longitude}`}
-                                  type="button"
-                                  onClick={() =>
-                                    selectAddressSuggestion(
-                                      suggestion
-                                    )
-                                  }
-                                  className="flex w-full items-start gap-3 border-b border-slate-100 px-4 py-3 text-left transition last:border-b-0 hover:bg-orange-50"
-                                >
-                                  <span>
-                                    <span className="block text-sm font-bold text-slate-900">
-                                      {
-                                        suggestion.label
-                                      }
-                                    </span>
-
-                                    {(suggestion.postcode ||
-                                      suggestion.city) && (
-                                      <span className="mt-1 block text-xs font-medium text-slate-500">
-                                        {
-                                          suggestion.postcode
-                                        }{' '}
-                                        {
-                                          suggestion.city
-                                        }
-                                      </span>
-                                    )}
-                                  </span>
-                                </button>
-                              )
-                            )}
-                        </div>
-                      )}
-                  </div>
-
-                  <div className="mt-3 flex flex-wrap gap-3">
-
-                                        <button
-                      type="button"
-                      onClick={() =>
-                        void useCurrentPosition()
-                      }
-                      disabled={isLocating}
-                      className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-50 disabled:opacity-60"
-                    >
-                      {isLocating
-                        ? t(
-                            'createPoint.locating',
-                            'Localisation...'
-                          )
-                        : t(
-                            'createPoint.myPosition',
-                            'Ma position'
-                          )}
-                    </button>
-
-                    {canAccessMap() && (
-                      <Link
-                        to="/carte"
-                        className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-50"
-                      >
-                        {t(
-                          'createPoint.map',
-                          'Carte'
-                        )}
-                      </Link>
-                    )}
-                  </div>
-
-                  {hasCoordinates && (
-                    <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
-                      {t(
-                        'createPoint.coordinatesRetrieved',
-                        'Coordonnées récupérées automatiquement.'
-                      )}
-
-                      <br />
-
-                      <span className="font-semibold">
-                        {t(
-                          'createPoint.latitude',
-                          'Latitude'
-                        )}{' '}
-                        :{' '}
-                        {
-                          latitude
-                        }
-                      </span>
-
-                      {' · '}
-
-                      <span className="font-semibold">
-                        {t(
-                          'createPoint.longitude',
-                          'Longitude'
-                        )}{' '}
-                        :{' '}
-                        {
-                          longitude
-                        }
-                      </span>
-                    </div>
+                  required
+                  aria-label={t(
+                    'createPoint.address',
+                    'Adresse ou lieu'
                   )}
-                </div>
+                  placeholder={t(
+                    'createPoint.addressPlaceholder',
+                    'Ex : Gare du Nord, Paris 10e'
+                  )}
+                  className={formFieldClass}
+                />
 
-                <div>
-                  <label className="mb-2 block text-sm font-bold text-slate-800">
-                    {t(
-                      'createPoint.estimatedPeople',
-                      'Nombre de personnes estimé'
-                    )}
-                  </label>
-
-                  <input
-                    value={
-                      nombrePersonnesEstime
-                    }
-                    onChange={(
-                      event
-                    ) =>
-                      setNombrePersonnesEstime(
-                        event
-                          .target
-                          .value
-                      )
-                    }
-                    required
-                    type="number"
-                    min="1"
-                    placeholder={t(
-                      'createPoint.peoplePlaceholder',
-                      'Ex : 20'
-                    )}
-                    className="min-h-14 w-full rounded-2xl border border-slate-300 bg-white px-4 text-base text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#d94a0b] focus:ring-4 focus:ring-orange-100"
-                  />
-                </div>
-
-                <div>
-                  <label className="mb-3 block text-sm font-bold text-slate-800">
-                    {t(
-                      'createPoint.urgencyLevel',
-                      'Niveau d’urgence'
-                    )}
-                  </label>
-
-                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                    {urgencyOptions.map(
-                      (
-                        option
-                      ) => {
-                        const isSelected =
-                          niveauUrgence ===
-                          option.value
-
-                        return (
-                          <button
-                            key={
-                              option.value
-                            }
-                            type="button"
-                            onClick={() => {
-                              setNiveauUrgence(
-                                option.value
-                              )
-
-                              setSuccessMessage(
-                                ''
-                              )
-                            }}
-                            className={[
-                              'rounded-2xl border p-4 text-left transition',
-
-                              isSelected
-                                ? 'border-[#d94a0b] bg-orange-50 ring-4 ring-orange-100'
-                                : 'border-slate-200 bg-white hover:border-orange-200 hover:bg-orange-50/50',
-                            ].join(
-                              ' '
-                            )}
-                          >
-                            <div className="text-base font-black text-slate-950">
-                              {getUrgencyLabel(
-                                option.value
-                              )}
-                            </div>
-
-                            <p className="mt-1 text-sm text-slate-500">
-                              {getUrgencyDescription(
-                                option.value
-                              )}
-                            </p>
-                          </button>
-                        )
-                      }
-                    )}
-                  </div>
-                </div>
-
-                {/* ================================
-                    BESOINS AVEC ICONES LUCIDE
-                ================================= */}
-
-                <div>
-                  <label className="mb-3 block text-sm font-bold text-slate-800">
-                    {t(
-                      'createPoint.observedNeeds',
-                      'Besoins observés'
-                    )}
-                  </label>
-
-                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-7">
-                    {needsOptions.map(
-                      (
-                        option
-                      ) => {
-                        const isSelected =
-                          besoins.includes(
-                            option.value
-                          )
-
-                        const Icon =
-                          option.icon
-
-                        return (
-                          <button
-                            key={
-                              option.value
-                            }
-                            type="button"
-                            onClick={() =>
-                              toggleBesoin(
-                                option.value
-                              )
-                            }
-                            aria-pressed={
-                              isSelected
-                            }
-                            className={[
-                              'group flex min-h-[112px] flex-col items-center justify-center gap-3 rounded-2xl border p-3 text-center transition',
-
-                              isSelected
-                                ? 'border-[#d94a0b] bg-orange-50 ring-4 ring-orange-100'
-                                : 'border-slate-200 bg-white hover:border-orange-200 hover:bg-orange-50/50',
-                            ].join(
-                              ' '
-                            )}
-                          >
-                            <Icon
-                              size={
-                                28
-                              }
-                              strokeWidth={
-                                1.8
-                              }
-                              aria-hidden="true"
-                              className={
-                                isSelected
-                                  ? 'text-[#d94a0b]'
-                                  : 'text-slate-500 transition group-hover:text-[#d94a0b]'
-                              }
-                            />
-
-                            <span
-                              className={[
-                                'text-sm font-black',
-
-                                isSelected
-                                  ? 'text-[#d94a0b]'
-                                  : 'text-slate-800',
-                              ].join(
-                                ' '
-                              )}
-                            >
-                              {getNeedLabel(
-                                option.value
-                              )}
-                            </span>
-                          </button>
-                        )
-                      }
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="mb-2 block text-sm font-bold text-slate-800">
-                    {t(
-                      'createPoint.typology',
-                      'Typologie'
-                    )}
-                  </label>
-
-                  <input
-                    value={
-                      typologie
-                    }
-                    onChange={(
-                      event
-                    ) =>
-                      setTypologie(
-                        event
-                          .target
-                          .value
-                      )
-                    }
-                    placeholder={t(
-                      'createPoint.typologyPlaceholder',
-                      'Ex : familles, hommes seuls, migrants...'
-                    )}
-                    className="min-h-14 w-full rounded-2xl border border-slate-300 bg-white px-4 text-base text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#d94a0b] focus:ring-4 focus:ring-orange-100"
-                  />
-                </div>
-
-                <div>
-                  <label className="mb-2 block text-sm font-bold text-slate-800">
-                    {t(
-                      'createPoint.comment',
-                      'Commentaire'
-                    )}
-                  </label>
-
-                  <textarea
-                    value={
-                      commentaire
-                    }
-                    onChange={(
-                      event
-                    ) =>
-                      setCommentaire(
-                        event
-                          .target
-                          .value
-                      )
-                    }
-                    rows={5}
-                    placeholder={t(
-                      'createPoint.commentPlaceholder',
-                      'Observations complémentaires...'
-                    )}
-                    className="w-full resize-none rounded-2xl border border-slate-300 bg-white px-4 py-4 text-base text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#d94a0b] focus:ring-4 focus:ring-orange-100"
-                  />
-                </div>
-
-                <div className="flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:items-center sm:justify-between">
-
-                  <Link
-                    to={
-                      getSafeBackPath()
-                    }
-                    className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-slate-300 bg-white px-5 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
-                  >
-                    {t(
-                      'createPoint.cancel',
-                      'Annuler'
-                    )}
-                  </Link>
-
-                  <button
-                    type="submit"
-                    disabled={
-                      createPointMutation.isPending
-                    }
-                    className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#d94a0b] px-7 py-3 text-sm font-black text-white shadow-sm transition hover:bg-[#bf3f08] disabled:opacity-60 sm:min-w-56"
-                  >
-                    {createPointMutation.isPending
-                      ? t(
-                          'createPoint.sending',
-                          'Envoi en cours...'
-                        )
-                      : t(
-                          'createPoint.submit',
-                          'Envoyer le signalement'
-                        )}
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setShowAddressSuggestions(true)
+                  }
+                  title={t(
+                    'createPoint.searchAddress',
+                    'Rechercher une adresse'
+                  )}
+                  aria-label={t(
+                    'createPoint.searchAddress',
+                    'Rechercher une adresse'
+                  )}
+                  className="flex min-h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-slate-300 text-slate-600"
+                >
+                  <Search size={18} />
+                </button>
               </div>
-            </form>
-          </section>
 
-          {/* =====================================
-              APERÇU DESKTOP
-          ====================================== */}
-
-          <aside className="hidden xl:block">
-            <div className="sticky top-28 space-y-5">
-
-              <div className="rounded-[2rem] border border-[#eadfd6] bg-white p-6 shadow-sm">
-
-                <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#d94a0b]">
-                  {t(
-                    'createPoint.preview',
-                    'Aperçu'
-                  )}
-                </p>
-
-                <h2 className="mt-3 text-2xl font-black text-slate-950">
-                  {adresse ||
-                    t(
-                      'createPoint.pointAddress',
-                      'Adresse du point'
+              {showAddressSuggestions &&
+                adresse.trim().length >= 3 && (
+                  <div className="absolute left-0 right-0 top-12 z-50 max-h-72 overflow-y-auto rounded-lg border border-slate-200 bg-white shadow-xl">
+                    {isSearchingAddress && (
+                      <p className="px-3 py-2 text-sm text-slate-500">
+                        {t(
+                          'createPoint.searchingAddresses',
+                          'Recherche des adresses...'
+                        )}
+                      </p>
                     )}
-                </h2>
 
-                <div className="mt-5 grid grid-cols-2 gap-3">
-
-                  <div className="rounded-2xl bg-slate-50 p-4">
-                    <p className="text-xs font-bold uppercase text-slate-500">
-                      {t(
-                        'createPoint.people',
-                        'Personnes'
-                      )}
-                    </p>
-
-                    <p className="mt-2 text-3xl font-black text-slate-950">
-                      {nombrePersonnesEstime ||
-                        '0'}
-                    </p>
-                  </div>
-
-                  <div className="rounded-2xl bg-orange-50 p-4">
-                    <p className="text-xs font-bold uppercase text-orange-600">
-                      {t(
-                        'createPoint.urgency',
-                        'Urgence'
-                      )}
-                    </p>
-
-                    <p className="mt-2 text-lg font-black text-orange-700">
-                      {selectedUrgency
-                        ? getUrgencyLabel(
-                            selectedUrgency.value
-                          )
-                        : '—'}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="mt-5">
-                  <p className="text-sm font-bold text-slate-800">
-                    {t(
-                      'createPoint.coordinates',
-                      'Coordonnées'
-                    )}
-                  </p>
-
-                  {hasCoordinates ? (
-                    <p className="mt-2 text-sm leading-relaxed text-emerald-700">
-                      {t(
-                        'createPoint.coordinatesRetrieved',
-                        'Coordonnées récupérées automatiquement.'
+                    {!isSearchingAddress &&
+                      addressSuggestions.length === 0 && (
+                        <p className="px-3 py-2 text-sm text-slate-500">
+                          {t(
+                            'createPoint.noAddressFound',
+                            'Aucune adresse trouvée.'
+                          )}
+                        </p>
                       )}
 
-                      <br />
-
-                      {t(
-                        'createPoint.latitude',
-                        'Latitude'
-                      )}{' '}
-                      :{' '}
-
-                      <span className="font-bold">
-                        {
-                          latitude
-                        }
-                      </span>
-
-                      <br />
-
-                      {t(
-                        'createPoint.longitude',
-                        'Longitude'
-                      )}{' '}
-                      :{' '}
-
-                      <span className="font-bold">
-                        {
-                          longitude
-                        }
-                      </span>
-                    </p>
-                  ) : (
-                    <p className="mt-2 text-sm leading-relaxed text-slate-500">
-                      {t(
-                        'createPoint.coordinatesHelp',
-                        'Choisis une adresse proposée ou utilise “Ma position”.'
-                      )}
-                    </p>
-                  )}
-                </div>
-
-                <div className="mt-5">
-                  <p className="text-sm font-bold text-slate-800">
-                    {t(
-                      'createPoint.selectedNeeds',
-                      'Besoins sélectionnés'
-                    )}
-                  </p>
-
-                  {besoins.length ===
-                  0 ? (
-                    <p className="mt-2 text-sm text-slate-500">
-                      {t(
-                        'createPoint.noSelectedNeeds',
-                        'Aucun besoin sélectionné pour le moment.'
-                      )}
-                    </p>
-                  ) : (
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {besoins.map(
-                        (
-                          besoin
-                        ) => (
-                          <span
-                            key={
-                              besoin
-                            }
-                            className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700 ring-1 ring-emerald-200"
-                          >
-                            {getNeedLabel(
-                              besoin
-                            )}
+                    {!isSearchingAddress &&
+                      addressSuggestions.map((suggestion) => (
+                        <button
+                          key={`${suggestion.label}-${suggestion.latitude}-${suggestion.longitude}`}
+                          type="button"
+                          onClick={() =>
+                            selectAddressSuggestion(suggestion)
+                          }
+                          className="block w-full border-b border-slate-100 px-3 py-2 text-left text-sm last:border-b-0 hover:bg-slate-50"
+                        >
+                          <span className="block font-medium text-slate-900">
+                            {suggestion.label}
                           </span>
-                        )
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
 
-              <div className="rounded-[2rem] border border-emerald-200 bg-emerald-50 p-6">
-                <h3 className="text-lg font-black text-emerald-900">
-                  {t(
-                    'createPoint.fieldTips',
-                    'Conseils terrain'
-                  )}
-                </h3>
-
-                <ul className="mt-4 space-y-3 text-sm leading-relaxed text-emerald-800">
-
-                  <li>
-                    {t(
-                      'createPoint.tipAddress',
-                      'Choisis une adresse proposée dans la liste.'
-                    )}
-                  </li>
-
-                  <li>
-                    {t(
-                      'createPoint.tipCoordinates',
-                      'Les coordonnées seront remplies automatiquement.'
-                    )}
-                  </li>
-
-                  <li>
-                    {t(
-                      'createPoint.tipPosition',
-                      'Utilise “Ma position” si tu es sur place.'
-                    )}
-                  </li>
-
-                  <li>
-                    {t(
-                      'createPoint.tipComment',
-                      'Ajoute un commentaire si la situation est urgente.'
-                    )}
-                  </li>
-                </ul>
-              </div>
+                          {(suggestion.postcode ||
+                            suggestion.city) && (
+                            <span className="block text-xs text-slate-500">
+                              {suggestion.postcode}{' '}
+                              {suggestion.city}
+                            </span>
+                          )}
+                        </button>
+                      ))}
+                  </div>
+                )}
             </div>
-          </aside>
-        </div>
+
+            <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-sm font-medium">
+              <button
+                type="button"
+                onClick={() => void useCurrentPosition()}
+                disabled={isLocating}
+                className="inline-flex items-center gap-1 text-[#d94a0b] disabled:opacity-60"
+              >
+                <LocateFixed size={15} />
+                {isLocating
+                  ? t('createPoint.locating', 'Localisation...')
+                  : t('createPoint.myPosition', 'Ma position')}
+              </button>
+
+              {canAccessMap() && (
+                <Link
+                  to="/carte"
+                  className="inline-flex items-center gap-1 text-slate-600"
+                >
+                  <MapIcon size={15} />
+                  {t('createPoint.map', 'Carte')}
+                </Link>
+              )}
+            </div>
+
+            {hasCoordinates ? (
+              <p className="mt-2 flex items-center gap-1 text-sm text-emerald-600">
+                <Check size={15} />
+                {t(
+                  'createPoint.coordinatesRetrieved',
+                  'Coordonnées récupérées automatiquement.'
+                )}{' '}
+                {Number(latitude).toFixed(6)},{' '}
+                {Number(longitude).toFixed(6)}
+              </p>
+            ) : (
+              <p className="mt-2 text-xs text-slate-500">
+                {t(
+                  'createPoint.coordinatesHelp',
+                  'Choisis une adresse proposée ou utilise “Ma position”.'
+                )}
+              </p>
+            )}
+          </FormSection>
+
+          {/* 2. SITUATION */}
+
+          <FormSection
+            number={2}
+            title={t('createPoint.situation', 'Situation')}
+          >
+            <label className={formLabelClass}>
+              {t(
+                'createPoint.estimatedPeople',
+                'Nombre de personnes estimé'
+              )}
+            </label>
+
+            <input
+              value={nombrePersonnesEstime}
+              onChange={(event) =>
+                setNombrePersonnesEstime(event.target.value)
+              }
+              required
+              type="number"
+              min="1"
+              placeholder={t(
+                'createPoint.peoplePlaceholder',
+                'Ex : 20'
+              )}
+              className={formFieldClass}
+            />
+
+            <label className={`${formLabelClass} mt-4`}>
+              {t('createPoint.urgencyLevel', 'Niveau d’urgence')}
+            </label>
+
+            <div className="grid grid-cols-2 gap-1 rounded-lg border border-slate-300 p-1 sm:grid-cols-4">
+              {urgencyOptions.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  aria-pressed={niveauUrgence === option.value}
+                  onClick={() => setNiveauUrgence(option.value)}
+                  className={`flex items-center justify-center gap-1.5 rounded-md py-2 text-sm font-medium transition ${
+                    niveauUrgence === option.value
+                      ? 'bg-slate-100 text-slate-950'
+                      : 'text-slate-600'
+                  }`}
+                >
+                  <span
+                    className={`h-2 w-2 rounded-full ${urgencyDotClass[option.value]}`}
+                  />
+                  {getUrgencyLabel(option.value)}
+                </button>
+              ))}
+            </div>
+
+            <p className="mt-1 text-xs text-slate-500">
+              {getUrgencyDescription(niveauUrgence)}
+            </p>
+          </FormSection>
+
+          {/* 3. BESOINS OBSERVÉS */}
+
+          <FormSection
+            number={3}
+            title={t('createPoint.observedNeeds', 'Besoins observés')}
+          >
+            <div className="flex flex-wrap gap-2">
+              {needsOptions.map((option) => {
+                const selected = besoins.includes(option.value)
+                const Icon = option.icon
+
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    aria-pressed={selected}
+                    onClick={() => toggleBesoin(option.value)}
+                    className={chipClass(selected)}
+                  >
+                    {selected ? (
+                      <Check size={15} />
+                    ) : (
+                      <Icon size={15} />
+                    )}
+                    {getNeedLabel(option.value)}
+                  </button>
+                )
+              })}
+            </div>
+          </FormSection>
+
+          {/* 4. DÉTAILS */}
+
+          <FormSection
+            number={4}
+            title={t('createPoint.details', 'Détails')}
+          >
+            <label className={formLabelClass}>
+              {t('createPoint.typology', 'Typologie')}
+            </label>
+
+            <input
+              value={typologie}
+              onChange={(event) =>
+                setTypologie(event.target.value)
+              }
+              placeholder={t(
+                'createPoint.typologyPlaceholder',
+                'Ex : familles, hommes seuls, migrants...'
+              )}
+              className={formFieldClass}
+            />
+
+            <label className={`${formLabelClass} mt-4`}>
+              {t('createPoint.comment', 'Commentaire')}
+            </label>
+
+            <textarea
+              rows={3}
+              value={commentaire}
+              onChange={(event) =>
+                setCommentaire(event.target.value)
+              }
+              placeholder={t(
+                'createPoint.commentPlaceholder',
+                'Observations complémentaires...'
+              )}
+              className={`${formFieldClass} py-2`}
+            />
+
+            <p className="mt-2 text-xs text-slate-500">
+              {t(
+                'createPoint.tipComment',
+                'Ajoute un commentaire si la situation est urgente.'
+              )}
+            </p>
+          </FormSection>
+
+          {/* RÉCAPITULATIF + ENVOI */}
+
+          <div className={formFooterClass}>
+            {formErrorMessage && (
+              <p
+                role="alert"
+                className="mb-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+              >
+                {formErrorMessage}
+              </p>
+            )}
+
+            <p className="text-sm text-slate-600">{summary}</p>
+
+            <div className="mt-2 flex items-center gap-4">
+              <button
+                type="submit"
+                disabled={createPointMutation.isPending}
+                className="min-h-11 flex-1 rounded-lg bg-[#d94a0b] px-4 text-sm font-semibold text-white transition hover:bg-[#b93607] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {createPointMutation.isPending
+                  ? t('createPoint.sending', 'Envoi en cours...')
+                  : t('createPoint.submit', 'Envoyer le signalement')}
+              </button>
+
+              <Link
+                to={getSafeBackPath()}
+                className="text-sm font-medium text-slate-600"
+              >
+                {t('createPoint.cancel', 'Annuler')}
+              </Link>
+            </div>
+          </div>
+        </form>
       </div>
     </div>
   )

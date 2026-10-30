@@ -310,6 +310,19 @@ export const router = createBrowserRouter([
       },
 
       // =====================================================
+      // MODIFIER UNE INTERVENTION
+      // =====================================================
+
+      {
+        path: '/interventions/:interventionId/edit',
+        element: (
+          <RequireAccess permission="manage_interventions">
+            <CreateInterventionPage />
+          </RequireAccess>
+        ),
+      },
+
+      // =====================================================
       // MODÉRATION
       // =====================================================
 
