@@ -1,4 +1,4 @@
-import {
+﻿import {
   useEffect,
   useMemo,
   useState,
@@ -1040,7 +1040,7 @@ useEffect(() => {
   return (
     <div
       dir={i18n.dir()}
-      className="min-w-0 px-4 pt-4"
+            className="min-w-0 overflow-x-hidden px-4 pt-4"
     >
       <div className="mx-auto w-full max-w-xl">
         <Link

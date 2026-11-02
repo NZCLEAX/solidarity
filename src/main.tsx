@@ -2,6 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { RouterProvider } from 'react-router-dom'
+import { Capacitor } from '@capacitor/core'
 
 import '@/index.css'
 
@@ -26,6 +27,12 @@ document.documentElement.classList.toggle(
 
 void initializeMobileAuth()
 
+// Dans l'app iPhone / Android : comportement d'application
+// (pas de sélection de texte au toucher).
+document.documentElement.classList.toggle(
+  'app-native',
+  Capacitor.isNativePlatform()
+)
 // Empêche la molette de la souris de modifier un champ numérique
 // (nombre de bénévoles, repas, personnes) en faisant défiler la page.
 document.addEventListener(
