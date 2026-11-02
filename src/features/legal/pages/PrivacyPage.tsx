@@ -103,7 +103,7 @@ export default function PrivacyPage() {
               </p>
 
               <p className="font-black text-white">
-                Mizab ET Sofiane
+                Sofiane
               </p>
 
               <p>
