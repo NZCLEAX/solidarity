@@ -71,9 +71,25 @@ export default function PointSafetyActions({
     },
   })
 
-  // Pas de bouton sur ses propres signalements.
-  if (isLoading || (authorId && authorId === currentUserId)) {
+  if (isLoading) {
     return null
+  }
+
+  // Sur ses propres signalements : pas de « Signaler » ni de « Bloquer »
+  // (on ne se signale pas et on ne se bloque pas soi-même).
+  if (authorId && authorId === currentUserId) {
+    return (
+      <p
+        className={
+          compact
+            ? 'mt-4 border-t border-slate-200 pt-3 text-xs text-slate-500'
+            : 'mt-6 border-t border-slate-200 py-5 text-sm text-slate-500'
+        }
+      >
+        C’est toi qui as signalé ce point. « Signaler » et « Bloquer
+        l’auteur » apparaissent sur les points des autres utilisateurs.
+      </p>
+    )
   }
 
   const canBlock = Boolean(authorId) && !blocked
@@ -178,6 +194,13 @@ export default function PointSafetyActions({
             </button>
           )}
         </div>
+      )}
+
+      {mode === 'idle' && !authorId && !reported && (
+        <p className="mt-2 text-xs text-slate-500">
+          Auteur inconnu pour ce point : le blocage n’est pas disponible,
+          mais tu peux le signaler.
+        </p>
       )}
 
       {mode === 'report' && (

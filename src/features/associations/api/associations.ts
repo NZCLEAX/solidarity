@@ -524,6 +524,26 @@ export async function respondJoinRequest(
 }
 
 /*
+ * Un bénévole quitte l'association à laquelle il est rattaché.
+ * RPC sécurisée : le bénévole ne peut pas modifier lui-même son
+ * rattachement dans profiles (RLS).
+ * Script : supabase/migrations/20261103170000_quitter_association.sql
+ */
+export async function leaveMyAssociation() {
+  const { error } = await supabase.rpc('leave_my_association')
+
+  if (error) {
+    if (error.code === 'PGRST202' || error.code === '42883') {
+      throw new Error(
+        'La fonction « leave_my_association » est absente de Supabase. Exécute le script SQL « quitter_association ».'
+      )
+    }
+
+    throw error
+  }
+}
+
+/*
  * Lecture sécurisée de l'équipe de l'association.
  *
  * Cette RPC contourne uniquement les restrictions RLS

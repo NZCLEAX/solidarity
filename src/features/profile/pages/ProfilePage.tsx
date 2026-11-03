@@ -7,6 +7,7 @@ import { getCurrentProfile } from '@/features/auth/api/profile'
 import { signOut } from '@/features/auth/api/auth'
 import { formatRole } from '@/features/auth/utils/roles'
 import { hasPermission } from '@/features/auth/utils/permissions'
+import LeaveAssociationAction from '@/features/profile/components/LeaveAssociationAction'
 
 function formatDate(value: string | null | undefined) {
   if (!value) return 'Non renseignée'
@@ -331,6 +332,12 @@ export default function ProfilePage() {
               Ton compte bénévole doit être rattaché et validé par une
               association avant de pouvoir accéder aux outils terrain.
             </p>
+          )}
+
+          {role === 'benevole' && associationId && (
+            <LeaveAssociationAction
+              associationName={profile.association_nom ?? null}
+            />
           )}
         </div>
 
