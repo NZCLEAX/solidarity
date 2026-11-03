@@ -22,13 +22,42 @@ function isAppleCallback(url: string): boolean {
   }
 }
 
+// supabase-js (flux PKCE) mémorise le "code verifier" d'une demande de
+// réinitialisation avec le suffixe /PASSWORD_RECOVERY. On le lit avant
+// l'échange du code, car l'échange l'efface.
+function hasPendingPasswordRecovery(): boolean {
+  try {
+    for (let index = 0; index < localStorage.length; index += 1) {
+      const key = localStorage.key(index)
+
+      if (
+        key?.endsWith('-code-verifier') &&
+        localStorage.getItem(key)?.endsWith('/PASSWORD_RECOVERY')
+      ) {
+        return true
+      }
+    }
+  } catch {
+    return false
+  }
+
+  return false
+}
+
 async function handleAuthCallback(url: string) {
   if (!isAppleCallback(url) || handlingCallback) return
 
   handlingCallback = true
 
+  let isPasswordRecovery = hasPendingPasswordRecovery()
+
   try {
     const callbackUrl = new URL(url)
+
+    // Lien e-mail expiré ou déjà utilisé : Supabase renvoie otp_expired.
+    if (callbackUrl.searchParams.get('error_code') === 'otp_expired') {
+      isPasswordRecovery = true
+    }
 
     const authError =
       callbackUrl.searchParams.get('error_description') ||
@@ -42,7 +71,7 @@ async function handleAuthCallback(url: string) {
 
     if (!code) {
       throw new Error(
-        'Retour Apple sans code OAuth. Vérifie les Redirect URLs Supabase.'
+        'Retour sans code. Vérifie les Redirect URLs Supabase.'
       )
     }
 
@@ -53,17 +82,27 @@ async function handleAuthCallback(url: string) {
 
     await Browser.close().catch(() => undefined)
 
+    // Lien "mot de passe oublié" : la session temporaire est ouverte,
+    // on affiche directement le formulaire du nouveau mot de passe.
+    if (isPasswordRecovery) {
+      await router.navigate('/reset-password', {
+        replace: true,
+      })
+      return
+    }
+
     await router.navigate('/login?oauth=complete', {
       replace: true,
     })
   } catch (error) {
-    console.error('Erreur OAuth Apple dans PULSE :', error)
+    console.error('Erreur de retour d’authentification dans PULSE :', error)
 
     await Browser.close().catch(() => undefined)
 
-    await router.navigate('/login?oauth=error', {
-      replace: true,
-    })
+    await router.navigate(
+      isPasswordRecovery ? '/forgot-password?expired=1' : '/login?oauth=error',
+      { replace: true }
+    )
   } finally {
     handlingCallback = false
   }

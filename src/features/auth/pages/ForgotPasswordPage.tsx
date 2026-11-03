@@ -1,12 +1,23 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
+import { Capacitor } from '@capacitor/core'
 
 import { supabase } from '@/lib/supabase'
+import { MOBILE_AUTH_CALLBACK_URL } from '../api/auth'
+
+const isNativeApp = Capacitor.isNativePlatform()
 
 export default function ForgotPasswordPage() {
+  const [searchParams] = useSearchParams()
+  const linkExpired = searchParams.get('expired') === '1'
+
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [error, setError] = useState(
+    linkExpired
+      ? 'Le lien de réinitialisation a expiré ou a déjà été utilisé. Demande un nouveau lien ci-dessous.'
+      : ''
+  )
   const [success, setSuccess] = useState('')
 
   async function handleSubmit(
@@ -31,8 +42,13 @@ export default function ForgotPasswordPage() {
         await supabase.auth.resetPasswordForEmail(
           cleanEmail,
           {
-            redirectTo:
-              `${window.location.origin}/reset-password`,
+            // Dans l'app iOS, window.location.origin vaut
+            // capacitor://localhost : Safari ne sait pas l'ouvrir.
+            // On renvoie donc vers le schéma de l'app, qui rouvre PULSE
+            // et termine la réinitialisation (voir mobileAuth.ts).
+            redirectTo: isNativeApp
+              ? MOBILE_AUTH_CALLBACK_URL
+              : `${window.location.origin}/reset-password`,
           }
         )
 
@@ -41,7 +57,9 @@ export default function ForgotPasswordPage() {
       }
 
       setSuccess(
-        'Si un compte existe avec cette adresse, un e-mail de réinitialisation a été envoyé.'
+        isNativeApp
+          ? 'Si un compte existe avec cette adresse, un e-mail de réinitialisation a été envoyé. Ouvre le lien depuis ce téléphone : il te ramènera directement dans PULSE.'
+          : 'Si un compte existe avec cette adresse, un e-mail de réinitialisation a été envoyé.'
       )
     } catch (error) {
       setError(

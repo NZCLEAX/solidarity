@@ -4,9 +4,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   confirmPoint,
   deactivateStalePoints,
-  getPoints,
+  getAllPoints,
   rejectPoint,
 } from '@/features/points/api/points'
+import ReportedContentSection from '@/features/moderation/components/ReportedContentSection'
 import {
   formatPointLabel,
   getStatusBadgeClass,
@@ -49,8 +50,8 @@ export default function ModerationPage() {
     isError,
     error,
   } = useQuery({
-    queryKey: ['points'],
-    queryFn: getPoints,
+    queryKey: ['points', 'all'],
+    queryFn: getAllPoints,
   })
 
   const confirmMutation = useMutation({
@@ -172,6 +173,8 @@ export default function ModerationPage() {
             </Link>
           </div>
         </div>
+
+        <ReportedContentSection />
 
         <section className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <article className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm">

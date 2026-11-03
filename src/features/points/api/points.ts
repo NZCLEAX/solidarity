@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase'
+import { getBlockedUserIds } from '@/features/moderation/api/contentReports'
 
 export type CreatePointInput = {
   adresse: string
@@ -108,7 +109,8 @@ export async function createPoint(input: CreatePointInput) {
   return data
 }
 
-export async function getPoints(): Promise<Point[]> {
+// Tous les points, sans filtre : réservé à la modération.
+export async function getAllPoints(): Promise<Point[]> {
   const { data, error } = await supabase
     .from('points')
     .select('*')
@@ -119,6 +121,25 @@ export async function getPoints(): Promise<Point[]> {
   }
 
   return data ?? []
+}
+
+// Points visibles par l'utilisateur connecté : on retire ceux des
+// auteurs qu'il a bloqués (carte, listes, tableau de bord…).
+export async function getPoints(): Promise<Point[]> {
+  const [points, blockedUserIds] = await Promise.all([
+    getAllPoints(),
+    getBlockedUserIds(),
+  ])
+
+  if (blockedUserIds.size === 0) {
+    return points
+  }
+
+  return points.filter(
+    (point) =>
+      !blockedUserIds.has(point.created_by) &&
+      !(point.cree_par && blockedUserIds.has(point.cree_par))
+  )
 }
 
 export async function getPointById(pointId: string): Promise<Point> {

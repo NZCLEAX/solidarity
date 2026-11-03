@@ -9,8 +9,13 @@ import type { PublicRegisterRole } from '../utils/roles'
 const GOOGLE_WEB_CLIENT_ID =
   import.meta.env.VITE_GOOGLE_WEB_CLIENT_ID
 
-const APPLE_CALLBACK_URL =
+// Adresse de retour vers l'app iOS (schéma déclaré dans Info.plist).
+// Sert pour la connexion Apple et pour le lien de réinitialisation
+// du mot de passe. Elle doit figurer dans les Redirect URLs Supabase.
+export const MOBILE_AUTH_CALLBACK_URL =
   'fr.humanspulse.app://auth/callback'
+
+const APPLE_CALLBACK_URL = MOBILE_AUTH_CALLBACK_URL
 
 let googleInitialized = false
 

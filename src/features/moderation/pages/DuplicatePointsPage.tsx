@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
-  getPoints,
+  getAllPoints,
   markDuplicatePoint,
   mergeDuplicatePoints,
 } from '@/features/points/api/points'
@@ -38,8 +38,8 @@ export default function DuplicatePointsPage() {
     isError,
     error,
   } = useQuery({
-    queryKey: ['points'],
-    queryFn: getPoints,
+    queryKey: ['points', 'all'],
+    queryFn: getAllPoints,
   })
 
   const markDuplicateMutation = useMutation({

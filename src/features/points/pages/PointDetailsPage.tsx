@@ -2,6 +2,8 @@ import { Link, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { CircleMarker, MapContainer, Popup, TileLayer } from 'react-leaflet'
 import { getPointById } from '@/features/points/api/points'
+import PointSafetyActions from '@/features/points/components/PointSafetyActions'
+import { getCurrentUserId } from '@/features/moderation/api/contentReports'
 import {
   formatPointLabel,
   getStatusBadgeClass,
@@ -55,6 +57,11 @@ export default function PointDetailsPage() {
     enabled: Boolean(pointId),
   })
 
+  const { data: currentUserId } = useQuery({
+    queryKey: ['current-user-id'],
+    queryFn: getCurrentUserId,
+  })
+
   if (isLoading) {
     return (
       <div className="min-h-[calc(100vh-80px)] bg-[#faf8f4] px-4 py-6 sm:px-6 lg:px-8 xl:px-10">
@@ -80,6 +87,8 @@ export default function PointDetailsPage() {
     )
   }
 
+  const authorId = point.created_by || point.cree_par || null
+  const isOwnPoint = Boolean(authorId) && authorId === currentUserId
   const hasCoordinates = isValidCoordinate(point.latitude, point.longitude)
   const needs = splitNeeds(point.besoins)
   const markerColor = getUrgencyMarkerColor(point.niveau_urgence)
@@ -127,6 +136,20 @@ export default function PointDetailsPage() {
                 >
                   Voir la carte
                 </Link>
+
+                {!isOwnPoint && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      document
+                        .getElementById('signaler')
+                        ?.scrollIntoView({ behavior: 'smooth' })
+                    }
+                    className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-red-200 bg-red-50 px-6 py-3 text-sm font-black text-red-700 shadow-sm transition hover:bg-red-100"
+                  >
+                    Signaler
+                  </button>
+                )}
               </div>
             </div>
 
@@ -285,6 +308,11 @@ export default function PointDetailsPage() {
                   : 'Aucun commentaire renseigné.'}
               </div>
             </section>
+
+            <PointSafetyActions
+              pointId={String(point.id)}
+              authorId={authorId}
+            />
 
             <section className="mt-6 rounded-[2rem] border border-[#eadfd6] bg-white p-5 shadow-sm sm:p-7">
               <div className="mb-6">
