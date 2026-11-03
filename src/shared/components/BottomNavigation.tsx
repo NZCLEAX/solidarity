@@ -29,6 +29,7 @@ type IconName =
   | 'interventions'
   | 'user'
   | 'admin'
+  | 'moderation'
 
 type NavLabel =
   | 'home'
@@ -38,6 +39,7 @@ type NavLabel =
   | 'interventions'
   | 'profile'
   | 'administration'
+  | 'moderation'
 
 type NavItem = {
   label: NavLabel
@@ -59,6 +61,7 @@ const NAV_TRANSLATIONS = {
     interventions: 'Interventions',
     profile: 'Espace',
     administration: 'Administration',
+    moderation: 'Modération',
   },
 
   en: {
@@ -69,6 +72,7 @@ const NAV_TRANSLATIONS = {
     interventions: 'Interventions',
     profile: 'Profile',
     administration: 'Administration',
+    moderation: 'Moderation',
   },
 
   es: {
@@ -79,6 +83,7 @@ const NAV_TRANSLATIONS = {
     interventions: 'Intervenciones',
     profile: 'Perfil',
     administration: 'Administración',
+    moderation: 'Moderación',
   },
 
   ar: {
@@ -89,6 +94,7 @@ const NAV_TRANSLATIONS = {
     interventions: 'التدخلات',
     profile: 'الملف',
     administration: 'الإدارة',
+    moderation: 'الإشراف',
   },
 } as const
 
@@ -240,6 +246,25 @@ function NavIcon({
         />
 
         <path d="M4.5 21c.7-4 3.3-6 7.5-6s6.8 2 7.5 6" />
+      </svg>
+    )
+  }
+
+  /* =======================================================
+     MODÉRATION (drapeau de signalement)
+  ======================================================= */
+
+  if (name === 'moderation') {
+    return (
+      <svg
+        viewBox="0 0 24 24"
+        className={className}
+        aria-hidden="true"
+        {...commonProps}
+      >
+        <path d="M5 21V4" />
+
+        <path d="M5 4h11l-2 4 2 4H5" />
       </svg>
     )
   }
@@ -409,6 +434,43 @@ const adminItems: NavItem[] = [
 ]
 
 /* =========================================================
+   MODÉRATEUR
+   (tableau de bord, modération, carte, interventions)
+========================================================= */
+
+const moderateurItems: NavItem[] = [
+  {
+    label: 'home',
+    path: '/dashboard',
+    icon: 'home',
+  },
+
+  {
+    label: 'moderation',
+    path: '/moderation',
+    icon: 'moderation',
+  },
+
+  {
+    label: 'map',
+    path: '/carte',
+    center: true,
+  },
+
+  {
+    label: 'interventions',
+    path: '/interventions',
+    icon: 'interventions',
+  },
+
+  {
+    label: 'profile',
+    path: '/profile',
+    icon: 'user',
+  },
+]
+
+/* =========================================================
    COMPOSANT
 ========================================================= */
 
@@ -518,6 +580,8 @@ export default function BottomNavigation() {
 
   if (role === 'admin') {
     items = adminItems
+  } else if (role === 'moderateur') {
+    items = moderateurItems
   } else if (
     role === 'association'
   ) {

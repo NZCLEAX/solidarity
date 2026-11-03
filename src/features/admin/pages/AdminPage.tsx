@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import OpenReportsLink from '@/features/moderation/components/OpenReportsLink'
 import {
   useMutation,
   useQuery,
@@ -362,6 +363,8 @@ export default function AdminPage() {
           )}
         </Link>
       </div>
+
+      <OpenReportsLink />
 
       <section className="mb-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">

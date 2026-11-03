@@ -12,6 +12,7 @@ import BottomNavigation from './BottomNavigation'
 import PulseLogo from './PulseLogo'
 
 import { getCurrentProfile } from '@/features/auth/api/profile'
+import { getOpenContentReports } from '@/features/moderation/api/contentReports'
 import {
   isAssociationValidated,
   isVolunteerValidated,
@@ -40,8 +41,22 @@ export default function AppLayout() {
     role === 'association' && isAssociationValidated(profile)
 
   const isAdmin = role === 'admin'
+  const isModerator = role === 'moderateur'
   const isBenevole = role === 'benevole'
   const volunteerValidated = isVolunteerValidated(profile)
+
+  // Nombre de contenus signalés à traiter (modérateurs et admins).
+  const { data: openReports = [] } = useQuery({
+    queryKey: ['signalements-contenu'],
+    queryFn: getOpenContentReports,
+    enabled: isAdmin || isModerator,
+    retry: false,
+  })
+
+  const moderationLabel =
+    openReports.length > 0
+      ? `Modération (${openReports.length})`
+      : 'Modération'
 
   async function handleLogout() {
     try {
@@ -147,6 +162,28 @@ export default function AppLayout() {
                   </>
                 )}
 
+                {isModerator && (
+                  <>
+                    <div className="border-t border-slate-200" />
+
+                    <Link
+                      to="/moderation"
+                      onClick={() => setMenuOpen(false)}
+                      className="block px-5 py-3 text-sm font-bold text-[#d94a0b] hover:bg-orange-50"
+                    >
+                      {moderationLabel}
+                    </Link>
+
+                    <Link
+                      to="/moderation/doublons"
+                      onClick={() => setMenuOpen(false)}
+                      className="block px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                    >
+                      Doublons
+                    </Link>
+                  </>
+                )}
+
                 {isAdmin && (
                   <>
                     <div className="border-t border-slate-200" />
@@ -157,6 +194,14 @@ export default function AppLayout() {
                       className="block px-5 py-3 text-sm font-bold text-[#d94a0b] hover:bg-orange-50"
                     >
                       Administration
+                    </Link>
+
+                    <Link
+                      to="/moderation"
+                      onClick={() => setMenuOpen(false)}
+                      className="block px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                    >
+                      {moderationLabel}
                     </Link>
 
                     <Link
