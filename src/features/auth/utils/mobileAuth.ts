@@ -4,6 +4,10 @@ import { Capacitor } from '@capacitor/core'
 
 import { router } from '@/app/router'
 import { supabase } from '@/lib/supabase'
+import {
+  clearPendingEmailConfirmation,
+  hasPendingEmailConfirmation,
+} from './mobileCallback'
 
 let initialized = false
 let handlingCallback = false
@@ -44,20 +48,30 @@ function hasPendingPasswordRecovery(): boolean {
   return false
 }
 
+type CallbackFlow = 'recovery' | 'email-confirmation' | 'oauth'
+
+// Le même lien de retour sert à trois choses : connexion Apple,
+// « mot de passe oublié » et confirmation de l'e-mail à l'inscription.
+function detectCallbackFlow(): CallbackFlow {
+  if (hasPendingPasswordRecovery()) return 'recovery'
+  if (hasPendingEmailConfirmation()) return 'email-confirmation'
+  return 'oauth'
+}
+
 async function handleAuthCallback(url: string) {
   if (!isAppleCallback(url) || handlingCallback) return
 
   handlingCallback = true
 
-  let isPasswordRecovery = hasPendingPasswordRecovery()
+  const flow = detectCallbackFlow()
+  let linkExpired = false
 
   try {
     const callbackUrl = new URL(url)
 
     // Lien e-mail expiré ou déjà utilisé : Supabase renvoie otp_expired.
-    if (callbackUrl.searchParams.get('error_code') === 'otp_expired') {
-      isPasswordRecovery = true
-    }
+    linkExpired =
+      callbackUrl.searchParams.get('error_code') === 'otp_expired'
 
     const authError =
       callbackUrl.searchParams.get('error_description') ||
@@ -84,12 +98,16 @@ async function handleAuthCallback(url: string) {
 
     // Lien "mot de passe oublié" : la session temporaire est ouverte,
     // on affiche directement le formulaire du nouveau mot de passe.
-    if (isPasswordRecovery) {
+    if (flow === 'recovery') {
       await router.navigate('/reset-password', {
         replace: true,
       })
       return
     }
+
+    // Confirmation d'e-mail ou connexion Apple : l'utilisateur est
+    // connecté, la page de connexion l'envoie vers son espace.
+    clearPendingEmailConfirmation()
 
     await router.navigate('/login?oauth=complete', {
       replace: true,
@@ -99,10 +117,24 @@ async function handleAuthCallback(url: string) {
 
     await Browser.close().catch(() => undefined)
 
-    await router.navigate(
-      isPasswordRecovery ? '/forgot-password?expired=1' : '/login?oauth=error',
-      { replace: true }
-    )
+    if (flow === 'recovery') {
+      await router.navigate('/forgot-password?expired=1', { replace: true })
+      return
+    }
+
+    if (flow === 'email-confirmation' || linkExpired) {
+      clearPendingEmailConfirmation()
+
+      // L'adresse est confirmée dès le clic sur le lien, même si la
+      // connexion automatique n'a pas abouti : on invite à se connecter.
+      await router.navigate(
+        linkExpired ? '/login?email=expired' : '/login?email=confirmed',
+        { replace: true }
+      )
+      return
+    }
+
+    await router.navigate('/login?oauth=error', { replace: true })
   } finally {
     handlingCallback = false
   }

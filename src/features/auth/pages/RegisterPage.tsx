@@ -205,13 +205,16 @@ export default function RegisterPage() {
               </p>
               <p className="mt-2 text-sm leading-relaxed text-orange-700">
                 Clique sur le lien reçu par e-mail pour activer
-                ton compte PULSE. Tu pourras ensuite te connecter.
+                ton compte PULSE.
+                {Capacitor.isNativePlatform()
+                  ? ' Ouvre-le depuis ce téléphone : il te ramènera directement dans l’app.'
+                  : ' Tu pourras ensuite te connecter.'}
+              </p>
+              <p className="mt-3 text-sm font-bold leading-relaxed text-orange-800">
+                Tu ne trouves pas l’e-mail ? Vérifie tes spams (courrier
+                indésirable), si ce n’est pas déjà fait.
               </p>
             </div>
-
-            <p className="mt-4 text-xs text-slate-500">
-              Vérifie également ton dossier spam.
-            </p>
 
             <Link
               to="/login"

@@ -5,15 +5,17 @@ import { GoogleSignIn } from '@capawesome/capacitor-google-sign-in'
 
 import { supabase } from '@/lib/supabase'
 import type { PublicRegisterRole } from '../utils/roles'
+import {
+  MOBILE_AUTH_CALLBACK_URL,
+  clearPendingEmailConfirmation,
+  getEmailConfirmationRedirect,
+  markPendingEmailConfirmation,
+} from '../utils/mobileCallback'
+
+export { MOBILE_AUTH_CALLBACK_URL }
 
 const GOOGLE_WEB_CLIENT_ID =
   import.meta.env.VITE_GOOGLE_WEB_CLIENT_ID
-
-// Adresse de retour vers l'app iOS (schéma déclaré dans Info.plist).
-// Sert pour la connexion Apple et pour le lien de réinitialisation
-// du mot de passe. Elle doit figurer dans les Redirect URLs Supabase.
-export const MOBILE_AUTH_CALLBACK_URL =
-  'fr.humanspulse.app://auth/callback'
 
 const APPLE_CALLBACK_URL = MOBILE_AUTH_CALLBACK_URL
 
@@ -55,6 +57,9 @@ async function signInWithNativeGoogle() {
 }
 
 async function signInWithNativeApple() {
+  // Le retour Apple utilise la même adresse que la confirmation d'e-mail.
+  clearPendingEmailConfirmation()
+
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'apple',
     options: {
@@ -87,10 +92,14 @@ export async function signUp(
   const cleanEmail = email.trim().toLowerCase()
   const cleanName = name.trim()
 
+  // Dans l'app iOS, le lien de confirmation rouvre PULSE.
+  markPendingEmailConfirmation()
+
   const { data, error } = await supabase.auth.signUp({
     email: cleanEmail,
     password,
     options: {
+      emailRedirectTo: getEmailConfirmationRedirect(),
       data: {
         nom: cleanName,
         name: cleanName,
@@ -120,6 +129,9 @@ export async function signIn(
   })
 
   if (error) throw error
+
+  // Connecté : plus aucune confirmation d'e-mail en attente.
+  clearPendingEmailConfirmation()
 
   return data
 }

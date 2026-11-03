@@ -43,6 +43,33 @@ export default function LoginPage() {
   const [selectedRole, setSelectedRole] =
     useState<PublicRegisterRole>('citoyen')
   const [localError, setLocalError] = useState<string | null>(null)
+  const [infoMessage, setInfoMessage] = useState<string | null>(null)
+
+  /*
+   * RETOUR DU LIEN DE CONFIRMATION D'E-MAIL (app iOS)
+   */
+
+  useEffect(() => {
+    const emailStatus = searchParams.get('email')
+
+    if (!emailStatus) return
+
+    if (emailStatus === 'confirmed') {
+      setInfoMessage(
+        'Ton adresse e-mail est confirmée ✓ Connecte-toi pour continuer.'
+      )
+    }
+
+    if (emailStatus === 'expired') {
+      setLocalError(
+        'Ce lien a expiré ou a déjà été utilisé. Si tu as déjà confirmé ton adresse, connecte-toi. Sinon, inscris-toi à nouveau pour recevoir un nouveau lien.'
+      )
+    }
+
+    const nextParams = new URLSearchParams(searchParams)
+    nextParams.delete('email')
+    setSearchParams(nextParams, { replace: true })
+  }, [searchParams, setSearchParams])
   const [isCompletingOAuth, setIsCompletingOAuth] = useState(false)
 
   /*
@@ -379,6 +406,15 @@ export default function LoginPage() {
             Connecte-toi à ton espace.
           </p>
         </div>
+
+        {infoMessage && !loginError && (
+          <div
+            role="status"
+            className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-700"
+          >
+            {infoMessage}
+          </div>
+        )}
 
         {loginError && (
           <div

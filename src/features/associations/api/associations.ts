@@ -1,5 +1,9 @@
 import { supabase } from '@/lib/supabase'
 import type { OfficialAssociationData } from './officialVerification'
+import {
+  getEmailConfirmationRedirect,
+  markPendingEmailConfirmation,
+} from '@/features/auth/utils/mobileCallback'
 
 export type AssociationDocumentType =
   | 'statuts'
@@ -124,10 +128,14 @@ export async function createAssociationRequest(
   const email = input.email.trim()
   const password = input.password
 
+  // Dans l'app iOS, le lien de confirmation rouvre PULSE.
+  markPendingEmailConfirmation()
+
   const { error: signUpError } = await supabase.auth.signUp({
     email,
     password,
     options: {
+      emailRedirectTo: getEmailConfirmationRedirect(),
       data: {
         nom: input.nom.trim(),
         name: input.nom.trim(),
@@ -158,7 +166,7 @@ export async function createAssociationRequest(
       signInError.message.toLowerCase().includes('not confirmed')
     ) {
       throw new Error(
-        `Compte créé ! Confirme ton adresse e-mail avec le lien envoyé à ${email}, puis reviens sur cette page et renvoie le formulaire pour finaliser le dossier.`
+        `Compte créé ! Confirme ton adresse e-mail avec le lien envoyé à ${email}, puis reviens sur cette page et renvoie le formulaire pour finaliser le dossier. Tu ne trouves pas l’e-mail ? Vérifie tes spams (courrier indésirable), si ce n’est pas déjà fait.`
       )
     }
 
