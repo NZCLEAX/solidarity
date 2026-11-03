@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { Check } from 'lucide-react'
 
 import {
   REPORT_REASONS,
@@ -9,19 +10,33 @@ import {
   reportPoint,
   type ReportReason,
 } from '@/features/moderation/api/contentReports'
+import {
+  chipClass,
+  formFieldClass,
+  formLabelClass,
+} from '@/shared/components/FormSection'
 
 type Mode = 'idle' | 'report' | 'block'
 
 type PointSafetyActionsProps = {
   pointId: string
   authorId: string | null
+  // Version courte pour la fiche de la carte (sans texte d'explication).
+  compact?: boolean
 }
+
+const primaryButtonClass =
+  'min-h-11 flex-1 rounded-lg bg-[#d94a0b] px-4 text-sm font-semibold text-white transition hover:bg-[#b93607] disabled:cursor-not-allowed disabled:opacity-60'
+
+const cancelButtonClass = 'text-sm font-medium text-slate-600'
 
 // Bloc « Signaler ce contenu / Bloquer l'auteur » affiché sur la fiche
 // d'un point (règle App Store 1.2 sur le contenu des utilisateurs).
+// Même style que les formulaires PULSE : section à plat, pastilles.
 export default function PointSafetyActions({
   pointId,
   authorId,
+  compact = false,
 }: PointSafetyActionsProps) {
   const queryClient = useQueryClient()
 
@@ -75,50 +90,68 @@ export default function PointSafetyActions({
     reportMutation.mutate({ pointId, motif: reason, details })
   }
 
-  const mutationError =
+  const errorMessage =
+    formError ||
     (reportMutation.error as Error | null)?.message ||
     (blockMutation.error as Error | null)?.message ||
     ''
 
   return (
     <section
-      id="signaler"
-      className="mt-6 scroll-mt-28 rounded-[2rem] border border-red-200 bg-white p-5 shadow-sm sm:p-7"
+      id={compact ? undefined : 'signaler'}
+      className={
+        compact
+          ? 'mt-4 border-t border-slate-200 pt-3'
+          : 'mt-6 scroll-mt-28 border-t border-slate-200 py-5'
+      }
     >
-      <h2 className="text-2xl font-black text-slate-950">
+      <h2
+        className={
+          compact
+            ? 'text-sm font-semibold text-slate-950'
+            : 'text-base font-semibold text-slate-950'
+        }
+      >
         Un problème avec ce contenu ?
       </h2>
 
-      <p className="mt-1 text-sm leading-relaxed text-slate-500">
-        Signale un contenu inapproprié, faux ou offensant : l’équipe de
-        modération l’examinera rapidement. Tu peux aussi bloquer son auteur
-        pour ne plus voir ses signalements.
-      </p>
+      {!compact && (
+        <p className="mt-1 text-sm text-slate-500">
+          Signale un contenu inapproprié, faux ou offensant : l’équipe de
+          modération l’examinera rapidement. Tu peux aussi bloquer son
+          auteur pour ne plus voir ses signalements.
+        </p>
+      )}
 
       {reported && (
-        <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-bold text-emerald-700">
+        <p className="mt-3 flex items-center gap-1.5 text-sm font-medium text-emerald-700">
+          <Check size={15} />
           Merci, ton signalement a été transmis à l’équipe de modération.
-        </div>
+        </p>
       )}
 
       {blocked && (
-        <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-bold text-emerald-700">
-          Auteur bloqué. Ses signalements n’apparaîtront plus sur ta carte ni
-          dans tes listes.{' '}
-          <Link to="/carte" className="underline underline-offset-4">
+        <p className="mt-3 text-sm font-medium text-emerald-700">
+          <Check size={15} className="mr-1.5 inline align-[-2px]" />
+          Auteur bloqué : ses signalements n’apparaîtront plus sur ta carte
+          ni dans tes listes.{' '}
+          <Link to="/carte" className="font-semibold text-[#d94a0b]">
             Retour à la carte
           </Link>
-        </div>
+        </p>
       )}
 
-      {mutationError && (
-        <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-700">
-          {mutationError}
-        </div>
+      {errorMessage && (
+        <p
+          role="alert"
+          className="mt-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+        >
+          {errorMessage}
+        </p>
       )}
 
-      {mode === 'idle' && (
-        <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+      {mode === 'idle' && (!reported || canBlock) && (
+        <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm font-semibold">
           {!reported && (
             <button
               type="button"
@@ -126,7 +159,7 @@ export default function PointSafetyActions({
                 reportMutation.reset()
                 setMode('report')
               }}
-              className="inline-flex min-h-12 flex-1 items-center justify-center rounded-2xl bg-red-600 px-5 py-3 text-sm font-black text-white transition hover:bg-red-700"
+              className="text-red-600"
             >
               Signaler ce contenu
             </button>
@@ -139,7 +172,7 @@ export default function PointSafetyActions({
                 blockMutation.reset()
                 setMode('block')
               }}
-              className="inline-flex min-h-12 flex-1 items-center justify-center rounded-2xl border border-slate-300 bg-white px-5 py-3 text-sm font-black text-slate-700 transition hover:bg-slate-50"
+              className="text-slate-600"
             >
               Bloquer l’auteur
             </button>
@@ -148,66 +181,56 @@ export default function PointSafetyActions({
       )}
 
       {mode === 'report' && (
-        <form onSubmit={handleReportSubmit} className="mt-5 space-y-4">
-          <fieldset>
-            <legend className="text-sm font-black text-slate-950">
-              Motif du signalement
-            </legend>
+        <form onSubmit={handleReportSubmit} className="mt-4">
+          <p className={formLabelClass}>Motif du signalement</p>
 
-            <div className="mt-3 grid gap-2">
-              {REPORT_REASONS.map((item) => (
-                <label
+          <div className="flex flex-wrap gap-2">
+            {REPORT_REASONS.map((item) => {
+              const selected = reason === item
+
+              return (
+                <button
                   key={item}
-                  className={`flex min-h-12 cursor-pointer items-center gap-3 rounded-2xl border px-4 py-3 text-sm font-bold transition ${
-                    reason === item
-                      ? 'border-red-200 bg-red-50 text-red-700'
-                      : 'border-slate-200 bg-slate-50 text-slate-700'
-                  }`}
+                  type="button"
+                  aria-pressed={selected}
+                  onClick={() => {
+                    setReason(item)
+                    setFormError('')
+                  }}
+                  className={chipClass(selected)}
                 >
-                  <input
-                    type="radio"
-                    name="motif"
-                    value={item}
-                    checked={reason === item}
-                    onChange={() => setReason(item)}
-                    className="h-4 w-4 accent-red-600"
-                  />
+                  {selected && <Check size={15} />}
                   {item}
-                </label>
-              ))}
-            </div>
-          </fieldset>
-
-          <div>
-            <label
-              htmlFor="report-details"
-              className="text-sm font-black text-slate-950"
-            >
-              Précisions (facultatif)
-            </label>
-            <textarea
-              id="report-details"
-              value={details}
-              onChange={(event) => setDetails(event.target.value)}
-              maxLength={500}
-              rows={3}
-              placeholder="Explique en quelques mots ce qui pose problème…"
-              className="mt-2 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:border-red-400"
-            />
+                </button>
+              )
+            })}
           </div>
 
-          {formError && (
-            <p className="text-sm font-bold text-red-700">{formError}</p>
-          )}
+          <label
+            htmlFor="report-details"
+            className={`${formLabelClass} mt-4`}
+          >
+            Précisions (facultatif)
+          </label>
 
-          <div className="flex flex-col gap-3 sm:flex-row">
+          <textarea
+            id="report-details"
+            rows={3}
+            value={details}
+            onChange={(event) => setDetails(event.target.value)}
+            maxLength={500}
+            placeholder="Explique en quelques mots ce qui pose problème…"
+            className={`${formFieldClass} py-2`}
+          />
+
+          <div className="mt-4 flex items-center gap-4">
             <button
               type="submit"
               disabled={reportMutation.isPending}
-              className="inline-flex min-h-12 flex-1 items-center justify-center rounded-2xl bg-red-600 px-5 py-3 text-sm font-black text-white transition hover:bg-red-700 disabled:opacity-60"
+              className={primaryButtonClass}
             >
               {reportMutation.isPending
-                ? 'Envoi…'
+                ? 'Envoi en cours...'
                 : 'Envoyer le signalement'}
             </button>
 
@@ -217,7 +240,7 @@ export default function PointSafetyActions({
                 setMode('idle')
                 setFormError('')
               }}
-              className="inline-flex min-h-12 flex-1 items-center justify-center rounded-2xl border border-slate-300 bg-white px-5 py-3 text-sm font-black text-slate-700 transition hover:bg-slate-50"
+              className={cancelButtonClass}
             >
               Annuler
             </button>
@@ -226,28 +249,29 @@ export default function PointSafetyActions({
       )}
 
       {mode === 'block' && authorId && (
-        <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-          <p className="text-sm font-bold leading-relaxed text-slate-700">
-            Bloquer l’auteur de ce point ? Tu ne verras plus ses signalements
-            sur la carte ni dans les listes. Il ne sera pas prévenu.
+        <div className="mt-4">
+          <p className="text-sm text-slate-600">
+            Bloquer l’auteur de ce point ? Tu ne verras plus ses
+            signalements sur la carte ni dans les listes. Il ne sera pas
+            prévenu.
           </p>
 
-          <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+          <div className="mt-4 flex items-center gap-4">
             <button
               type="button"
               disabled={blockMutation.isPending}
               onClick={() => blockMutation.mutate(authorId)}
-              className="inline-flex min-h-12 flex-1 items-center justify-center rounded-2xl bg-[#d94a0b] px-5 py-3 text-sm font-black text-white transition hover:bg-[#b93607] disabled:opacity-60"
+              className={primaryButtonClass}
             >
               {blockMutation.isPending
-                ? 'Blocage…'
+                ? 'Blocage en cours...'
                 : 'Confirmer le blocage'}
             </button>
 
             <button
               type="button"
               onClick={() => setMode('idle')}
-              className="inline-flex min-h-12 flex-1 items-center justify-center rounded-2xl border border-slate-300 bg-white px-5 py-3 text-sm font-black text-slate-700 transition hover:bg-slate-50"
+              className={cancelButtonClass}
             >
               Annuler
             </button>

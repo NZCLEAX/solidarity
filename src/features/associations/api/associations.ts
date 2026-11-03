@@ -489,54 +489,37 @@ export async function getAssociationJoinRequests(): Promise<
   return (data ?? []) as AssociationJoinRequest[]
 }
 
+/*
+ * Accepter ou refuser une demande de bénévole.
+ *
+ * Passe par une RPC sécurisée : les règles RLS empêchent l'association
+ * de modifier elle-même la demande et le profil du bénévole, et
+ * Supabase ne renvoie alors aucune erreur (0 ligne modifiée). La RPC
+ * vérifie côté SQL que l'utilisateur connecté est bien l'association
+ * destinataire, puis met à jour la demande et le profil ensemble.
+ * Script : supabase/migrations/20261103150000_repondre_demande_benevole.sql
+ */
 export async function respondJoinRequest(
   requestId: string,
   decision: 'acceptee' | 'refusee'
 ) {
-  const {
-    data: request,
-    error: requestError,
-  } = await supabase
-    .from('association_join_requests')
-    .select(
-      'id, association_id, benevole_id'
-    )
-    .eq('id', requestId)
-    .single()
-
-  if (requestError) {
-    throw requestError
-  }
-
-  const { error: updateRequestError } = await supabase
-    .from('association_join_requests')
-    .update({
-      statut: decision,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', requestId)
-
-  if (updateRequestError) {
-    throw updateRequestError
-  }
-
-  if (decision === 'acceptee') {
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .update({
-        role: 'benevole',
-        association_id: request.association_id,
-        statut_compte: 'actif',
-        updated_at: new Date().toISOString(),
-      })
-      .eq(
-        'id',
-        request.benevole_id
-      )
-
-    if (profileError) {
-      throw profileError
+  const { error } = await supabase.rpc(
+    'respond_my_association_join_request',
+    {
+      p_request_id: requestId,
+      p_decision: decision,
     }
+  )
+
+  if (error) {
+    // Fonction pas encore créée dans Supabase.
+    if (error.code === 'PGRST202' || error.code === '42883') {
+      throw new Error(
+        'La fonction « respond_my_association_join_request » est absente de Supabase. Exécute le script SQL « repondre_demande_benevole ».'
+      )
+    }
+
+    throw error
   }
 }
 

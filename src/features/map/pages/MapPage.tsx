@@ -20,6 +20,9 @@ import {
 import { useTranslation } from 'react-i18next'
 
 import { getPoints } from '@/features/points/api/points'
+import PointSafetyActions from '@/features/points/components/PointSafetyActions'
+import { getCurrentProfile } from '@/features/auth/api/profile'
+import { hasPermission } from '@/features/auth/utils/permissions'
 import {
   getInterventions,
   type Intervention,
@@ -252,6 +255,20 @@ function isActiveMapIntervention(
 
 export default function MapPage() {
   const { t, i18n } = useTranslation()
+
+  // Les boutons « Voir détail » / « Intervenir » ne s'affichent qu'aux
+  // comptes qui ont accès à ces pages (sinon : « Accès non autorisé »).
+  // « Signaler / Bloquer » reste visible pour tout le monde.
+  const { data: currentProfile } = useQuery({
+    queryKey: ['current-profile'],
+    queryFn: getCurrentProfile,
+  })
+
+  const canViewPointDetails = hasPermission(currentProfile, 'view_points')
+  const canIntervene = hasPermission(
+    currentProfile,
+    'manage_interventions'
+  )
 
   const [searchParams] =
     useSearchParams()
@@ -1063,15 +1080,23 @@ useEffect(() => {
                         </div>
                       )}
 
-                      <Link
-                        to={`/points/${point.id}`}
-                        className="mt-4 block rounded-xl bg-[#d94a0b] py-3 text-center text-sm font-black text-white"
-                      >
-                        {t(
-                          'map.voirLeDtail',
-                          'Voir le détail'
-                        )}
-                      </Link>
+                      {canViewPointDetails && (
+                        <Link
+                          to={`/points/${point.id}`}
+                          className="mt-4 block rounded-xl bg-[#d94a0b] py-3 text-center text-sm font-black text-white"
+                        >
+                          {t(
+                            'map.voirLeDtail',
+                            'Voir le détail'
+                          )}
+                        </Link>
+                      )}
+
+                      <PointSafetyActions
+                        compact
+                        pointId={String(point.id)}
+                        authorId={point.created_by || point.cree_par || null}
+                      />
                     </div>
                   </Popup>
                 </Marker>
@@ -1303,29 +1328,50 @@ useEffect(() => {
                 )}
               </div>
 
-              <div className="mt-5 grid grid-cols-2 gap-3">
-  <Link
-    to={`/points/${mobilePoint.id}`}
-    className="rounded-2xl bg-[#d94a0b] px-4 py-3 text-center text-sm font-black text-white"
-  >
-    {t(
-      'map.voirDtail',
-      'Voir détail'
-    )}
-  </Link>
+              {(canViewPointDetails || canIntervene) && (
+                <div
+                  className={`mt-5 grid gap-3 ${
+                    canViewPointDetails && canIntervene
+                      ? 'grid-cols-2'
+                      : 'grid-cols-1'
+                  }`}
+                >
+                  {canViewPointDetails && (
+                    <Link
+                      to={`/points/${mobilePoint.id}`}
+                      className="rounded-2xl bg-[#d94a0b] px-4 py-3 text-center text-sm font-black text-white"
+                    >
+                      {t(
+                        'map.voirDtail',
+                        'Voir détail'
+                      )}
+                    </Link>
+                  )}
 
-  <Link
-    to={`/interventions/new?pointId=${encodeURIComponent(
-      String(mobilePoint.id)
-    )}`}
-    className="rounded-2xl border border-slate-300 bg-white px-4 py-3 text-center text-sm font-black text-slate-700"
-  >
-    {t(
-      'map.intervenir',
-      'Intervenir'
-    )}
-  </Link>
-</div>
+                  {canIntervene && (
+                    <Link
+                      to={`/interventions/new?pointId=${encodeURIComponent(
+                        String(mobilePoint.id)
+                      )}`}
+                      className="rounded-2xl border border-slate-300 bg-white px-4 py-3 text-center text-sm font-black text-slate-700"
+                    >
+                      {t(
+                        'map.intervenir',
+                        'Intervenir'
+                      )}
+                    </Link>
+                  )}
+                </div>
+              )}
+
+              <PointSafetyActions
+                key={`safety-${mobilePoint.id}`}
+                compact
+                pointId={String(mobilePoint.id)}
+                authorId={
+                  mobilePoint.created_by || mobilePoint.cree_par || null
+                }
+              />
             </div>
           )}
 

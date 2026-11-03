@@ -1,16 +1,19 @@
+import type { ReactNode } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { CircleMarker, MapContainer, Popup, TileLayer } from 'react-leaflet'
+import { CircleMarker, MapContainer, TileLayer } from 'react-leaflet'
+import { ArrowLeft } from 'lucide-react'
+
 import { getPointById } from '@/features/points/api/points'
 import PointSafetyActions from '@/features/points/components/PointSafetyActions'
 import { getCurrentUserId } from '@/features/moderation/api/contentReports'
+import { getCurrentProfile } from '@/features/auth/api/profile'
+import { hasPermission } from '@/features/auth/utils/permissions'
+import { chipClass } from '@/shared/components/FormSection'
 import {
   formatPointLabel,
-  getStatusBadgeClass,
-  getUrgencyBadgeClass,
   getUrgencyMarkerColor,
 } from '@/shared/utils/pointStyles'
-
 
 function formatDate(value: string | null | undefined) {
   if (!value) return 'Non renseigné'
@@ -43,6 +46,50 @@ function splitNeeds(value: string | null) {
     .filter(Boolean)
 }
 
+// Section à plat, comme les formulaires PULSE (FormSection sans numéro).
+function DetailSection({
+  title,
+  children,
+}: {
+  title: string
+  children: ReactNode
+}) {
+  return (
+    <section className="border-t border-slate-200 py-5">
+      <h2 className="text-base font-semibold text-slate-950">{title}</h2>
+      <div className="mt-3">{children}</div>
+    </section>
+  )
+}
+
+// Ligne « libellé : valeur » séparée par un trait fin.
+function DetailRow({ label, value }: { label: string; value: ReactNode }) {
+  return (
+    <div className="flex items-start justify-between gap-4 border-b border-slate-200 py-2.5 text-sm last:border-b-0">
+      <dt className="text-slate-500">{label}</dt>
+      <dd className="text-right font-medium text-slate-950">{value}</dd>
+    </div>
+  )
+}
+
+function PageShell({ children }: { children: ReactNode }) {
+  return (
+    <div className="min-w-0 px-4 pt-4">
+      <div className="mx-auto w-full max-w-xl">
+        <Link
+          to="/points"
+          className="inline-flex items-center gap-1 text-sm text-slate-500 transition hover:text-slate-900"
+        >
+          <ArrowLeft size={16} />
+          Retour aux points
+        </Link>
+
+        {children}
+      </div>
+    </div>
+  )
+}
+
 export default function PointDetailsPage() {
   const { pointId } = useParams()
 
@@ -62,409 +109,200 @@ export default function PointDetailsPage() {
     queryFn: getCurrentUserId,
   })
 
+  const { data: currentProfile } = useQuery({
+    queryKey: ['current-profile'],
+    queryFn: getCurrentProfile,
+  })
+
   if (isLoading) {
     return (
-      <div className="min-h-[calc(100vh-80px)] bg-[#faf8f4] px-4 py-6 sm:px-6 lg:px-8 xl:px-10">
-        <div className="mx-auto w-full max-w-[1500px]">
-          <div className="rounded-[2rem] border border-[#eadfd6] bg-white p-8 text-slate-600 shadow-sm">
-            Chargement du point...
-          </div>
-        </div>
-      </div>
+      <PageShell>
+        <p className="mt-6 text-sm text-slate-500">Chargement du point...</p>
+      </PageShell>
     )
   }
 
   if (isError || !point) {
     return (
-      <div className="min-h-[calc(100vh-80px)] bg-[#faf8f4] px-4 py-6 sm:px-6 lg:px-8 xl:px-10">
-        <div className="mx-auto w-full max-w-[1500px]">
-          <div className="rounded-[2rem] border border-red-200 bg-red-50 p-8 text-red-700">
-            {(error as Error)?.message ||
-              'Erreur lors du chargement du point.'}
-          </div>
-        </div>
-      </div>
+      <PageShell>
+        <p
+          role="alert"
+          className="mt-6 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+        >
+          {(error as Error)?.message || 'Erreur lors du chargement du point.'}
+        </p>
+      </PageShell>
     )
   }
 
   const authorId = point.created_by || point.cree_par || null
   const isOwnPoint = Boolean(authorId) && authorId === currentUserId
+  const canEdit = hasPermission(currentProfile, 'edit_point')
   const hasCoordinates = isValidCoordinate(point.latitude, point.longitude)
   const needs = splitNeeds(point.besoins)
   const markerColor = getUrgencyMarkerColor(point.niveau_urgence)
 
   return (
-    <div className="min-h-[calc(100vh-80px)] bg-[#faf8f4] px-4 py-6 sm:px-6 lg:px-8 xl:px-10">
-      <div className="mx-auto w-full max-w-[1500px]">
-        <Link
-          to="/points"
-          className="inline-flex items-center gap-2 rounded-2xl px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-orange-50 hover:text-[#d94a0b]"
-        >
-          <span>←</span>
-          <span>Retour aux points</span>
+    <PageShell>
+      <h1 className="mt-3 break-words text-2xl font-bold text-slate-950">
+        {point.adresse || 'Adresse non renseignée'}
+      </h1>
+
+      <p className="mt-1 text-sm text-slate-500">
+        Fiche du point : statut, urgence, besoins observés et suivi terrain.
+      </p>
+
+      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm font-semibold">
+        <Link to="/carte" className="text-[#d94a0b]">
+          Voir sur la carte
         </Link>
 
-        <div className="mt-5 grid gap-8 xl:grid-cols-[1.15fr_0.85fr] xl:items-start">
-          <section>
-            <div className="mb-7 flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-              <div>
-                <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#d94a0b]">
-                  Fiche point
-                </p>
+        {canEdit && (
+          <Link to={`/points/${point.id}/edit`} className="text-slate-600">
+            Modifier
+          </Link>
+        )}
 
-                <h1 className="mt-3 text-3xl font-black leading-tight tracking-tight text-slate-950 sm:text-4xl xl:text-5xl">
-                  {point.adresse || 'Adresse non renseignée'}
-                </h1>
-
-                <p className="mt-3 max-w-3xl text-base leading-relaxed text-slate-600 sm:text-lg">
-                  Fiche détaillée du point de précarité avec son statut, son
-                  niveau d’urgence, ses besoins et son suivi terrain.
-                </p>
-              </div>
-
-              <div className="flex flex-col gap-3 sm:flex-row lg:justify-end">
-                <Link
-                  to={`/points/${point.id}/edit`}
-                  className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-indigo-600 px-6 py-3 text-sm font-black text-white shadow-sm transition hover:bg-indigo-700"
-                >
-                  Modifier
-                </Link>
-
-                <Link
-                  to="/carte"
-                  className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-slate-300 bg-white px-6 py-3 text-sm font-black text-slate-700 shadow-sm transition hover:bg-slate-50"
-                >
-                  Voir la carte
-                </Link>
-
-                {!isOwnPoint && (
-                  <button
-                    type="button"
-                    onClick={() =>
-                      document
-                        .getElementById('signaler')
-                        ?.scrollIntoView({ behavior: 'smooth' })
-                    }
-                    className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-red-200 bg-red-50 px-6 py-3 text-sm font-black text-red-700 shadow-sm transition hover:bg-red-100"
-                  >
-                    Signaler
-                  </button>
-                )}
-              </div>
-            </div>
-
-            <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              <article className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm">
-                <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
-                  Statut
-                </p>
-
-                <div className="mt-4">
-                  <span
-                    className={`inline-flex rounded-full px-3 py-1 text-sm font-bold ring-1 ${getStatusBadgeClass(
-                      point.statut
-                    )}`}
-                  >
-                    {formatPointLabel(point.statut)}
-                  </span>
-                </div>
-              </article>
-
-              <article className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm">
-                <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
-                  Urgence
-                </p>
-
-                <div className="mt-4">
-                  <span
-                    className={`inline-flex rounded-full px-3 py-1 text-sm font-bold ring-1 ${getUrgencyBadgeClass(
-                      point.niveau_urgence
-                    )}`}
-                  >
-                    {formatPointLabel(point.niveau_urgence)}
-                  </span>
-                </div>
-              </article>
-
-              <article className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm">
-                <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
-                  Fiabilité
-                </p>
-
-                <p className="mt-4 text-lg font-black text-slate-950">
-                  {formatPointLabel(point.niveau_fiabilite)}
-                </p>
-              </article>
-            </section>
-
-            <section className="mt-6 rounded-[2rem] border border-[#eadfd6] bg-white p-5 shadow-sm sm:p-7">
-              <div className="mb-6">
-                <h2 className="text-2xl font-black text-slate-950">
-                  Informations principales
-                </h2>
-                <p className="mt-1 text-sm text-slate-500">
-                  Informations utiles pour identifier rapidement la situation.
-                </p>
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                <div className="rounded-2xl bg-slate-50 p-4">
-                  <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
-                    Adresse
-                  </p>
-                  <p className="mt-2 font-black text-slate-950">
-                    {point.adresse || 'Non renseigné'}
-                  </p>
-                </div>
-
-                <div className="rounded-2xl bg-emerald-50 p-4">
-                  <p className="text-xs font-bold uppercase tracking-wide text-emerald-600">
-                    Personnes estimées
-                  </p>
-                  <p className="mt-2 text-3xl font-black text-emerald-700">
-                    {point.nombre_personnes_estime ?? '0'}
-                  </p>
-                </div>
-
-                <div className="rounded-2xl bg-orange-50 p-4">
-                  <p className="text-xs font-bold uppercase tracking-wide text-orange-600">
-                    Typologie
-                  </p>
-                  <p className="mt-2 font-black text-orange-800">
-                    {point.typologie || 'Non renseignée'}
-                  </p>
-                </div>
-
-                <div className="rounded-2xl bg-slate-50 p-4">
-                  <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
-                    Latitude
-                  </p>
-                  <p className="mt-2 font-black text-slate-950">
-                    {point.latitude ?? 'Non renseignée'}
-                  </p>
-                </div>
-
-                <div className="rounded-2xl bg-slate-50 p-4">
-                  <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
-                    Longitude
-                  </p>
-                  <p className="mt-2 font-black text-slate-950">
-                    {point.longitude ?? 'Non renseignée'}
-                  </p>
-                </div>
-
-                <div className="rounded-2xl bg-slate-50 p-4">
-                  <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
-                    Actif
-                  </p>
-                  <p className="mt-2 font-black text-slate-950">
-                    {point.actif === false ? 'Non' : 'Oui'}
-                  </p>
-                </div>
-              </div>
-            </section>
-
-            <section className="mt-6 rounded-[2rem] border border-[#eadfd6] bg-white p-5 shadow-sm sm:p-7">
-              <div className="mb-6">
-                <h2 className="text-2xl font-black text-slate-950">
-                  Besoins observés
-                </h2>
-                <p className="mt-1 text-sm text-slate-500">
-                  Les besoins déclarés lors du signalement.
-                </p>
-              </div>
-
-              {needs.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-5 text-sm text-slate-500">
-                  Aucun besoin renseigné.
-                </div>
-              ) : (
-                <div className="flex flex-wrap gap-3">
-                  {needs.map((need) => (
-                    <span
-                      key={need}
-                      className="rounded-full bg-emerald-50 px-4 py-2 text-sm font-bold text-emerald-700 ring-1 ring-emerald-200"
-                    >
-                      {need}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </section>
-
-            <section className="mt-6 rounded-[2rem] border border-[#eadfd6] bg-white p-5 shadow-sm sm:p-7">
-              <div className="mb-6">
-                <h2 className="text-2xl font-black text-slate-950">
-                  Commentaire
-                </h2>
-                <p className="mt-1 text-sm text-slate-500">
-                  Détails complémentaires du signalement.
-                </p>
-              </div>
-
-              <div className="rounded-2xl bg-slate-50 p-5 text-sm leading-relaxed text-slate-700">
-                {point.commentaire && point.commentaire.trim().length > 0
-                  ? point.commentaire
-                  : 'Aucun commentaire renseigné.'}
-              </div>
-            </section>
-
-            <PointSafetyActions
-              pointId={String(point.id)}
-              authorId={authorId}
-            />
-
-            <section className="mt-6 rounded-[2rem] border border-[#eadfd6] bg-white p-5 shadow-sm sm:p-7">
-              <div className="mb-6">
-                <h2 className="text-2xl font-black text-slate-950">
-                  Suivi
-                </h2>
-                <p className="mt-1 text-sm text-slate-500">
-                  Dates importantes liées au point.
-                </p>
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="rounded-2xl bg-slate-50 p-4">
-                  <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
-                    Date d’observation
-                  </p>
-                  <p className="mt-2 font-black text-slate-950">
-                    {formatDate(point.date_observation)}
-                  </p>
-                </div>
-
-                <div className="rounded-2xl bg-slate-50 p-4">
-                  <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
-                    Dernière mise à jour
-                  </p>
-                  <p className="mt-2 font-black text-slate-950">
-                    {formatDate(point.date_derniere_maj || point.updated_at)}
-                  </p>
-                </div>
-              </div>
-            </section>
-          </section>
-
-          <aside>
-            <div className="sticky top-28 space-y-5">
-              <section className="overflow-hidden rounded-[2rem] border border-[#eadfd6] bg-white shadow-sm">
-                <div className="border-b border-[#eadfd6] p-5">
-                  <h2 className="text-2xl font-black text-slate-950">
-                    Localisation
-                  </h2>
-                  <p className="mt-1 text-sm text-slate-500">
-                    Position du point sur la carte.
-                  </p>
-                </div>
-
-                <div className="h-[360px] bg-slate-100">
-                  {hasCoordinates ? (
-                    <MapContainer
-                      center={[point.latitude!, point.longitude!]}
-                      zoom={15}
-                      scrollWheelZoom={false}
-                      className="h-full w-full"
-                    >
-                      <TileLayer
-                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                      />
-
-                      <CircleMarker
-                        center={[point.latitude!, point.longitude!]}
-                        radius={14}
-                        pathOptions={{
-                          color: '#ffffff',
-                          fillColor: markerColor,
-                          fillOpacity: 0.9,
-                          weight: 4,
-                        }}
-                      >
-                        <Popup>
-                          <div className="p-2">
-                            <p className="font-bold text-slate-950">
-                              {point.adresse || 'Point'}
-                            </p>
-                            <p className="mt-1 text-sm text-slate-500">
-                              {formatPointLabel(point.niveau_urgence)}
-                            </p>
-                          </div>
-                        </Popup>
-                      </CircleMarker>
-                    </MapContainer>
-                  ) : (
-                    <div className="flex h-full items-center justify-center p-6 text-center text-sm text-slate-500">
-                      Coordonnées indisponibles pour afficher la carte.
-                    </div>
-                  )}
-                </div>
-
-                {hasCoordinates && (
-                  <div className="p-5">
-                    <Link
-                      to="/carte"
-                      className="inline-flex w-full min-h-12 items-center justify-center rounded-2xl bg-[#d94a0b] px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-[#b93607]"
-                    >
-                      Voir dans la carte générale
-                    </Link>
-                  </div>
-                )}
-              </section>
-
-              <section className="rounded-[2rem] border border-emerald-200 bg-emerald-50 p-6">
-                <h2 className="text-xl font-black text-emerald-900">
-                  Résumé terrain
-                </h2>
-
-                <div className="mt-5 space-y-4 text-sm leading-relaxed text-emerald-800">
-                  <p>
-                    <span className="font-black">Adresse :</span>{' '}
-                    {point.adresse || 'Non renseignée'}
-                  </p>
-
-                  <p>
-                    <span className="font-black">Urgence :</span>{' '}
-                    {formatPointLabel(point.niveau_urgence)}
-                  </p>
-
-                  <p>
-                    <span className="font-black">Personnes :</span>{' '}
-                    {point.nombre_personnes_estime ?? 'Non renseigné'}
-                  </p>
-
-                  <p>
-                    <span className="font-black">Besoins :</span>{' '}
-                    {point.besoins || 'Non renseignés'}
-                  </p>
-                </div>
-              </section>
-
-              <section className="rounded-[2rem] border border-orange-200 bg-orange-50 p-6">
-                <h2 className="text-xl font-black text-orange-900">
-                  Actions rapides
-                </h2>
-
-                <div className="mt-5 grid gap-3">
-                  <Link
-                    to={`/points/${point.id}/edit`}
-                    className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-black text-white transition hover:bg-indigo-700"
-                  >
-                    Modifier le point
-                  </Link>
-
-                  <Link
-                    to="/points"
-                    className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-orange-200 bg-white px-5 py-3 text-sm font-black text-orange-700 transition hover:bg-orange-100"
-                  >
-                    ← Retour aux points
-                  </Link>
-                </div>
-              </section>
-            </div>
-          </aside>
-        </div>
+        {!isOwnPoint && (
+          <button
+            type="button"
+            onClick={() =>
+              document
+                .getElementById('signaler')
+                ?.scrollIntoView({ behavior: 'smooth' })
+            }
+            className="ml-auto text-red-600"
+          >
+            Signaler
+          </button>
+        )}
       </div>
-    </div>
+
+      {/* Chiffres clés, à plat comme le tableau de bord */}
+      <section className="mt-5 grid grid-cols-3 gap-x-4 border-t border-slate-200">
+        <div className="border-b border-slate-200 py-4">
+          <p className="text-xs font-medium text-slate-500">Statut</p>
+          <p className="mt-1 text-sm font-semibold text-slate-950">
+            {formatPointLabel(point.statut)}
+          </p>
+        </div>
+
+        <div className="border-b border-slate-200 py-4">
+          <p className="text-xs font-medium text-slate-500">Urgence</p>
+          <p className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-slate-950">
+            <span
+              aria-hidden="true"
+              className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
+              style={{ backgroundColor: markerColor }}
+            />
+            {formatPointLabel(point.niveau_urgence)}
+          </p>
+        </div>
+
+        <div className="border-b border-slate-200 py-4">
+          <p className="text-xs font-medium text-slate-500">Fiabilité</p>
+          <p className="mt-1 text-sm font-semibold text-slate-950">
+            {formatPointLabel(point.niveau_fiabilite)}
+          </p>
+        </div>
+      </section>
+
+      <DetailSection title="Informations principales">
+        <dl>
+          <DetailRow
+            label="Personnes estimées"
+            value={point.nombre_personnes_estime ?? 'Non renseigné'}
+          />
+          <DetailRow
+            label="Typologie"
+            value={point.typologie || 'Non renseignée'}
+          />
+          <DetailRow
+            label="Point actif"
+            value={point.actif === false ? 'Non' : 'Oui'}
+          />
+          <DetailRow
+            label="Coordonnées"
+            value={
+              hasCoordinates
+                ? `${point.latitude}, ${point.longitude}`
+                : 'Non renseignées'
+            }
+          />
+        </dl>
+      </DetailSection>
+
+      <DetailSection title="Besoins observés">
+        {needs.length === 0 ? (
+          <p className="text-sm text-slate-500">Aucun besoin renseigné.</p>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {needs.map((need) => (
+              <span key={need} className={chipClass(false)}>
+                {need}
+              </span>
+            ))}
+          </div>
+        )}
+      </DetailSection>
+
+      <DetailSection title="Commentaire">
+        <p className="break-words text-sm text-slate-700">
+          {point.commentaire && point.commentaire.trim().length > 0
+            ? point.commentaire
+            : 'Aucun commentaire renseigné.'}
+        </p>
+      </DetailSection>
+
+      <DetailSection title="Localisation">
+        {hasCoordinates ? (
+          <div className="h-56 overflow-hidden rounded-lg border border-slate-200">
+            <MapContainer
+              center={[point.latitude!, point.longitude!]}
+              zoom={15}
+              scrollWheelZoom={false}
+              className="h-full w-full"
+            >
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+
+              <CircleMarker
+                center={[point.latitude!, point.longitude!]}
+                radius={12}
+                pathOptions={{
+                  color: '#ffffff',
+                  fillColor: markerColor,
+                  fillOpacity: 0.9,
+                  weight: 3,
+                }}
+              />
+            </MapContainer>
+          </div>
+        ) : (
+          <p className="text-sm text-slate-500">
+            Coordonnées indisponibles pour afficher la carte.
+          </p>
+        )}
+      </DetailSection>
+
+      <DetailSection title="Suivi">
+        <dl>
+          <DetailRow
+            label="Date d’observation"
+            value={formatDate(point.date_observation)}
+          />
+          <DetailRow
+            label="Dernière mise à jour"
+            value={formatDate(point.date_derniere_maj || point.updated_at)}
+          />
+        </dl>
+      </DetailSection>
+
+      <div className="pb-6">
+        <PointSafetyActions pointId={String(point.id)} authorId={authorId} />
+      </div>
+    </PageShell>
   )
 }
