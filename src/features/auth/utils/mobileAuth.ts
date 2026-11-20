@@ -109,8 +109,16 @@ async function handleAuthCallback(url: string) {
     // connecté, la page de connexion l'envoie vers son espace.
     clearPendingEmailConfirmation()
 
-    await router.navigate('/login?oauth=complete', {
-      replace: true,
+    // Inscription d'une association : on reste sur le formulaire, encore
+    // rempli (PDF compris), pour qu'elle le renvoie et finalise son dossier.
+    if (
+      flow === 'email-confirmation' &&
+      router.state.location.pathname === '/associations/register'
+    ) {
+      return
+    }
+
+    await router.navigate('/login?oauth=complete', {      replace: true,
     })
   } catch (error) {
     console.error('Erreur de retour d’authentification dans PULSE :', error)
